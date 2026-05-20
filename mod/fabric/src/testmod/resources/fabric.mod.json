@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "testmod",
+  "version": "1.0.0",
+  "name": "Test Mod",
+  "environment": "client",
+  "mixins": [
+    {
+      "config": "testmod.mixins.json",
+      "environment": "client"
+    }
+  ]
+}

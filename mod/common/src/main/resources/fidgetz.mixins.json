@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "io.github.fishstiz.fidgetz.transform.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ContainerEventHandlerMixin",
+    "EditBoxAccess",
+    "EditBoxMixin",
+    "ScreenMixin",
+    "ScrollableLayoutContainerMixin",
+    "ScrollableLayoutMixin",
+    "StringWidgetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

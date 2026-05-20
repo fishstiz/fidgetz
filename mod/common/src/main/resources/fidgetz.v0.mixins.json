@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "io.github.fishstiz.fidgetz.v0.inject.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractContainerEventHandlerMixin",
+    "AbstractWidgetMixin",
+    "ContainerEventHandlerMixin",
+    "GuiEventListenerMixin",
+    "ScreenMixin",
+    "access.EditBoxAccess"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

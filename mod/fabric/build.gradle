@@ -1,0 +1,52 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.fabricmc.fabric-loom'
+    id 'publish-local'
+}
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+loader {
+    sources = [sourceSets.main, sourceSets.testmod]
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:$minecraft_version"
+
+    implementation "net.fabricmc:fabric-loader:$fabric_loader_version"
+    implementation "net.fabricmc.fabric-api:fabric-api:$fabric_api_version"
+}
+
+loom {
+    def aw = file("src/main/resources/${mod_id}.classtweaker")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+        testmod {
+            sourceSet sourceSets.testmod
+        }
+    }
+
+    runs {
+        remove client
+        remove server
+
+        testmodClient {
+            client()
+            setConfigName('Fabric Client Test')
+            ideConfigGenerated(true)
+            runDir('run/testmod')
+            source sourceSets.testmod
+        }
+    }
+}

@@ -1,0 +1,33 @@
+modLoader = "javafml" #mandatory
+loaderVersion = "${neoforge_loader_version_range}" #mandatory
+license = "${license}" # Review your options at https://choosealicense.com/.
+
+[[mixins]]
+config = "testmod.mixins.json"
+
+[[mods]] #mandatory
+modId = "testmod" #mandatory
+version = "1.0.0" #mandatory
+displayName = "Test Mod" #mandatory
+description = ""
+
+[[dependencies.testmod]] #optional
+modId = "neoforge" #mandatory
+type = "required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
+versionRange = "${neoforge_version_range}" #mandatory
+ordering = "NONE" # The order that this dependency should load in relation to your mod, required to be either 'BEFORE' or 'AFTER' if the dependency is not mandatory
+side = "CLIENT" # Side this dependency is applied on - 'BOTH', 'CLIENT' or 'SERVER'
+
+[[dependencies.testmod]]
+modId = "minecraft"
+type = "required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
+versionRange = "${neoforge_minecraft_version_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.testmod]]
+modId = "fidgetz"
+type = "required" #mandatory (Can be one of "required", "optional", "incompatible" or "discouraged")
+ordering = "AFTER"
+side = "CLIENT"
+
