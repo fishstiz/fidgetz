@@ -28,6 +28,7 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
     private Justification mainJustification = Justification.START;
     private Justification crossJustification = Justification.START;
     private boolean wrap;
+    private boolean visible = true;
 
     FZFlexLayout(Supplier<ScreenRectangle> screenArea, ScreenAxis axis) {
         super(0, 0, screenArea.get().width(), screenArea.get().height());
@@ -105,6 +106,24 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         return this.wrap(true);
     }
 
+    public FZFlexLayout visible(boolean visible) {
+        this.visible = visible;
+        return this;
+    }
+
+    public FZFlexLayout visible() {
+        return visible(true);
+    }
+
+    public FZFlexLayout invisible() {
+        return visible(false);
+    }
+
+    @Override
+    public boolean fidgetz$isVisible() {
+        return visible;
+    }
+
     @Override
     public void fidgetz$setWidth(int width) {
         maxWidth(width);
@@ -150,52 +169,52 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         return this;
     }
 
-    public <T extends LayoutElement> T addChild(T child, LayoutSettings layoutSettings) {
+    public <T extends LayoutElement> T child(T child, LayoutSettings layoutSettings) {
         children.add(new ChildContainer(child, layoutSettings));
         return child;
     }
 
-    public <T extends LayoutElement> T addChild(T child) {
-        return addChild(child, defaultChildSettings.layoutSettings);
+    public <T extends LayoutElement> T child(T child) {
+        return child(child, defaultChildSettings.layoutSettings);
     }
 
-    public <T extends AbstractWidget> T addChild(T child, Settings settings) {
+    public <T extends AbstractWidget> T child(T child, Settings settings) {
         children.add(new FlexChildContainer(child, settings));
         return child;
     }
 
-    public <T extends AbstractWidget> T addChild(T child, LayoutSettings layoutSettings) {
-        return addChild(child, defaultChildSettings.copyWithLayoutSettings(layoutSettings));
+    public <T extends AbstractWidget> T child(T child, LayoutSettings layoutSettings) {
+        return child(child, defaultChildSettings.copyWithLayoutSettings(layoutSettings));
     }
 
-    public <T extends AbstractWidget> T addChild(T child) {
-        return addChild(child, defaultChildSettings);
+    public <T extends AbstractWidget> T child(T child) {
+        return child(child, defaultChildSettings);
     }
 
-    public <T extends FZFlexElement> T addChild(T child, Settings settings) {
+    public <T extends FZFlexElement> T child(T child, Settings settings) {
         children.add(new FlexChildContainer(child, settings));
         return child;
     }
 
-    public <T extends FZFlexElement> T addChild(T child, LayoutSettings layoutSettings) {
-        return addChild(child, defaultChildSettings.copyWithLayoutSettings(layoutSettings));
+    public <T extends FZFlexElement> T child(T child, LayoutSettings layoutSettings) {
+        return child(child, defaultChildSettings.copyWithLayoutSettings(layoutSettings));
     }
 
-    public <T extends FZFlexElement> T addChild(T child) {
-        return addChild(child, defaultChildSettings);
+    public <T extends FZFlexElement> T child(T child) {
+        return child(child, defaultChildSettings);
     }
 
-    public FZFlexSpacerElement addSpacer(Settings settings) {
+    public FZFlexSpacerElement spacer(Settings settings) {
         FZFlexSpacerElement spacer = new FZFlexSpacerElement();
         children.add(new FlexChildContainer(spacer, settings));
         return spacer;
     }
 
-    public FZFlexSpacerElement addSpacer() {
-        return addSpacer(defaultChildSettings);
+    public FZFlexSpacerElement spacer() {
+        return spacer(defaultChildSettings);
     }
 
-    public void clearChildren() {
+    public void clear() {
         children.clear();
     }
 
@@ -373,9 +392,11 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
         for (int i = 0; i < children.size(); i++) {
             ChildContainer container = children.get(i);
-            container.setPosition(axis, mainPos, mainResult);
-            container.setPosition(crossAxis, crossPos, crossResult);
-            mainPos = container.getPosition(axis) + container.getLength(axis) + justified.adjustSpacing(i);
+            if (container.visible()) {
+                container.setPosition(axis, mainPos, mainResult);
+                container.setPosition(crossAxis, crossPos, crossResult);
+                mainPos = container.getPosition(axis) + container.getLength(axis) + justified.adjustSpacing(i);
+            }
         }
 
         ScreenPosition resultSize = ScreenPosition.of(axis, mainResult, crossResult);
@@ -489,9 +510,11 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
             for (int i = 0; i < line.size(); i++) {
                 ChildContainer container = line.get(i);
-                container.setPosition(axis, mainPos, container.getLength(axis));
-                container.setPosition(crossAxis, crossPos, lineCross);
-                mainPos += container.getLength(axis) + mainJustified.adjustSpacing(i);
+                if (container.visible()) {
+                    container.setPosition(axis, mainPos, container.getLength(axis));
+                    container.setPosition(crossAxis, crossPos, lineCross);
+                    mainPos += container.getLength(axis) + mainJustified.adjustSpacing(i);
+                }
             }
 
             crossPos += lineCross + crossJustified.adjustSpacing(li);

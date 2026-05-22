@@ -31,31 +31,32 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
 
     private void openContextMenu(double x, double y) {
         if (dialogManager.get(CONTEXT_MENU_ID).map(dialog -> !dialog.isMouseOver(x, y)).orElse(true)) {
-            dialogManager.addOrReplace(
-                    CONTEXT_MENU_ID,
-                    0,
-                    FZContextMenu.builder(this).buildAndOpen(x, y, fidgetz$collectContextEntries(x, y))
-            );
+            dialogManager.put(FZContextMenu.builder(this)
+                    .id(CONTEXT_MENU_ID)
+                    .popoverOrder(0)
+                    .buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
         }
     }
 
     private void openModal() {
-        dialogManager.addIfClosed(MODAL_ID, 1, () -> {
+        dialogManager.putIfClosed(MODAL_ID, () -> {
             LinearLayout modalLayout = LinearLayout.vertical().spacing(8);
             modalLayout.addChild(Button.builder(Component.literal("Modal Button 7"), _ -> IO.println("7")).build());
             modalLayout.addChild(Button.builder(Component.literal("Modal Button 8"), _ -> IO.println("8")).build());
             modalLayout.addChild(Button.builder(Component.literal("Close"), _ -> dialogManager.remove(MODAL_ID)).build());
-            return FZModal.builder(this, modalLayout).buildAndOpen();
+            return FZModal.builder(this, modalLayout).id(MODAL_ID).popoverOrder(1).buildAndOpen();
         });
     }
 
     private void openModal2() {
-        dialogManager.addIfClosed(MODAL_TWO_ID, 2, () -> {
+        dialogManager.putIfClosed(MODAL_TWO_ID, () -> {
             LinearLayout modalLayout2 = LinearLayout.vertical().spacing(8);
             modalLayout2.addChild(Button.builder(Component.literal("Modal Button 9"), _ -> IO.println("9")).build());
             modalLayout2.addChild(Button.builder(Component.literal("Modal Button 10"), _ -> IO.println("10")).build());
             modalLayout2.addChild(Button.builder(Component.literal("Close"), _ -> dialogManager.remove(MODAL_TWO_ID)).build());
             return FZModal.builder(this, modalLayout2)
+                    .id(MODAL_TWO_ID)
+                    .popoverOrder(2)
                     .background(Renderables.boxShadow(24)
                             .then(Renderables.fill(CommonColors.DARK_GRAY))
                             .then(Renderables.outline(CommonColors.GRAY)))

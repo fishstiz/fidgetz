@@ -17,8 +17,11 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
-public abstract class FZDialog extends FZContainer implements FZPopover {
+public abstract class FZDialog extends FZContainer implements FZComponent, FZPopover {
+    protected static final int DEFAULT_POPOVER_ORDER = 0;
     protected final ContainerEventHandler container;
+    protected @Nullable String componentId;
+    protected int popoverOrder = DEFAULT_POPOVER_ORDER;
     private @Nullable ComponentPath lastContainerFocusPath;
     private boolean open;
 
@@ -169,9 +172,12 @@ public abstract class FZDialog extends FZContainer implements FZPopover {
         return shouldCaptureFocus() ? getCurrentFocusPath() : null;
     }
 
+    public void repositionElements() {
+    }
+
     @Override
     public void fidgetz$visitWidgets(WidgetVisitor visitor) {
-        visitor.fidgetz$visitWidget(this);
+        visitor.visitWidget(this);
     }
 
     @Override
@@ -181,6 +187,11 @@ public abstract class FZDialog extends FZContainer implements FZPopover {
 
     @Override
     public int fidgetz$popoverOrder() {
-        return 0;
+        return popoverOrder;
+    }
+
+    @Override
+    public @Nullable String fidgetz$componentId() {
+        return componentId;
     }
 }

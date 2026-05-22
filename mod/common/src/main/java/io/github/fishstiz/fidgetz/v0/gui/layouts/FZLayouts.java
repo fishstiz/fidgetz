@@ -103,7 +103,7 @@ public final class FZLayouts {
         return new Composer<>(base, container::getRectangle);
     }
 
-    public static class Composer<T extends Layout> {
+    public static final class Composer<T extends Layout> {
         private final Supplier<ScreenRectangle> screenArea;
         private final T current;
 

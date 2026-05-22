@@ -2,32 +2,20 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
-import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
-import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
-import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractContainerWidget;
 import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.TriState;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jspecify.annotations.Nullable;
@@ -36,26 +24,17 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class FZList extends AbstractContainerWidget implements Layout, ScrollableContainer, FZComponent, FZContextMenuEntry.Source {
-    private static final int DEFAULT_MAX_CONTENT_WIDTH = 270;
-    private static final int SEPARATOR_HEIGHT = 2;
-    private static final RenderableRectangle BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/menu_list_background.png"), 32, 32);
-    private static final RenderableRectangle INWORLD_BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/inworld_menu_list_background.png"), 32, 32);
-    private static final RenderableRectangle HEADER_SEPARATOR = Renderables.texture(Screen.HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
-    private static final RenderableRectangle INWORLD_HEADER_SEPARATOR = Renderables.texture(Screen.INWORLD_HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
-    private static final RenderableRectangle FOOTER_SEPARATOR = Renderables.texture(Screen.FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
-    private static final RenderableRectangle INWORLD_FOOTER_SEPARATOR = Renderables.texture(Screen.INWORLD_FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
+public class FZLayoutList extends AbstractListWidget implements Layout, FZComponent, FZContextMenuEntry.Source {
     protected static final int DEFAULT_WIDTH = 300;
     protected static final int DEFAULT_HEIGHT = 150;
     protected static final int DEFAULT_SCROLL_RATE = 10;
-    private final Minecraft minecraft;
     private final List<Entry> entries = new ArrayList<>();
     private final List<GuiEventListener> children = new ArrayList<>();
     private final List<NarratableEntry> narratables = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private FZFlexLayout layout;
-    private FZKeyed<BiConsumer<FZList, FZFlexLayout>> entryInitializer = FZKeyed.selfKey((_, _) -> {
+    private FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer = FZKeyed.selfKey((_, _) -> {
     });
     private int maxContentWidth = DEFAULT_MAX_CONTENT_WIDTH;
     private int contentPaddingLeft;
@@ -64,23 +43,22 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
     private int scrollRate;
     private ScreenRectangle bounds;
 
-    protected FZList(Minecraft minecraft, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
+    protected FZLayoutList(int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
         super(0, 0, width, height, message, scrollbarSettings);
-        this.minecraft = minecraft;
         scrollRate = scrollbarSettings.scrollRate();
         layout = FZLayouts.flexVertical();
         bounds = super.getRectangle();
     }
 
-    protected FZList(int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        this(Minecraft.getInstance(), width, height, message, scrollbarSettings);
-    }
-
-    protected FZList() {
+    protected FZLayoutList() {
         this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
-    public final void initializeEntries() {
+    protected void collectEntries(FZFlexLayout layout) {
+        entryInitializer.value().accept(this, layout);
+    }
+
+    public final void refreshEntries() {
         GuiEventListener lastFocused = getFocused();
         String lastFocusedId = null;
 
@@ -98,7 +76,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
 
         GuiComponentCollector collector = new GuiComponentCollector();
         FZFlexLayout newLayout = FZLayouts.flexVertical().maxWidth(contentWidth()).maxHeight(0);
-        onInitializeEntries(newLayout);
+        collectEntries(newLayout);
         newLayout.visitWidgets(collector::renderableWidget);
 
         MutableBoolean focusUnresolved = new MutableBoolean(true);
@@ -115,7 +93,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
             private int count = 0;
 
             @Override
-            public <T extends GuiEventListener & NarratableEntry> void fidgetz$visitWidget(T widget) {
+            public <T extends GuiEventListener & NarratableEntry> void visitWidget(T widget) {
                 String id = widget instanceof FZComponent component ? component.fidgetz$componentId() : null;
                 if (id == null) id = "FZList@%s-element-%s-%s".formatted(hashCode, count, widget.getClass().getName());
 
@@ -130,10 +108,6 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
                 }
             }
         };
-    }
-
-    protected void onInitializeEntries(FZFlexLayout layout) {
-        entryInitializer.value().accept(this, layout);
     }
 
     protected int maxContentWidth() {
@@ -157,19 +131,6 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         return layout.getHeight();
     }
 
-    protected int scrollbarReserve() {
-        return reserveScrollbarWidth() || scrollbarVisible() ? scrollbarWidth() : 0;
-    }
-
-    protected int contentWidth() {
-        int contentWidth = getWidth() - scrollbarReserve() - contentPaddingLeft() - contentPaddingRight();
-        return MathUtils.optionalMin(contentWidth, maxContentWidth());
-    }
-
-    protected boolean scrollbarVisible() {
-        return contentHeight() > getHeight();
-    }
-
     @Override
     protected int scrollBarX() {
         return Math.min(layout.getX() + layout.getWidth() + contentPaddingRight(), getRight() - scrollbarWidth());
@@ -188,49 +149,27 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         refreshScrollAmount();
     }
 
-    protected void extractBackgroundRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        RenderableRectangle background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
-        background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
-    }
-
-    protected void extractEntryRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    @Override
+    protected void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        ScreenRectangle bounds = getRectangle();
         for (Renderable renderable : renderables) {
-            renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            if (!(renderable instanceof LayoutElement element) || element.getRectangle().overlaps(bounds)) {
+                renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            }
         }
-    }
-
-    protected void extractSeparatorsRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        RenderableRectangle header = minecraft.level == null ? HEADER_SEPARATOR : INWORLD_HEADER_SEPARATOR;
-        RenderableRectangle footer = minecraft.level == null ? FOOTER_SEPARATOR : INWORLD_FOOTER_SEPARATOR;
-        header.extractRenderState(graphics, getX(), getY() - SEPARATOR_HEIGHT, getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
-        footer.extractRenderState(graphics, getX(), getBottom(), getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
     }
 
     @Override
     protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        extractBackgroundRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.enableScissor(getX(), getY(), getRight(), getBottom());
-        extractEntryRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.disableScissor();
-        extractSeparatorsRenderState(graphics, mouseX, mouseY, partialTick);
-        extractScrollbar(graphics, mouseX, mouseY);
+        super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTick);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
         }
     }
 
     @Override
-    protected boolean isOverScrollbar(double x, double y) {
-        return super.isOverScrollbar(x, y) && isHovered();
-    }
-
-    @Override
     public List<NarratableEntry> getNarratables() {
         return narratables;
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput output) {
     }
 
     @Override
@@ -241,10 +180,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
     @Override
     public void setX(int x) {
         super.setX(x);
-        layout.setX(Math.min(
-                x + (getWidth() / 2 - contentWidth() / 2) + contentPaddingLeft() - contentPaddingRight(),
-                getRight() - scrollbarReserve() - contentWidth()
-        ));
+        layout.setX(contentLeft());
     }
 
     @Override
@@ -269,33 +205,6 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
     public void setSize(int width, int height) {
         super.setSize(width, height);
         arrangeElements();
-    }
-
-    @Override
-    public void setFocused(boolean focused) {
-        if (!focused) {
-            setFocused(null);
-        }
-    }
-
-    @Override
-    public void setFocused(@Nullable GuiEventListener focused) {
-        if (getFocused() != focused) {
-            super.setFocused(focused);
-        }
-    }
-
-    @Override
-    public ScreenRectangle getBorderForArrowNavigation(ScreenDirection opposite) {
-        GuiEventListener focused = getFocused();
-        return focused != null
-                ? focused.getBorderForArrowNavigation(opposite)
-                : new ScreenRectangle(getX(), getY(), width, contentHeight()).getBorder(opposite);
-    }
-
-    @Override
-    public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-        return addScrollEffectOnFocus(navigationEvent, super.nextFocusPath(navigationEvent));
     }
 
     @Override
@@ -375,14 +284,6 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         return scrolled;
     }
 
-    @Override
-    public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
-        if (isActive() && getChildAt(mx, my).filter(child -> child.mouseScrolled(mx, my, scrollX, scrollY)).isPresent()) {
-            return true;
-        }
-        return super.mouseScrolled(mx, my, scrollX, scrollY) && scrollable();
-    }
-
     protected void applyProps(Props props) {
         this.propsState.apply(this, props);
 
@@ -397,17 +298,17 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         props.scrollRate().ifPresent(scrollRate -> this.scrollRate = scrollRate);
 
         props.entryInitializer().ifPresent(initializer -> {
-            FZKeyed<BiConsumer<FZList, FZFlexLayout>> previousEntryInitializer = this.entryInitializer;
+            FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> previousEntryInitializer = this.entryInitializer;
             this.entryInitializer = initializer;
             if (!Objects.equals(previousEntryInitializer, this.entryInitializer)) {
-                this.initializeEntries();
+                this.refreshEntries();
             }
         });
     }
 
-    public static FZList bind(String key, FZRef<Props> ref) {
+    public static FZLayoutList bind(String key, FZRef<Props> ref) {
         Props props = ref.value();
-        FZList list = new FZList();
+        FZLayoutList list = new FZLayoutList();
         list.applyProps(props);
         ref.subscribe(key, list::applyProps);
         return list;
@@ -441,13 +342,13 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
             return OptionalInt.empty();
         }
 
-        default Optional<FZKeyed<BiConsumer<FZList, FZFlexLayout>>> entryInitializer() {
+        default Optional<FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>>> entryInitializer() {
             return Optional.empty();
         }
     }
 
     protected static final class PropsImpl extends GuiComponentPropsBase implements Props {
-        private final @Nullable FZKeyed<BiConsumer<FZList, FZFlexLayout>> entryInitializer;
+        private final @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer;
         private final @Nullable Integer maxContentWidth;
         private final @Nullable Integer contentPaddingLeft;
         private final @Nullable Integer contentPaddingRight;
@@ -456,7 +357,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
 
         protected PropsImpl(
                 GuiComponentProps props,
-                @Nullable FZKeyed<BiConsumer<FZList, FZFlexLayout>> entryInitializer,
+                @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer,
                 @Nullable Integer maxContentWidth,
                 @Nullable Integer contentPaddingLeft,
                 @Nullable Integer contentPaddingRight,
@@ -473,7 +374,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         }
 
         @Override
-        public Optional<FZKeyed<BiConsumer<FZList, FZFlexLayout>>> entryInitializer() {
+        public Optional<FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>>> entryInitializer() {
             return Optional.ofNullable(entryInitializer);
         }
 
@@ -531,7 +432,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private ScrollbarSettings settings = AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
-        private @Nullable FZKeyed<BiConsumer<FZList, FZFlexLayout>> entryInitializer = null;
+        private @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer = null;
         private @Nullable Integer maxContentWidth;
         private @Nullable Integer contentPaddingLeft;
         private @Nullable Integer contentPaddingRight;
@@ -560,7 +461,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
             return this;
         }
 
-        public Builder entries(BiConsumer<FZList, FZFlexLayout> entryInitializer) {
+        public Builder entries(BiConsumer<FZLayoutList, FZFlexLayout> entryInitializer) {
             this.entryInitializer = FZKeyed.selfKey(entryInitializer);
             return this;
         }
@@ -572,7 +473,7 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
         }
 
 
-        public Builder entries(Object key, BiConsumer<FZList, FZFlexLayout> entryInitializer) {
+        public Builder entries(Object key, BiConsumer<FZLayoutList, FZFlexLayout> entryInitializer) {
             this.entryInitializer = new FZKeyed<>(key, Objects.requireNonNull(entryInitializer, "entryInitializer cannot be null"));
             return this;
         }
@@ -617,10 +518,10 @@ public class FZList extends AbstractContainerWidget implements Layout, Scrollabl
             );
         }
 
-        public FZList build() {
-            FZList list = new FZList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY), settings);
+        public FZLayoutList build() {
+            FZLayoutList list = new FZLayoutList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY), settings);
             list.applyProps(toProps());
-            list.initializeEntries();
+            list.refreshEntries();
             return list;
         }
     }

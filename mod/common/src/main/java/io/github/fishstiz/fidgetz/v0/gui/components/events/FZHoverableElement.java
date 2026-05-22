@@ -1,11 +1,11 @@
 package io.github.fishstiz.fidgetz.v0.gui.components.events;
 
 public interface FZHoverableElement {
-    private static UnsupportedOperationException notImplemented(String method) {
+    private UnsupportedOperationException notImplemented(String method) {
         return new UnsupportedOperationException("""
                 FZHoverableElement is only implemented for GuiEventListeners, \
-                override %s if implementing on a custom class.
-                """.formatted(method)
+                override %s if implementing on a custom class (%s).
+                """.formatted(method, getClass().getName())
         );
     }
 

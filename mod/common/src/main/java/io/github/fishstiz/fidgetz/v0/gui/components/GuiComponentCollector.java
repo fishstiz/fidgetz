@@ -4,10 +4,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class GuiComponentCollector {
@@ -35,7 +32,7 @@ public final class GuiComponentCollector {
         if (includeWidgets) {
             popover.fidgetz$visitWidgets(new WidgetVisitor() {
                 @Override
-                public <T extends GuiEventListener & NarratableEntry> void fidgetz$visitWidget(T widget) {
+                public <T extends GuiEventListener & NarratableEntry> void visitWidget(T widget) {
                     popoverWidgets.add(new OrderedEntry<>(widget, order));
                 }
             });
@@ -97,7 +94,7 @@ public final class GuiComponentCollector {
             Iterator<OrderedEntry<? extends GuiEventListener>> iterator = popoverWidgets.iterator();
             while (iterator.hasNext()) {
                 OrderedEntry<? extends GuiEventListener> entry = iterator.next();
-                widgetSink.fidgetz$visitWidget(asWidget(entry.value));
+                widgetSink.visitWidget(asWidget(entry.value));
                 iterator.remove();
             }
         }
@@ -105,7 +102,7 @@ public final class GuiComponentCollector {
         Iterator<GuiEventListener> widgetsIterator = widgets.iterator();
         while (widgetsIterator.hasNext()) {
             GuiEventListener widget = widgetsIterator.next();
-            widgetSink.fidgetz$visitWidget(asWidget(widget));
+            widgetSink.visitWidget(asWidget(widget));
             widgetsIterator.remove();
         }
 

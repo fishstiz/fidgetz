@@ -17,21 +17,21 @@ public class FlexWrapScreen extends FZScreen {
     }
 
     @Override
-    protected void onInitialize(GuiComponentCollector collector) {
+    protected void collectChildren(GuiComponentCollector collector) {
         FZLayouts.flexHorizontal(this).spacing(4).maxWidth(200).wrap().also(root -> {
             root.justifyContents(Justification.SPACE_EVENLY);
             root.alignContents(Justification.SPACE_EVENLY);
 
             for (int i = 1; i <= 13; i++) {
-                root.addChild(FZButton.builder()
+                root.child(FZButton.builder()
                         .message(Component.literal(String.valueOf(i)))
                         .onPress(e -> Fidgetz.LOG.info(e.target().getMessage().getString()))
                         .size(60, 20)
                         .build());
             }
 
-            root.addSpacer(root.flexChildHorizontalSettings());
-            root.addChild(
+            root.spacer(root.flexChildHorizontalSettings());
+            root.child(
                     FZButton.builder()
                             .message(Component.literal("flex-h"))
                             .onPress(e -> Fidgetz.LOG.info(e.target().getMessage().getString()))
@@ -40,7 +40,7 @@ public class FlexWrapScreen extends FZScreen {
                             .minFlexWidth(70)
                             .maxFlexWidth(100)
             );
-            root.addChild(
+            root.child(
                     FZButton.builder()
                             .message(Component.literal("flex-v"))
                             .onPress(e -> Fidgetz.LOG.info(e.target().getMessage().getString()))
@@ -48,7 +48,7 @@ public class FlexWrapScreen extends FZScreen {
                             .build(),
                     root.flexChildVerticalSettings().alignHorizontallyLeft()
             );
-            root.addChild(
+            root.child(
                     FZButton.builder()
                             .message(Component.literal("fixed"))
                             .onPress(e -> Fidgetz.LOG.info(e.target().getMessage().getString()))

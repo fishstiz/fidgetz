@@ -15,6 +15,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -149,6 +150,14 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent keyEvent) {
+        if (getValue().isEmpty() && (keyEvent.isLeft() || keyEvent.isRight())) {
+            return false;
+        }
+        return super.keyPressed(keyEvent);
     }
 
     @Override

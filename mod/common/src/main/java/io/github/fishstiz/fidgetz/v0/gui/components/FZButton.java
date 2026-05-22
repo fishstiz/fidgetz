@@ -17,7 +17,7 @@ public final class FZButton extends FZButtonBase {
     private @Nullable WidgetRenderables sprites = DEFAULT_RENDERABLES;
     private @Nullable WidgetElements leftIcon;
     private @Nullable WidgetElements rightIcon;
-    private TriState centeredMessage = TriState.TRUE;
+    private boolean centeredMessage = true;
 
     FZButton() {
     }
@@ -41,7 +41,7 @@ public final class FZButton extends FZButtonBase {
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         extractSprite(graphics, mouseX, mouseY, partialTick);
 
-        int margin = centeredMessage.toBoolean(true) ? TEXT_MARGIN : DEFAULT_SPACING;
+        int margin = centeredMessage ? TEXT_MARGIN : DEFAULT_SPACING;
         int spacing = DEFAULT_SPACING;
         int left = getX() + margin;
         int right = getRight() - margin;
@@ -50,23 +50,30 @@ public final class FZButton extends FZButtonBase {
         int bottom = top + height;
 
         if (leftIcon != null) {
-            left += spacing - margin;
-            int iconTop = top + height / 2 - leftIcon.height() / 2;
-            leftIcon.sprites().get(isActive(), isHoveredOrFocused())
+            left += spacing - margin + leftIcon.margin().left();
+
+            int iconTop = (top + height / 2 - leftIcon.height() / 2) + leftIcon.margin().top() - leftIcon.margin().bottom();
+
+            leftIcon.elements()
+                    .get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, left, iconTop, leftIcon.width(), leftIcon.height(), mouseX, mouseY, partialTick);
 
-            left += leftIcon.width() + spacing / 2;
+            left += leftIcon.width() + leftIcon.margin().right() + spacing / 2;
         }
 
         if (rightIcon != null) {
-            right -= spacing - margin + rightIcon.width();
-            int iconTop = top + height / 2 - rightIcon.height() / 2;
-            rightIcon.sprites().get(isActive(), isHoveredOrFocused())
+            right -= spacing - margin + rightIcon.width() + rightIcon.margin().right();
+
+            int iconTop = (top + height / 2 - rightIcon.height() / 2) + rightIcon.margin().top() - rightIcon.margin().bottom();
+
+            rightIcon.elements()
+                    .get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, right, iconTop, rightIcon.width(), rightIcon.height(), mouseX, mouseY, partialTick);
-            right -= spacing / 2;
+
+            right -= spacing / 2 + rightIcon.margin().left();
         }
 
-        if (centeredMessage.toBoolean(true)) {
+        if (centeredMessage) {
             graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
                     .acceptScrollingWithDefaultCenter(getMessage(), left, right, top, bottom);
         } else {
@@ -83,7 +90,7 @@ public final class FZButton extends FZButtonBase {
         props.leftIcon().ifDefined(leftIcon -> this.leftIcon = leftIcon);
         props.rightIcon().ifDefined(rightIcon -> this.rightIcon = rightIcon);
         if (props.centeredMessage() != TriState.DEFAULT) {
-            this.centeredMessage = props.centeredMessage();
+            this.centeredMessage = props.centeredMessage().toBoolean(true);
         }
     }
 

@@ -50,15 +50,15 @@ public class StatefulScreen extends FZScreen {
     }
 
     @Override
-    protected void onInitialize(GuiComponentCollector collector) {
+    protected void collectChildren(GuiComponentCollector collector) {
         FZFlexLayout rootLayout = FZLayouts.flexVertical(this).spacing(8).also(root -> {
-            var titleText = root.addChild(FZText.builder(title).build(), root.newChildSettings().alignHorizontallyCenter());
+            var titleText = root.child(FZText.builder(title).build(), root.newChildSettings().alignHorizontallyCenter());
 
             collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.BLUE)).toRenderable(titleText::getRectangle));
 
-            root.addChild(FZLayouts.flexVertical().spacing(8), root.flexChildSettings()).also(items -> {
-                items.addChild(FZLayouts.flexHorizontal().spacing(8), items.flexChildHorizontalSettings()).also(controls -> {
-                    controls.addChild(
+            root.child(FZLayouts.flexVertical().spacing(8), root.flexChildSettings()).also(items -> {
+                items.child(FZLayouts.flexHorizontal().spacing(8), items.flexChildHorizontalSettings()).also(controls -> {
+                    controls.child(
                             FZButton.bind("count", state.map(s -> FZButton.builder()
                                     .message(Component.literal("Count: " + s.itemCount()))
                                     .onPress(this::incrementCount)
@@ -73,13 +73,13 @@ public class StatefulScreen extends FZScreen {
                                     .maxFlexWidth(150)
                     );
 
-                    var spacer = controls.addSpacer(controls.flexChildSettings());
+                    var spacer = controls.spacer(controls.flexChildSettings());
 
                     collector.renderableOnly(Renderables.fill(ARGB.color(0.7f, CommonColors.YELLOW)).toRenderable(spacer::getRectangle));
                     collector.renderableOnly(Renderables.text(() -> Component.literal("Spacer:" + spacer.getWidth())
                             .withColor(CommonColors.BLACK).withoutShadow()).toRenderable(spacer::getRectangle));
 
-                    var reset = controls.addChild(
+                    var reset = controls.child(
                             FZButton.builder()
                                     .message(Component.literal("Reset Count"))
                                     .onPress(this::resetCount)
@@ -95,7 +95,7 @@ public class StatefulScreen extends FZScreen {
                             .pose(matrix -> matrix.translate(0, (float) reset.getHeight() / 2 + 4.5f))
                             .toPopover(reset::getRectangle));
 
-                    controls.addChild(state.bind(
+                    controls.child(state.bind(
                             "decrement1",
                             FZButton.builder()
                                     .onPress(this::decrementCount)
@@ -105,14 +105,14 @@ public class StatefulScreen extends FZScreen {
                             (s, btn) -> btn.active = s.itemCount > 0
                     ));
 
-                    controls.addChild(FZButton.bind("decrement2", state.map(s -> FZButton.builder()
+                    controls.child(FZButton.bind("decrement2", state.map(s -> FZButton.builder()
                             .square()
                             .message(Component.literal("-"))
                             .active(s.itemCount > 0)
                             .onPress(this::decrementCount)
                             .toProps())));
 
-                    controls.addChild(FZButton.builder()
+                    controls.child(FZButton.builder()
                             .square()
                             .message(Component.literal("+"))
                             .onPress(this::incrementCount)
@@ -122,11 +122,11 @@ public class StatefulScreen extends FZScreen {
                 });
 
                 var contents = FZLayouts.flexVertical().spacing(8);
-                var scrollableContents = items.addChild(
+                var scrollableContents = items.child(
                         FZLayouts.scrollable(this, state.bind("contents", contents, (s, c) -> {
-                            c.clearChildren();
+                            c.clear();
                             for (int i = 0; i < s.itemCount(); i++) {
-                                c.addChild(FZButton.builder().message(Component.literal("Item: " + i)).build(), c.flexChildHorizontalSettings());
+                                c.child(FZButton.builder().message(Component.literal("Item: " + i)).build(), c.flexChildHorizontalSettings());
                             }
                         })),
                         items.flexChildSettings()
@@ -138,16 +138,16 @@ public class StatefulScreen extends FZScreen {
                 state.subscribe("items-layout", items::arrangeElements);
             });
 
-            root.addChild(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(buttons -> {
+            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(buttons -> {
                 buttons.justifyContents(Justification.CENTER);
 
-                buttons.addChild(FZButton.bind("cycling-button", state.map(s -> FZButton.builder()
+                buttons.child(FZButton.bind("cycling-button", state.map(s -> FZButton.builder()
                         .message(CommonComponents.optionNameValue(Component.literal("Enum"), Component.literal(s.option.toString())))
                         .smallWidth()
                         .onPress(this::handleCycle)
                         .toProps())));
 
-                buttons.addChild(FZButton.bind("toggle-button", state.map(s -> FZButton.builder()
+                buttons.child(FZButton.bind("toggle-button", state.map(s -> FZButton.builder()
                         .smallWidth()
                         .message(CommonComponents.optionNameValue(Component.literal("Toggle"), CommonComponents.optionStatus(s.toggled)))
                         .onPress(this::toggleOption)
@@ -156,16 +156,16 @@ public class StatefulScreen extends FZScreen {
                 collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.BLUE)).toPopover(buttons::getRectangle));
             });
 
-            root.addChild(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
+            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
                 footer.justifyContents(Justification.CENTER);
 
-                footer.addChild(FZButton.builder()
+                footer.child(FZButton.builder()
                         .message(CommonComponents.GUI_CANCEL)
                         .bigWidth()
                         .onPress(this::onClose)
                         .build());
 
-                footer.addChild(FZButton.builder()
+                footer.child(FZButton.builder()
                         .message(CommonComponents.GUI_DONE)
                         .bigWidth()
                         .onPress(this::onClose)

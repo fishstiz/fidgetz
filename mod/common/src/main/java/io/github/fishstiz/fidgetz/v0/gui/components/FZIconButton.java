@@ -28,9 +28,9 @@ public final class FZIconButton extends FZButtonBase {
                     .extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }
         if (icon != null) {
-            int x = getX() + getWidth() / 2 - icon.width() / 2;
-            int y = getY() + getHeight() / 2 - icon.height() / 2;
-            icon.sprites()
+            int x = (getX() + getWidth() / 2 - icon.width() / 2) + icon.margin().left() - icon.margin().right();
+            int y = (getY() + getHeight() / 2 - icon.height() / 2) + icon.margin().top() - icon.margin().bottom();
+            icon.elements()
                     .get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, x, y, icon.width(), icon.height(), mouseX, mouseY, a);
         }

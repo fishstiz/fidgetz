@@ -22,22 +22,19 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
         super(title);
     }
 
-    protected abstract void onInitialize(GuiComponentCollector collector);
-
-    protected void openContextMenu(double x, double y) {
-        if (dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> !menu.isMouseOver(x, y)).orElse(true)) {
-            dialogManager.addOrReplace(GLOBAL_CONTEXT_MENU_ID, 0, FZContextMenu.builder(this)
-                    .buildAndOpen(x, y, fidgetz$collectContextEntries(x, y))
-            );
-        }
-    }
+    protected abstract void collectChildren(GuiComponentCollector collector);
 
     @Override
-    protected final void init() {
-        this.screenRectangle = super.getRectangle();
+    protected void init() {
         GuiComponentCollector collector = new GuiComponentCollector();
-        onInitialize(collector);
+        collectChildren(collector);
         collector.flushTo(this::addWidget, this::addRenderableOnly);
+    }
+
+    protected void openContextMenu(double x, double y) {
+        if (dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> menu.isMouseOver(x, y)).isEmpty()) {
+            dialogManager.put(FZContextMenu.builder(this).id(GLOBAL_CONTEXT_MENU_ID).buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
+        }
     }
 
     protected boolean canOpenContextMenu(MouseButtonEvent mouseButtonEvent) {

@@ -43,16 +43,16 @@ public final class ScreenRectangleUtils {
         return new ScreenRectangle(left, top, right - left, bottom - top);
     }
 
-    public static boolean isInsetsEmpty(ScreenRectangle padding) {
-        return padding.left() <= 0 && padding.top() <= 0 && padding.right() <= 0 && padding.bottom() <= 0;
+    public static boolean isInsetsEmpty(ScreenRectangle insets) {
+        return insets.left() <= 0 && insets.top() <= 0 && insets.right() <= 0 && insets.bottom() <= 0;
     }
 
     public static ScreenRectangle insets(int left, int top, int right, int bottom) {
         return new ScreenRectangle(left, top, right - left, bottom - top);
     }
 
-    public static ScreenRectangle insets(int padding) {
-        return new ScreenRectangle(padding, padding, 0, 0);
+    public static ScreenRectangle insets(int margin) {
+        return new ScreenRectangle(margin, margin, 0, 0);
     }
 
     public static ScreenRectangle expand(ScreenRectangle rectangle, ScreenRectangle insets) {
@@ -69,6 +69,22 @@ public final class ScreenRectangleUtils {
         int width = rectangle.width() - (insets.left() + insets.right());
         int height = rectangle.height() - (insets.top() + insets.bottom());
         return new ScreenRectangle(left, top, width, height);
+    }
+
+    public static ScreenRectangle withLeft(ScreenRectangle rectangle, int left) {
+        return new ScreenRectangle(left, rectangle.top(), rectangle.width(), rectangle.height());
+    }
+
+    public static ScreenRectangle withTop(ScreenRectangle rectangle, int top) {
+        return new ScreenRectangle(rectangle.left(), top, rectangle.width(), rectangle.height());
+    }
+
+    public static ScreenRectangle withWidth(ScreenRectangle rectangle, int width) {
+        return new ScreenRectangle(rectangle.left(), rectangle.top(), width, rectangle.height());
+    }
+
+    public static ScreenRectangle withHeight(ScreenRectangle rectangle, int height) {
+        return new ScreenRectangle(rectangle.left(), rectangle.top(), rectangle.width(), height);
     }
 
     private ScreenRectangleUtils() {

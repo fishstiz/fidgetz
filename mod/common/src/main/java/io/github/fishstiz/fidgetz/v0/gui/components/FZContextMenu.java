@@ -5,7 +5,6 @@ import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.gui.renderables.*;
 import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.ComponentPath;
@@ -102,13 +101,13 @@ public final class FZContextMenu extends FZDialog {
 
             if (current instanceof FZContextMenuEntry.Divider divider) {
                 if (canDivideNext && entryCount > 0) {
-                    content.addChild(new EntryWidget(divider.fallback() && sectionDivider != null ? sectionDivider : current));
+                    content.child(new EntryWidget(divider.fallback() && sectionDivider != null ? sectionDivider : current));
                 }
             } else {
-                content.addChild(new EntryWidget(current));
+                content.child(new EntryWidget(current));
                 entryCount++;
                 if (canDivideNext && entryDivider != null && current.canAutoDivideAfterEntry()) {
-                    content.addChild(new EntryWidget(entryDivider));
+                    content.child(new EntryWidget(entryDivider));
                 }
             }
         }
@@ -463,9 +462,16 @@ public final class FZContextMenu extends FZDialog {
         private FZContextMenuEntry.@Nullable Divider entryDivider = FZContextMenuEntryImpl.Divider.DEFAULT_ENTRY;
         private int maxHeight = DEFAULT_MAX_HEIGHT;
         private int entryWidth = DEFAULT_ENTRY_WIDTH;
+        private int popoverOrder = DEFAULT_POPOVER_ORDER;
+        private @Nullable String componentId;
 
         private Builder(FZDialogContainer container) {
             this.container = container;
+        }
+
+        public Builder id(String id) {
+            this.componentId = id;
+            return this;
         }
 
         public Builder background(@Nullable RenderableRectangle background) {
@@ -519,8 +525,13 @@ public final class FZContextMenu extends FZDialog {
             return this;
         }
 
+        public Builder popoverOrder(int popoverOrder) {
+            this.popoverOrder = popoverOrder;
+            return this;
+        }
+
         public FZContextMenu build() {
-            return new FZContextMenu(
+            FZContextMenu contextMenu = new FZContextMenu(
                     container,
                     preferredDirection,
                     background,
@@ -531,6 +542,9 @@ public final class FZContextMenu extends FZDialog {
                     entryWidth,
                     null
             );
+            contextMenu.componentId = componentId;
+            contextMenu.popoverOrder = popoverOrder;
+            return contextMenu;
         }
 
         public FZContextMenu buildAndOpen(double x, double y, List<? extends FZContextMenuEntry> entries) {

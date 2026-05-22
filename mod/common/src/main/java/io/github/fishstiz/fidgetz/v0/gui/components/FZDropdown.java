@@ -6,14 +6,9 @@ import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZScrollableLayout;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
-import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
-import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
-import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
-import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.*;
+import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.utils.text.TextComponentUtils;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.client.Minecraft;
@@ -34,15 +29,17 @@ import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.TriState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class FZDropdown extends Button.Plain implements FZComponent, FZContextMenuEntry.Source, FZPopoverContainer, Layout {
-    private static final int TEXT_SPACING = 8;
+    private static final int DEFAULT_ELEMENT_SPACING = 8;
     private static final int ENTRY_SPACING = 4;
     private static final int DEFAULT_SELECTION_HEIGHT = 200;
     private static final RenderableRectangle DEFAULT_DIVIDER = Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider"));
@@ -53,6 +50,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private final int collapseWidth;
     private final int expandWidth;
     private List<Entry> entries = Collections.emptyList();
+    private boolean hideMessage;
+    private @Nullable WidgetElements leftIcon;
     private int maxContainerHeight = DEFAULT_SELECTION_HEIGHT;
     private int minContainerWidth;
     private HorizontalDirection preferredDirection = HorizontalDirection.RIGHT;
@@ -81,9 +80,9 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         layout.defaultChildSettings().flexCross();
 
         for (int i = 0; i < entries.size(); i++) {
-            layout.addChild(entries.get(i).toWidget(this));
+            layout.child(entries.get(i).toWidget(this));
             if (i + 1 < entries.size()) {
-                layout.addChild(FZIconButton.builder(entryDivider)
+                layout.child(FZIconButton.builder(entryDivider)
                         .height(ENTRY_SPACING)
                         .disableCursorChanges()
                         .inactive()
@@ -131,18 +130,31 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         int width = getWidth();
         int height = getHeight();
         int right = getRight();
-        int bottom = getBottom();
-        int spacing = TEXT_SPACING;
+        int spacing = DEFAULT_ELEMENT_SPACING;
 
         right -= spacing + interactIconWidth;
 
+        if (leftIcon != null) {
+            left += spacing + leftIcon.margin().left();
+
+            int iconY = (top + height / 2 - leftIcon.height() / 2) + leftIcon.margin().top() - leftIcon.margin().bottom();
+
+            leftIcon.elements()
+                    .get(isActive(), isHoveredOrFocused())
+                    .extractRenderState(graphics, left, iconY, leftIcon.width(), leftIcon.height(), mouseX, mouseY, partialTick);
+
+            left += spacing + leftIcon.width() + leftIcon.margin().right();
+        }
+
         ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
 
-        int symbolX = MathUtils.clampOrAverage(right, left + spacing, right);
+        if (!hideMessage) {
+            GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left + spacing, top, right - spacing, getBottom());
+        }
+
+        int symbolX = MathUtils.clampOrAverage(right, getX() + spacing, right);
         int symbolY = top + (height / 2) - (font.lineHeight / 2);
         textRenderer.accept(symbolX, symbolY, getInteractSymbol());
-
-        GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left + spacing, top, right - spacing, bottom);
 
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
@@ -276,6 +288,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         propsState.apply(this, props);
 
+        if (props.hideMessage() != TriState.DEFAULT) {
+            hideMessage = props.hideMessage().toBoolean(false);
+        }
+        props.leftIcon().ifDefined(leftIcon -> this.leftIcon = leftIcon);
         props.containerBackground().ifPresent(containerBackground -> selectionContainer.background = containerBackground);
         props.maxContainerHeight().ifPresent(maxContainerHeight -> {
             this.maxContainerHeight = maxContainerHeight;
@@ -477,7 +493,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         @Override
         public void fidgetz$visitWidgets(WidgetVisitor visitor) {
-            visitor.fidgetz$visitWidget(this);
+            visitor.visitWidget(this);
         }
 
         @Override
@@ -496,83 +512,32 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
     }
 
-    public record Entry(
-            Component message,
-            FZKeyed<BooleanSupplier> selectionHandler,
-            @Nullable WidgetElements sprites,
-            boolean active
-    ) {
+    public record Entry(FZKeyed<BooleanSupplier> selectionHandler, UnaryOperator<FZButton.Builder> builderFactory) {
         private static final WidgetRenderables BACKGROUND = new WidgetRenderables(
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry")),
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry")),
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry_highlighted"))
         );
 
-        public Entry {
-            Objects.requireNonNull(message, "message cannot be null");
-            Objects.requireNonNull(selectionHandler, "selectionHandler cannot be null");
+        public Entry(BooleanSupplier selectionHandler, UnaryOperator<FZButton.Builder> builderFactory) {
+            this(FZKeyed.selfKey(selectionHandler), builderFactory);
         }
 
-        public Entry(Component message, FZKeyed<BooleanSupplier> selectionHandler) {
-            this(message, selectionHandler, null, true);
+        public Entry(BooleanSupplier selectionHandler) {
+            this(FZKeyed.selfKey(selectionHandler), (UnaryOperator<FZButton.Builder>) Function.<FZButton.Builder>identity());
         }
 
-        public Entry withMessage(Component message) {
-            return new Entry(message, selectionHandler, sprites, active);
-        }
-
-        public Entry withHandler(Object key, BooleanSupplier selectionHandler) {
-            return new Entry(message, new FZKeyed<>(key, selectionHandler), sprites, active);
-        }
-
-        public Entry withHandler(Object key, Runnable selectionHandler) {
-            Objects.requireNonNull(selectionHandler, "selectionHandler cannot be null");
-            return withHandler(key, () -> {
-                selectionHandler.run();
-                return true;
-            });
-        }
-
-        public Entry withHandler(Runnable selectionHandler) {
-            return withHandler(selectionHandler, selectionHandler);
-        }
-
-        public Entry withHandler(BooleanSupplier selectionHandler) {
-            return new Entry(message, FZKeyed.selfKey(selectionHandler), sprites, active);
-        }
-
-        public Entry withIcon(WidgetElements sprites) {
-            return new Entry(message, selectionHandler, sprites, active);
-        }
-
-        public Entry withIcon(WidgetRenderables sprites) {
-            Objects.requireNonNull(sprites, "sprites cannot be null");
-            return new Entry(message, selectionHandler, new WidgetElements(sprites, 16, 16), active);
-        }
-
-        public Entry withIcon(RenderableRectangle icon) {
-            return withIcon(new WidgetRenderables(Objects.requireNonNull(icon, "icon cannot be null")));
-        }
-
-        public Entry withActive(boolean active) {
-            return new Entry(message, selectionHandler, null, active);
-        }
-
-        private AbstractWidget toWidget(FZDropdown dropdown) {
-            FZButton.Builder builder = FZButton.builder()
+        private FZButton toWidget(FZDropdown dropdown) {
+            return builderFactory.apply(FZButton.builder()
                     .height(DEFAULT_HEIGHT)
                     .sprites(BACKGROUND)
-                    .message(message)
                     .onPress(selectionHandler.key(), () -> {
                         if (selectionHandler.value().getAsBoolean()) {
                             dropdown.closeSelection();
                             dropdown.parentContainer.setFocused(dropdown);
                         }
                     })
-                    .active(active)
-                    .leftAlignedMessage();
-
-            return sprites == null ? builder.build() : builder.rightIcon(sprites).build();
+                    .leftAlignedMessage()).build();
         }
     }
 
@@ -580,6 +545,14 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         ContainerEventHandler parentContainer();
 
         List<Entry> entries();
+
+        default TriState hideMessage() {
+            return TriState.DEFAULT;
+        }
+
+        default Undefinable<@Nullable WidgetElements> leftIcon() {
+            return Undefinable.undefined();
+        }
 
         default Optional<RenderableRectangle> containerBackground() {
             return Optional.empty();
@@ -601,6 +574,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private static final class PropsImpl extends GuiComponentPropsBase implements Props {
         private final ContainerEventHandler parentContainer;
         private final List<Entry> entries;
+        private final TriState hideMessage;
+        private final Undefinable<@Nullable WidgetElements> leftIcon;
         private final @Nullable RenderableRectangle containerBackground;
         private final @Nullable Integer maxContainerHeight;
         private final @Nullable IntObjectPair<HorizontalDirection> minContainerWidth;
@@ -609,6 +584,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private PropsImpl(
                 ContainerEventHandler parentContainer,
                 List<Entry> entries,
+                TriState hideMessage,
+                Undefinable<@Nullable WidgetElements> leftIcon,
                 @Nullable RenderableRectangle containerBackground,
                 @Nullable Integer maxContainerHeight,
                 @Nullable IntObjectPair<HorizontalDirection> minContainerWidth,
@@ -618,6 +595,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             super(props);
             this.parentContainer = parentContainer;
             this.entries = entries;
+            this.hideMessage = hideMessage;
+            this.leftIcon = leftIcon;
             this.containerBackground = containerBackground;
             this.maxContainerHeight = maxContainerHeight;
             this.minContainerWidth = minContainerWidth;
@@ -632,6 +611,16 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         @Override
         public List<Entry> entries() {
             return entries;
+        }
+
+        @Override
+        public TriState hideMessage() {
+            return hideMessage;
+        }
+
+        @Override
+        public Undefinable<@Nullable WidgetElements> leftIcon() {
+            return leftIcon;
         }
 
         @Override
@@ -661,6 +650,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             return super.equals(o) &&
                    Objects.equals(parentContainer, other.parentContainer()) &&
                    Objects.equals(entries, other.entries()) &&
+                   hideMessage == other.hideMessage() &&
+                   Objects.equals(leftIcon, other.leftIcon()) &&
                    Objects.equals(containerBackground(), other.containerBackground()) &&
                    Objects.equals(maxContainerHeight(), other.maxContainerHeight()) &&
                    Objects.equals(entryDivider(), other.entryDivider());
@@ -672,6 +663,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                     super.hashCode(),
                     parentContainer,
                     entries,
+                    hideMessage,
+                    leftIcon,
                     containerBackground,
                     maxContainerHeight,
                     entryDivider
@@ -681,7 +674,9 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private final ContainerEventHandler container;
-        private final List<Entry> options = new ArrayList<>();
+        private final List<Entry> entries = new ArrayList<>();
+        private TriState hideMessage = TriState.DEFAULT;
+        private Undefinable<@Nullable WidgetElements> leftIcon = Undefinable.undefined();
         private @Nullable RenderableRectangle containerBackground;
         private @Nullable Integer maxContainerHeight;
         private @Nullable IntObjectPair<HorizontalDirection> minContainerWidth;
@@ -689,6 +684,20 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         private Builder(ContainerEventHandler container) {
             this.container = container;
+        }
+
+        public Builder hideMessage(boolean hideMessage) {
+            this.hideMessage = TriState.from(hideMessage);
+            return this;
+        }
+
+        public Builder hideMessage() {
+            return hideMessage(true);
+        }
+
+        public Builder leftIcon(WidgetElements leftIcon) {
+            this.leftIcon = Undefinable.of(leftIcon);
+            return this;
         }
 
         public Builder containerBackground(@Nullable RenderableRectangle containerBackground) {
@@ -715,12 +724,12 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         public Builder entries(List<Entry> options) {
-            this.options.addAll(options);
+            this.entries.addAll(options);
             return this;
         }
 
         public Builder entries(Entry... options) {
-            this.options.addAll(Arrays.asList(options));
+            this.entries.addAll(Arrays.asList(options));
             return this;
         }
 
@@ -730,17 +739,17 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                 selectionHandler.run();
                 return true;
             };
-            this.options.add(new Entry(message, FZKeyed.selfKey(handler)));
+            this.entries.add(new Entry(FZKeyed.selfKey(handler), builder -> builder.message(message)));
             return this;
         }
 
-        public Builder entry(UnaryOperator<Entry> entryBuilder) {
-            this.options.add(entryBuilder.apply(new Entry(CommonComponents.EMPTY, FZKeyed.selfKey(() -> true))));
+        public Builder entry(UnaryOperator<FZButton.Builder> entryBuilder) {
+            this.entries.add(new Entry(() -> true, entryBuilder));
             return this;
         }
 
         public Builder entry(Entry entry) {
-            this.options.add(entry);
+            this.entries.add(entry);
             return this;
         }
 
@@ -752,7 +761,9 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         public Props toProps() {
             return new PropsImpl(
                     container,
-                    List.copyOf(options),
+                    List.copyOf(entries),
+                    hideMessage,
+                    leftIcon,
                     containerBackground,
                     maxContainerHeight,
                     minContainerWidth,

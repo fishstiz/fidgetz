@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AbstractContainerEventHandlerMixin",
+    "AbstractSelectionListEntryMixin",
     "AbstractWidgetMixin",
     "ContainerEventHandlerMixin",
     "GuiEventListenerMixin",

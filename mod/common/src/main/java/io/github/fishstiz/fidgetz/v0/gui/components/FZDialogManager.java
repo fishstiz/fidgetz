@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class FZDialogManager {
-    private static final Comparator<DialogEntry> DIALOG_COMPARATOR = Comparator.comparingInt(DialogEntry::order);
+    private static final Comparator<DialogEntry> DIALOG_COMPARATOR = Comparator.comparingInt(e -> e.dialog.fidgetz$popoverOrder());
     private final FZDialogContainer container;
     private final Consumer<FZDialog> widgetAdder;
     private final Consumer<FZDialog> widgetRemover;
@@ -47,9 +47,8 @@ public final class FZDialogManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends FZDialog> void addOrReplace(String id, int order, T dialog, Consumer<T> closer) {
-        Objects.requireNonNull(id, "id cannot be null");
-        Objects.requireNonNull(dialog, "dialog cannot be null");
+    public <T extends FZDialog> void put(T dialog, Consumer<T> closer) {
+        String id = Objects.requireNonNull(dialog.fidgetz$componentId(), "dialog id cannot be null");
 
         if (dialog.container != container) {
             throw new IllegalArgumentException("The dialog's (%s) container must be the same as the dialog manager's".formatted(id));
@@ -60,23 +59,23 @@ public final class FZDialogManager {
             previous.close();
         }
 
-        dialogsById.put(id, new DialogEntry(order, dialog, (Consumer<FZDialog>) closer));
+        dialogsById.put(id, new DialogEntry(dialog, (Consumer<FZDialog>) closer));
         updateDialogList();
     }
 
-    public void addOrReplace(String id, int order, FZDialog dialog) {
-        addOrReplace(id, order, dialog, d -> d.setOpen(false));
+    public void put(FZDialog dialog) {
+        put(dialog, d -> d.setOpen(false));
     }
 
-    public <T extends FZDialog> void addIfClosed(String id, int order, Supplier<T> fallback, Consumer<T> closer) {
+    public <T extends FZDialog> void putIfClosed(String id, Supplier<T> fallback, Consumer<T> closer) {
         DialogEntry entry = dialogsById.get(id);
         if (entry == null || !entry.dialog.isOpen()) {
-            addOrReplace(id, order, fallback.get(), closer);
+            put(fallback.get(), closer);
         }
     }
 
-    public void addIfClosed(String id, int order, Supplier<FZDialog> fallback) {
-        addIfClosed(id, order, fallback, d -> d.setOpen(false));
+    public void putIfClosed(String id, Supplier<FZDialog> fallback) {
+        putIfClosed(id, fallback, d -> d.setOpen(false));
     }
 
     public void remove(String id) {
@@ -99,7 +98,7 @@ public final class FZDialogManager {
         return dialogList;
     }
 
-    private record DialogEntry(int order, FZDialog dialog, Consumer<FZDialog> closer) {
+    private record DialogEntry(FZDialog dialog, Consumer<FZDialog> closer) {
         private void close() {
             closer.accept(dialog);
         }

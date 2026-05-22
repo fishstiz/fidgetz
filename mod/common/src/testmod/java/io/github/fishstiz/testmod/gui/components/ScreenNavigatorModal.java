@@ -27,14 +27,15 @@ public class ScreenNavigatorModal extends FZModal {
 
     @Override
     protected void onOpen() {
-        contents.clearChildren();
+        contents.clear();
         Minecraft minecraft = Minecraft.getInstance();
-        contents.addChild(Button.builder(Component.literal("Test Screen"), _ -> minecraft.setScreen(new TestmodScreen())).build());
-        contents.addChild(Button.builder(Component.literal("Flex Screen"), _ -> minecraft.setScreen(new FlexScreen())).build());
-        contents.addChild(Button.builder(Component.literal("FZ Screen"), _ -> minecraft.setScreen(new FZTestScreen())).build());
-        contents.addChild(Button.builder(Component.literal("Wrap Screen"), _ -> minecraft.setScreen(new FlexWrapScreen())).build());
-        contents.addChild(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
-        contents.addChild(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
+        contents.child(Button.builder(Component.literal("Test Screen"), _ -> minecraft.setScreen(new TestmodScreen())).build());
+        contents.child(Button.builder(Component.literal("Flex Screen"), _ -> minecraft.setScreen(new FlexScreen())).build());
+        contents.child(Button.builder(Component.literal("FZ Screen"), _ -> minecraft.setScreen(new FZTestScreen())).build());
+        contents.child(Button.builder(Component.literal("Wrap Screen"), _ -> minecraft.setScreen(new FlexWrapScreen())).build());
+        contents.child(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
+        contents.child(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
+        contents.child(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.setScreen(new AbstractListScreen())).build());
         layout.arrangeElements();
         super.onOpen();
     }
@@ -60,7 +61,7 @@ public class ScreenNavigatorModal extends FZModal {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
         return super.mouseClicked(event, doubleClick) || areCoordinatesInBounds(event.x(), event.y());
     }
 
