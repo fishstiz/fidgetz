@@ -143,9 +143,18 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
 
     @Override
     public void arrangeElements() {
+        int contentWidth = contentWidth();
         layout.arrangeElements();
-        layout.fidgetz$setWidth(contentWidth());
-        setPosition(getX(), getY());
+        layout.fidgetz$setWidth(contentWidth);
+        layout.setPosition(getX(), getY());
+
+        if (!reserveScrollbarWidth()) {
+            int newContentWidth = contentWidth();
+            if (contentWidth != newContentWidth) {
+                layout.fidgetz$setWidth(newContentWidth);
+            }
+        }
+
         refreshScrollAmount();
     }
 
@@ -234,7 +243,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
 
     @Override
     public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnNavigation;
+        return propsState.focusOnInteraction;
     }
 
     @Override

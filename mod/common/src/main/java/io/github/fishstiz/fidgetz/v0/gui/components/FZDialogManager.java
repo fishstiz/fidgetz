@@ -37,7 +37,7 @@ public final class FZDialogManager {
         this.widgetRemover = widgetRemover;
     }
 
-    private void updateDialogList() {
+    public void refreshDialogs() {
         dialogList.forEach(widgetRemover);
         dialogList = dialogsById.values().stream()
                 .sorted(DIALOG_COMPARATOR)
@@ -60,7 +60,7 @@ public final class FZDialogManager {
         }
 
         dialogsById.put(id, new DialogEntry(dialog, (Consumer<FZDialog>) closer));
-        updateDialogList();
+        refreshDialogs();
     }
 
     public void put(FZDialog dialog) {
@@ -81,13 +81,13 @@ public final class FZDialogManager {
     public void remove(String id) {
         DialogEntry previous = dialogsById.remove(id);
         if (previous != null) previous.dialog.setOpen(false);
-        updateDialogList();
+        refreshDialogs();
     }
 
     public void clear() {
         dialogsById.values().stream().sorted(DIALOG_COMPARATOR).forEachOrdered(DialogEntry::close);
         dialogsById.clear();
-        updateDialogList();
+        refreshDialogs();
     }
 
     public Optional<FZDialog> get(String id) {

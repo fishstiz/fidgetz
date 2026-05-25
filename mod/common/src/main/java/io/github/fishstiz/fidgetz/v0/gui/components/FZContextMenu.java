@@ -30,13 +30,16 @@ public final class FZContextMenu extends FZDialog {
             .then(Renderables.sprite(Fidgetz.id("widget/contextmenu")));
     private static final int DEFAULT_MAX_HEIGHT = 240;
     private static final int DEFAULT_ENTRY_WIDTH = 150;
+    private static final int DEFAULT_SPACING = 1;
     private final HorizontalDirection preferredDirection;
     private final @Nullable RenderableRectangle background;
     private final FZContextMenuEntry.@Nullable Divider sectionDivider;
     private final FZContextMenuEntry.@Nullable Divider entryDivider;
     private final ScreenRectangle padding;
+    private final int rowSpacing;
     private final int maxHeight;
-    private final int entryWidth;
+    private final int minWidth;
+    private final boolean focusOnOpen;
     private final @Nullable FZContextMenu parent;
     private @Nullable ChildDetails child;
     private HorizontalDirection direction;
@@ -49,8 +52,10 @@ public final class FZContextMenu extends FZDialog {
             FZContextMenuEntry.@Nullable Divider sectionDivider,
             FZContextMenuEntry.@Nullable Divider entryDivider,
             ScreenRectangle padding,
+            int rowSpacing,
             int maxHeight,
-            int entryWidth,
+            int minWidth,
+            boolean focusOnOpen,
             @Nullable FZContextMenu parent
     ) {
         super(container);
@@ -60,8 +65,10 @@ public final class FZContextMenu extends FZDialog {
         this.sectionDivider = sectionDivider;
         this.entryDivider = entryDivider;
         this.padding = padding;
+        this.rowSpacing = rowSpacing;
         this.maxHeight = maxHeight;
-        this.entryWidth = entryWidth;
+        this.minWidth = minWidth;
+        this.focusOnOpen = focusOnOpen;
         this.parent = parent;
     }
 
@@ -72,7 +79,7 @@ public final class FZContextMenu extends FZDialog {
 
     @Override
     public boolean shouldFocusOnOpen() {
-        return parent == null;
+        return parent == null && focusOnOpen;
     }
 
     @Override
@@ -91,8 +98,9 @@ public final class FZContextMenu extends FZDialog {
             return;
         }
 
-        FZFlexLayout content = FZLayouts.flexVertical().spacing(1);
+        FZFlexLayout content = FZLayouts.flexVertical().spacing(rowSpacing);
         int entryCount = 0;
+        int entryWidth = minWidth;
 
         for (int i = 0; i < entries.size(); i++) {
             FZContextMenuEntry current = entries.get(i);
@@ -105,6 +113,7 @@ public final class FZContextMenu extends FZDialog {
                 }
             } else {
                 content.child(new EntryWidget(current));
+                entryWidth = Math.max(entryWidth, current.minWidth());
                 entryCount++;
                 if (canDivideNext && entryDivider != null && current.canAutoDivideAfterEntry()) {
                     content.child(new EntryWidget(entryDivider));
@@ -117,14 +126,17 @@ public final class FZContextMenu extends FZDialog {
             return;
         }
 
+        if (entryWidth > minWidth) {
+            int width = entryWidth;
+            content.visitWidgets(widget -> widget.setWidth(width));
+        }
+
         Layout layout = FZLayouts.composer(container, content)
                 .padded(padding.left(), padding.top(), padding.right(), padding.bottom())
-                .padded(-1)
                 .scrollable(scrollable -> scrollable
                         .scrollbarSpacing(0)
-                        .minWidth(entryWidth)
+                        .minWidth(minWidth)
                         .maxHeight(maxHeight))
-                .padded(1)
                 .arrange()
                 .get();
 
@@ -209,8 +221,10 @@ public final class FZContextMenu extends FZDialog {
                 sectionDivider,
                 entryDivider,
                 padding,
+                rowSpacing,
                 maxHeight,
-                entryWidth,
+                minWidth,
+                focusOnOpen,
                 this
         );
 
@@ -282,7 +296,7 @@ public final class FZContextMenu extends FZDialog {
         private boolean lastHovered;
 
         private EntryWidget(FZContextMenuEntry entry) {
-            super(0, 0, FZContextMenu.this.entryWidth, entry.height(), entry.message());
+            super(0, 0, FZContextMenu.this.minWidth, entry.height(), entry.message());
             this.entry = entry;
         }
 
@@ -461,9 +475,11 @@ public final class FZContextMenu extends FZDialog {
         private FZContextMenuEntry.@Nullable Divider sectionDivider = FZContextMenuEntryImpl.Divider.DEFAULT_SECTION;
         private FZContextMenuEntry.@Nullable Divider entryDivider = FZContextMenuEntryImpl.Divider.DEFAULT_ENTRY;
         private int maxHeight = DEFAULT_MAX_HEIGHT;
-        private int entryWidth = DEFAULT_ENTRY_WIDTH;
+        private int minWidth = DEFAULT_ENTRY_WIDTH;
         private int popoverOrder = DEFAULT_POPOVER_ORDER;
+        private int rowSpacing = DEFAULT_SPACING;
         private @Nullable String componentId;
+        private boolean focusOnOpen = true;
 
         private Builder(FZDialogContainer container) {
             this.container = container;
@@ -501,6 +517,16 @@ public final class FZContextMenu extends FZDialog {
             return this;
         }
 
+        public Builder noEntryDivider() {
+            this.entryDivider = null;
+            return this;
+        }
+
+        public Builder rowSpacing(int spacing) {
+            this.rowSpacing = spacing;
+            return this;
+        }
+
         public Builder preferredDirection(HorizontalDirection preferredDirection) {
             this.preferredDirection = preferredDirection;
             return this;
@@ -520,14 +546,23 @@ public final class FZContextMenu extends FZDialog {
             return this;
         }
 
-        public Builder entryWidth(int entryWidth) {
-            this.entryWidth = entryWidth;
+        public Builder minWidth(int minWidth) {
+            this.minWidth = minWidth;
             return this;
         }
 
         public Builder popoverOrder(int popoverOrder) {
             this.popoverOrder = popoverOrder;
             return this;
+        }
+
+        public Builder focusOnOpen(boolean focusOnOpen) {
+            this.focusOnOpen = focusOnOpen;
+            return this;
+        }
+
+        public Builder focusOnOpen() {
+            return focusOnOpen(true);
         }
 
         public FZContextMenu build() {
@@ -538,8 +573,10 @@ public final class FZContextMenu extends FZDialog {
                     sectionDivider,
                     entryDivider,
                     padding,
+                    rowSpacing,
                     maxHeight,
-                    entryWidth,
+                    minWidth,
+                    focusOnOpen,
                     null
             );
             contextMenu.componentId = componentId;

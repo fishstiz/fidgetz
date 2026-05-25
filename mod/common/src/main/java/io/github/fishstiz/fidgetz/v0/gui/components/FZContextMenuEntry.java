@@ -26,14 +26,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public interface FZContextMenuEntry {
     int DEFAULT_HEIGHT = 20;
+    int DEFAULT_MIN_WIDTH = 0;
 
     void extractRenderState(GuiGraphicsExtractor graphics, Context context, int mouseX, int mouseY, float partialTick);
 
     default int height() {
         return DEFAULT_HEIGHT;
+    }
+
+    default int minWidth() {
+        return DEFAULT_MIN_WIDTH;
     }
 
     default boolean active() {
@@ -75,8 +81,12 @@ public interface FZContextMenuEntry {
     default void updateNarration(NarrationElementOutput output, Context context) {
     }
 
-    static FZContextMenuEntry.Divider sectionDivider() {
+    static Divider sectionDivider() {
         return FZContextMenuEntryImpl.Divider.DEFAULT_SECTION;
+    }
+
+    static Divider createDivider(RenderableRectangle rectangle, int height) {
+        return new FZContextMenuEntryImpl.Divider(rectangle, height);
     }
 
     static Builder builder() {
@@ -130,6 +140,12 @@ public interface FZContextMenuEntry {
     interface Collector {
         void addEntry(FZContextMenuEntry entry);
 
+        default void addEntry(UnaryOperator<FZContextMenuEntry.Builder> builderConfigurator) {
+            FZContextMenuEntry.Builder builder = FZContextMenuEntry.builder();
+            builderConfigurator.apply(builder);
+            addEntry(builder.build());
+        }
+
         default Collector nextSection() {
             addEntry(sectionDivider());
             return this;
@@ -161,7 +177,7 @@ public interface FZContextMenuEntry {
         );
         private final List<FZContextMenuEntry> children = new ArrayList<>();
         private @Nullable Supplier<@Nullable WidgetRenderables> backgroundSupplier = () -> DEFAULT_BACKGROUND;
-        private @Nullable Supplier<@Nullable WidgetRenderables> iconSupplier;
+        private @Nullable Supplier<@Nullable WidgetElements> iconSupplier;
         private @Nullable Supplier<@Nullable Component> messageSupplier;
         private FZContextMenuEntryImpl.@Nullable TooltipHolder tooltipHolder;
         private @Nullable BooleanSupplier activeSupplier;
@@ -173,6 +189,7 @@ public interface FZContextMenuEntry {
         private boolean playClickSoundOnInteraction = true;
         private boolean applyCursorWhenActive = true;
         private int height = DEFAULT_HEIGHT;
+        private int minWidth = DEFAULT_MIN_WIDTH;
         private boolean keyboardActionCopied = false;
 
         private Builder() {
@@ -192,16 +209,22 @@ public interface FZContextMenuEntry {
             return background(new WidgetRenderables(Objects.requireNonNull(background, "background cannot be null")));
         }
 
-        public Builder icon(@Nullable Supplier<@Nullable WidgetRenderables> iconSupplier) {
+        public Builder icon(@Nullable Supplier<@Nullable WidgetElements> iconSupplier) {
             this.iconSupplier = iconSupplier;
             return this;
         }
 
-        public Builder icon(WidgetRenderables icon) {
+        public Builder icon(WidgetElements icon) {
             return icon(() -> icon);
         }
 
+        public Builder icon(WidgetRenderables icon) {
+            Objects.requireNonNull(icon, "icon cannot be null");
+            return icon(new WidgetElements(icon, 16, 16));
+        }
+
         public Builder icon(RenderableRectangle icon) {
+            Objects.requireNonNull(icon, "icon cannot be null");
             return icon(new WidgetRenderables(icon));
         }
 
@@ -243,6 +266,11 @@ public interface FZContextMenuEntry {
 
         public Builder child(FZContextMenuEntry child) {
             children.add(child);
+            return this;
+        }
+
+        public Builder child(UnaryOperator<FZContextMenuEntry.Builder> builderConfigurator) {
+            children.add(builderConfigurator.apply(FZContextMenuEntry.builder()).build());
             return this;
         }
 
@@ -410,7 +438,8 @@ public interface FZContextMenuEntry {
                     allowDivideAfterEntry,
                     playClickSoundOnInteraction,
                     applyCursorWhenActive && mouseAction != null,
-                    height
+                    height,
+                    minWidth
             );
         }
 

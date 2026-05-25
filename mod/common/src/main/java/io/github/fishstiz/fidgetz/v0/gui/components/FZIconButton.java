@@ -82,7 +82,7 @@ public final class FZIconButton extends FZButtonBase {
         }
     }
 
-    static class PropsImpl extends FZButtonBase.PropsImpl implements Props {
+    private static final class PropsImpl extends FZButtonBase.PropsImpl implements Props {
         private final Undefinable<@Nullable WidgetRenderables> background;
         private final Undefinable<@Nullable WidgetElements> icon;
 
@@ -123,7 +123,7 @@ public final class FZIconButton extends FZButtonBase {
         }
     }
 
-    public static class Builder extends AbstractBuilder<Builder, FZIconButton, Props> {
+    public static final class Builder extends AbstractBuilder<Builder, FZIconButton, Props> {
         private Undefinable<@Nullable WidgetRenderables> background;
         private Undefinable<@Nullable WidgetElements> icon = Undefinable.undefined();
 

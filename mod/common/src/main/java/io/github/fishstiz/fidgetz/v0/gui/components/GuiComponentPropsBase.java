@@ -19,11 +19,12 @@ public class GuiComponentPropsBase implements GuiComponentProps {
     public @Nullable Integer height;
     public TriState active = TriState.DEFAULT;
     public TriState visible = TriState.DEFAULT;
-    public TriState focusOnNavigation = TriState.DEFAULT;
+    public TriState focusOnInteraction = TriState.DEFAULT;
     public @Nullable Component message;
     public Undefinable<@Nullable Tooltip> tooltip = Undefinable.undefined();
     public Undefinable<@Nullable RenderableRectangle> overlay = Undefinable.undefined();
     public @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries;
+    public @Nullable Integer tabOrderGroup;
 
     private GuiComponentPropsBase() {
     }
@@ -34,11 +35,12 @@ public class GuiComponentPropsBase implements GuiComponentProps {
         props.height().ifPresent(h -> this.height = h);
         ifNonDefault(props.active(), a -> this.active = a);
         ifNonDefault(props.visible(), a -> this.visible = a);
-        ifNonDefault(props.focusOnNavigation(), a -> this.focusOnNavigation = a);
+        ifNonDefault(props.focusOnInteraction(), a -> this.focusOnInteraction = a);
         props.message().ifPresent(m -> this.message = m);
         this.tooltip = props.tooltip();
         this.overlay = props.overlay();
         props.contextEntries().ifPresent(contextEntries -> this.contextEntries = contextEntries);
+        props.tabOrderGroup().ifPresent(tabOrderGroup -> this.tabOrderGroup = tabOrderGroup);
     }
 
     public static GuiComponentPropsBase defaults() {
@@ -81,8 +83,8 @@ public class GuiComponentPropsBase implements GuiComponentProps {
     }
 
     @Override
-    public TriState focusOnNavigation() {
-        return focusOnNavigation;
+    public TriState focusOnInteraction() {
+        return focusOnInteraction;
     }
 
     @Override
@@ -106,6 +108,11 @@ public class GuiComponentPropsBase implements GuiComponentProps {
     }
 
     @Override
+    public OptionalInt tabOrderGroup() {
+        return wrapBoxedInt(tabOrderGroup);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof GuiComponentProps other)) return false;
@@ -113,11 +120,12 @@ public class GuiComponentPropsBase implements GuiComponentProps {
                && Objects.equals(height(), other.height())
                && active() == other.active()
                && visible() == other.visible()
-               && focusOnNavigation() == other.focusOnNavigation()
+               && focusOnInteraction() == other.focusOnInteraction()
                && Objects.equals(message(), other.message())
                && Objects.equals(tooltip(), other.tooltip())
                && Objects.equals(overlay(), other.overlay())
-               && Objects.equals(contextEntries(), other.contextEntries());
+               && Objects.equals(contextEntries(), other.contextEntries())
+               && Objects.equals(tabOrderGroup(), other.tabOrderGroup());
     }
 
     @Override
@@ -127,11 +135,12 @@ public class GuiComponentPropsBase implements GuiComponentProps {
                 height,
                 active,
                 visible,
-                focusOnNavigation,
+                focusOnInteraction,
                 message,
                 tooltip,
                 overlay,
-                contextEntries
+                contextEntries,
+                tabOrderGroup
         );
     }
 }

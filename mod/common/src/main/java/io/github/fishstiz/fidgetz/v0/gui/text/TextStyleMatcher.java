@@ -1,9 +1,9 @@
-package io.github.fishstiz.fidgetz.v0.utils.text;
+package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import net.minecraft.network.chat.Style;
 
 public interface TextStyleMatcher {
-    boolean stylable(String input);
+    boolean styleable(String input);
 
     void reset(String input);
 

@@ -93,7 +93,10 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
                     return true;
                 }
             }
+            fidgetz$setHovered(null);
+            return true;
         }
+        fidgetz$setHovered(null);
         return hovered;
     }
 

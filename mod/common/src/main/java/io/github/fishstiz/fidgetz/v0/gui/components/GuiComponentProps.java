@@ -33,7 +33,7 @@ public interface GuiComponentProps {
         return TriState.DEFAULT;
     }
 
-    default TriState focusOnNavigation() {
+    default TriState focusOnInteraction() {
         return TriState.DEFAULT;
     }
 
@@ -51,5 +51,9 @@ public interface GuiComponentProps {
 
     default Optional<FZKeyed<Consumer<FZContextMenuEntry.Collector>>> contextEntries() {
         return Optional.empty();
+    }
+
+    default OptionalInt tabOrderGroup() {
+        return OptionalInt.empty();
     }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entry> {
     public AbstractListTest() {
         for (int i = 0; i < 20; i++) {
-            children.add(new Entry(i));
+            addEntry(new Entry(i));
         }
         repositionEntries();
     }
@@ -65,7 +65,7 @@ public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entr
 
         @Override
         protected int getMarginBottom() {
-            return getIndex() == AbstractListTest.this.children.size() - 1 ? 20 : 0;
+            return getIndex() == AbstractListTest.this.children().size() - 1 ? 20 : 0;
         }
 
         @Override

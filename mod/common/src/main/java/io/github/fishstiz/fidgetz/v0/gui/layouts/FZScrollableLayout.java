@@ -181,7 +181,6 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
 
-
         @Override
         public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
             if (isActive() && getChildAt(mx, my).filter(child -> child.mouseScrolled(mx, my, scrollX, scrollY)).isPresent()) {

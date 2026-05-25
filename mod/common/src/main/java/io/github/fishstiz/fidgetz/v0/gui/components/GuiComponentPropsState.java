@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 public class GuiComponentPropsState {
     public @Nullable String id;
-    public boolean focusOnNavigation = true;
+    public boolean focusOnInteraction = true;
     public @Nullable RenderableRectangle overlay = null;
     public Consumer<FZContextMenuEntry.Collector> contextEntries = FunctionUtils.nopConsumer();
 
@@ -18,7 +18,7 @@ public class GuiComponentPropsState {
 
     private void apply(GuiComponentProps props) {
         props.id().ifPresent(id -> this.id = id);
-        GuiComponentPropsBase.ifNonDefault(props.focusOnNavigation(), f -> this.focusOnNavigation = f.toBoolean(true));
+        GuiComponentPropsBase.ifNonDefault(props.focusOnInteraction(), f -> this.focusOnInteraction = f.toBoolean(true));
         props.overlay().ifDefined(overlay -> this.overlay = overlay);
         props.contextEntries().ifPresent(entries -> this.contextEntries = entries.value());
     }
@@ -30,6 +30,7 @@ public class GuiComponentPropsState {
         GuiComponentPropsBase.ifNonDefault(props.visible(), a -> widget.visible = a.toBoolean(true));
         props.tooltip().ifDefined(widget::setTooltip);
         props.message().ifPresent(widget::setMessage);
+        props.tabOrderGroup().ifPresent(widget::setTabOrderGroup);
         apply(props);
     }
 }

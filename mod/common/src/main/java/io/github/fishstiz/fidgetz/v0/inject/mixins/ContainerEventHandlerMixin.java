@@ -31,6 +31,10 @@ interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContai
     }
 
     @Override
+    default void fidgetz$setHovered(@Nullable GuiEventListener hovered) {
+    }
+
+    @Override
     default boolean fidgetz$isHovered() {
         return FZHoverableContainer.super.fidgetz$isHovered();
     }

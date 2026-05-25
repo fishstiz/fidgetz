@@ -111,10 +111,6 @@ public final class GuiGraphicsUtils {
         texture(graphics, texture, x, y, textureWidth, textureHeight, textureWidth, textureHeight);
     }
 
-    public static void fill(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int color) {
-        graphics.fill(x, y, x + width, y + height, color);
-    }
-
     public static void fillFloat(GuiGraphicsExtractor graphics, float left, float top, float right, float bottom, int color) {
         Matrix3x2f pose = new Matrix3x2f(graphics.pose());
         ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
@@ -152,14 +148,41 @@ public final class GuiGraphicsUtils {
         });
     }
 
-    public static void horizontalLineFloat(GuiGraphicsExtractor graphics, float left, float right, float y, int col) {
-        if (right < left) {
-            float tmp = left;
-            left = right;
-            right = tmp;
-        }
+    public static void fillHorizontal(GuiGraphicsExtractor graphics, int left, int top, int right, int bottom, int colorFrom, int colorTo) {
+        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
+        ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
+        ScreenRectangle bounds = new ScreenRectangle(left, top, right - left, bottom - top).transformMaxBounds(pose);
+        ScreenRectangle intersection = scissorArea == null ? bounds : scissorArea.intersection(bounds);
 
-        fillFloat(graphics, left, y, right + 1, y + 1, col);
+        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, new GuiElementRenderState() {
+            @Override
+            public void buildVertices(VertexConsumer vertexConsumer) {
+                vertexConsumer.addVertexWith2DPose(pose, left, top).setColor(colorFrom);
+                vertexConsumer.addVertexWith2DPose(pose, left, bottom).setColor(colorFrom);
+                vertexConsumer.addVertexWith2DPose(pose, right, bottom).setColor(colorTo);
+                vertexConsumer.addVertexWith2DPose(pose, right, top).setColor(colorTo);
+            }
+
+            @Override
+            public RenderPipeline pipeline() {
+                return RenderPipelines.GUI;
+            }
+
+            @Override
+            public TextureSetup textureSetup() {
+                return TextureSetup.noTexture();
+            }
+
+            @Override
+            public @Nullable ScreenRectangle scissorArea() {
+                return scissorArea;
+            }
+
+            @Override
+            public @Nullable ScreenRectangle bounds() {
+                return intersection;
+            }
+        });
     }
 
     public static void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {

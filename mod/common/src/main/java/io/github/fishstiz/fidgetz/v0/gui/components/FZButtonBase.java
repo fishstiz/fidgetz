@@ -76,7 +76,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
 
     @Override
     public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnNavigation;
+        return propsState.focusOnInteraction;
     }
 
     @Override

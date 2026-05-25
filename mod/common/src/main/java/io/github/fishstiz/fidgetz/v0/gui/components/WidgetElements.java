@@ -44,18 +44,18 @@ public record WidgetElements(WidgetRenderables elements, int width, int height, 
     }
 
     public WidgetElements marginLeft(int marginLeft) {
-        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(marginLeft, 0, 0, 0));
+        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(marginLeft, margin.top(), margin.right(), margin.bottom()));
     }
 
     public WidgetElements marginTop(int marginTop) {
-        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(0, marginTop, 0, 0));
+        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(margin.left(), marginTop, margin.right(), margin.bottom()));
     }
 
     public WidgetElements marginRight(int marginRight) {
-        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(0, 0, marginRight, 0));
+        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(margin.left(), margin.top(), marginRight, margin.bottom()));
     }
 
     public WidgetElements marginBottom(int marginBottom) {
-        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(0, 0, 0, marginBottom));
+        return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(margin.left(), margin.top(), margin.right(), marginBottom));
     }
 }

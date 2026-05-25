@@ -69,7 +69,10 @@ abstract class AbstractSelectionListEntryMixin implements LayoutElement, FZHover
                     return true;
                 }
             }
+            fidgetz$setHovered(null);
+            return true;
         }
+        fidgetz$setHovered(null);
         return hovered;
     }
 }

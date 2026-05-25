@@ -126,20 +126,30 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
     @Override
     public void fidgetz$setWidth(int width) {
+        int previousMaxWidth = this.maxWidth;
         maxWidth(width);
-        arrangeElements();
+        if (previousMaxWidth != maxWidth) {
+            arrangeElements();
+        }
     }
 
     @Override
     public void fidgetz$setHeight(int height) {
+        int previousMaxHeight = this.maxHeight;
         maxHeight(height);
-        arrangeElements();
+        if (previousMaxHeight != maxHeight) {
+            arrangeElements();
+        }
     }
 
     @Override
     public void fidgetz$setSize(int width, int height) {
+        int previousMaxWidth = this.maxWidth;
+        int previousMaxHeight = this.maxHeight;
         maxSize(width, height);
-        arrangeElements();
+        if (previousMaxWidth != maxWidth || previousMaxHeight != maxHeight) {
+            arrangeElements();
+        }
     }
 
     public ScreenAxis mainAxis() {

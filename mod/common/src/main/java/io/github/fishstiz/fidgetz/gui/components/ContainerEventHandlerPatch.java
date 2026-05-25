@@ -5,6 +5,7 @@ import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.jspecify.annotations.NonNull;
 
+@Deprecated
 public interface ContainerEventHandlerPatch extends ContainerEventHandler {
     @Override
     default boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClicked) {

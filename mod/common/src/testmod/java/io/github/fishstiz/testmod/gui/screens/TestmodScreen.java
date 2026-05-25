@@ -61,6 +61,7 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
                             .then(Renderables.fill(CommonColors.DARK_GRAY))
                             .then(Renderables.outline(CommonColors.GRAY)))
                     .uncentered()
+                    .height(height)
                     .backdrop(null)
                     .captureFocus(false)
                     .captureClick(false)

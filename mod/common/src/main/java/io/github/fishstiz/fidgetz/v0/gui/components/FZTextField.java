@@ -8,8 +8,8 @@ import io.github.fishstiz.fidgetz.v0.utils.CollectionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
-import io.github.fishstiz.fidgetz.v0.utils.text.TextStyleFormatter;
-import io.github.fishstiz.fidgetz.v0.utils.text.TextStyleMatcher;
+import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleFormatter;
+import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleMatcher;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private final Formatter formatter = new Formatter();
     private final Consumer<String> responder;
     private final boolean bound;
-    private Consumer<String> changeHandler = FunctionUtils.nopConsumer();
+    private Consumer<ChangeEvent> changeHandler = FunctionUtils.nopConsumer();
+    private Function<ConfirmEvent, @Nullable Boolean> confirmHandler = FunctionUtils.nullFunction();
     private ScreenRectangle bounds;
     private Predicate<String> filter = _ -> true;
     private int disableResponderCount = 0;
@@ -87,8 +89,11 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
 
     private void handleChange(String value) {
         boolean valid = filter.test(value);
+        boolean isBound = isBound();
+
         disableResponder();
-        if (!valid || isBound()) {
+
+        if (!valid || isBound) {
             int cursorPos = getCursorPosition();
             int highlightPos = getHighlightPosition();
 
@@ -96,24 +101,26 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             setCursorPosition(previousCursorPos);
             setHighlightPos(previousHighlightPos);
 
-            if (isBound()) {
+            if (valid) {
                 pendingValue = value;
                 pendingCursorPos = cursorPos;
                 pendingHighlightPos = highlightPos;
-                changeHandler.accept(value);
+                changeHandler.accept(new ChangeEvent(this, value));
             }
         } else {
             previousValue = value;
             previousHighlightPos = getHighlightPosition();
             previousCursorPos = getCursorPosition();
-            changeHandler.accept(value);
+            changeHandler.accept(new ChangeEvent(this, value));
         }
+
         enableResponder();
     }
 
     private void setBoundValue(String value) {
         valueBound = true;
         disableResponder();
+
         setValue(value);
         if (value.equals(pendingValue)) {
             setCursorPosition(pendingCursorPos);
@@ -125,6 +132,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         previousValue = value;
         previousHighlightPos = getHighlightPosition();
         previousCursorPos = getCursorPosition();
+
         enableResponder();
     }
 
@@ -157,7 +165,13 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         if (getValue().isEmpty() && (keyEvent.isLeft() || keyEvent.isRight())) {
             return false;
         }
-        return super.keyPressed(keyEvent);
+        if (super.keyPressed(keyEvent)) {
+            return true;
+        }
+        if (keyEvent.isConfirmation()) {
+            return Boolean.TRUE.equals(confirmHandler.apply(new ConfirmEvent(this, keyEvent)));
+        }
+        return false;
     }
 
     @Override
@@ -179,6 +193,11 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     @Override
     public void addFormatter(TextFormatter formatter) {
         this.formatter.formatters = CollectionUtils.addLast(this.formatter.formatters, formatter);
+    }
+
+    @Override
+    public boolean shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
     }
 
     @Override
@@ -208,6 +227,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         }
 
         props.changeHandler().ifPresent(changeHandler -> this.changeHandler = changeHandler.value());
+        props.confirmHandler().ifPresent(confirmHandler -> this.confirmHandler = confirmHandler.value());
     }
 
     public static FZTextField bind(String key, FZRef<Props> ref) {
@@ -232,6 +252,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             }
             return null;
         }
+    }
+
+    public record ChangeEvent(FZTextField target, String value) {
+    }
+
+    public record ConfirmEvent(FZTextField target, KeyEvent keyEvent) {
     }
 
     public interface Props extends GuiComponentProps {
@@ -267,7 +293,11 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return Optional.empty();
         }
 
-        default Optional<FZKeyed<Consumer<String>>> changeHandler() {
+        default Optional<FZKeyed<Consumer<ChangeEvent>>> changeHandler() {
+            return Optional.empty();
+        }
+
+        default Optional<FZKeyed<Function<ConfirmEvent, Boolean>>> confirmHandler() {
             return Optional.empty();
         }
     }
@@ -281,7 +311,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private final @Nullable List<FZKeyed<TextFormatter>> formatters;
         private final @Nullable List<TextStyleMatcher> styleMatchers;
         private final @Nullable FZKeyed<Predicate<String>> filter;
-        private final @Nullable FZKeyed<Consumer<String>> changeHandler;
+        private final @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
+        private final @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler;
 
         private PropsImpl(
                 GuiComponentProps props,
@@ -293,7 +324,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 @Nullable List<FZKeyed<TextFormatter>> formatters,
                 @Nullable List<TextStyleMatcher> styleMatchers,
                 @Nullable FZKeyed<Predicate<String>> filter,
-                @Nullable FZKeyed<Consumer<String>> changeHandler
+                @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler,
+                @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler
         ) {
             super(props);
             this.text = text;
@@ -305,6 +337,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             this.styleMatchers = styleMatchers;
             this.filter = filter;
             this.changeHandler = changeHandler;
+            this.confirmHandler = confirmHandler;
         }
 
         @Override
@@ -348,8 +381,13 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         }
 
         @Override
-        public Optional<FZKeyed<Consumer<String>>> changeHandler() {
+        public Optional<FZKeyed<Consumer<ChangeEvent>>> changeHandler() {
             return Optional.ofNullable(changeHandler);
+        }
+
+        @Override
+        public Optional<FZKeyed<Function<ConfirmEvent, Boolean>>> confirmHandler() {
+            return Optional.ofNullable(confirmHandler);
         }
 
         @Override
@@ -365,7 +403,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                    Objects.equals(formatters(), other.formatters()) &&
                    Objects.equals(styleMatchers(), other.styleMatchers()) &&
                    Objects.equals(filter(), other.filter()) &&
-                   Objects.equals(changeHandler(), other.changeHandler());
+                   Objects.equals(changeHandler(), other.changeHandler()) &&
+                   Objects.equals(confirmHandler(), other.confirmHandler());
         }
 
         @Override
@@ -380,7 +419,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     formatters,
                     styleMatchers,
                     filter,
-                    changeHandler
+                    changeHandler,
+                    confirmHandler
             );
         }
     }
@@ -393,7 +433,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private @Nullable Integer maxLength;
         private @Nullable List<FZKeyed<TextFormatter>> formatters;
         private @Nullable FZKeyed<Predicate<String>> filter;
-        private @Nullable FZKeyed<Consumer<String>> changeHandler;
+        private @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
+        private @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler;
         private @Nullable List<TextStyleMatcher> styleMatchers;
 
         private Builder() {
@@ -455,23 +496,40 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return formatter(formatter, formatter);
         }
 
-        public Builder styleMatcher(TextStyleMatcher styler) {
-            if (styleMatchers == null) {
-                styleMatchers = Lists.newArrayList(styler);
+        public Builder styleMatcher(TextStyleMatcher styleMatcher) {
+            if (this.styleMatchers == null) {
+                this.styleMatchers = Lists.newArrayList(styleMatcher);
             } else {
-                styleMatchers.add(styler);
+                this.styleMatchers.add(styleMatcher);
             }
             return this;
         }
 
-        public Builder onChange(Object key, Consumer<String> changeHandler) {
-            this.changeHandler = new FZKeyed<>(key, changeHandler);
+        public Builder styleMatchers(List<TextStyleMatcher> styleMatchers) {
+            if (this.styleMatchers == null) {
+                this.styleMatchers = new ArrayList<>(styleMatchers);
+            } else {
+                this.styleMatchers.addAll(styleMatchers);
+            }
             return this;
         }
 
-        public Builder onChange(Consumer<String> changeHandler) {
-            this.changeHandler = FZKeyed.selfKey(changeHandler);
+        public Builder onChange(Object key, Consumer<ChangeEvent> changeHandler) {
+            this.changeHandler = new FZKeyed<>(key, Objects.requireNonNull(changeHandler, "changeHandler cannot be null"));
             return this;
+        }
+
+        public Builder onChange(Consumer<ChangeEvent> changeHandler) {
+            return onChange(changeHandler, changeHandler);
+        }
+
+        public Builder onConfirm(Object key, Function<ConfirmEvent, Boolean> confirmHandler) {
+            this.confirmHandler = new FZKeyed<>(key, Objects.requireNonNull(confirmHandler, "confirmHandler cannot be null"));
+            return this;
+        }
+
+        public Builder onConfirm(Function<ConfirmEvent, Boolean> confirmHandler) {
+            return onConfirm(confirmHandler, confirmHandler);
         }
 
         public Props toProps() {
@@ -485,7 +543,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     formatters,
                     styleMatchers,
                     filter,
-                    changeHandler
+                    changeHandler,
+                    confirmHandler
             );
         }
 

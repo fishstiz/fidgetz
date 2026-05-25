@@ -31,14 +31,18 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
         collector.flushTo(this::addWidget, this::addRenderableOnly);
     }
 
-    protected void openContextMenu(double x, double y) {
-        if (dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> menu.isMouseOver(x, y)).isEmpty()) {
-            dialogManager.put(FZContextMenu.builder(this).id(GLOBAL_CONTEXT_MENU_ID).buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
-        }
+    protected void openContextMenu(double x, double y, boolean focus) {
+        dialogManager.put(FZContextMenu.builder(this)
+                .id(GLOBAL_CONTEXT_MENU_ID)
+                .focusOnOpen(focus)
+                .buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
     }
 
     protected boolean canOpenContextMenu(MouseButtonEvent mouseButtonEvent) {
-        return mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT;
+        double x = mouseButtonEvent.x();
+        double y = mouseButtonEvent.y();
+        return mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT &&
+               dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> !menu.isMouseOver(x, y)).orElse(true);
     }
 
     protected boolean shouldCloseOnEscape() {
@@ -62,10 +66,14 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
         if (fidgetz$captureEventForDialogs(event)) {
             return true;
         }
+
+        boolean clicked = super.mouseClicked(event, doubleClick);
+
         if (canOpenContextMenu(event)) {
-            openContextMenu(event.x(), event.y());
+            openContextMenu(event.x(), event.y(), !clicked);
         }
-        return super.mouseClicked(event, doubleClick);
+
+        return clicked;
     }
 
     @Override

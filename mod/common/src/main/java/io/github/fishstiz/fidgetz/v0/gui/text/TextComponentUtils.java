@@ -1,4 +1,4 @@
-package io.github.fishstiz.fidgetz.v0.utils.text;
+package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import net.minecraft.network.chat.Component;
 

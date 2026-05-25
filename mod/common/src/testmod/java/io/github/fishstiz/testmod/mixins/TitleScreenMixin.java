@@ -54,6 +54,8 @@ public abstract class TitleScreenMixin extends Screen implements FZDialogContain
         layout.addChild(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
         layout.addChild(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
         layout.addChild(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.setScreen(new AbstractListScreen())).build());
+        layout.addChild(Button.builder(Component.literal("GradientScreen"), _ -> minecraft.setScreen(new GradientScreen())).build());
+        layout.addChild(Button.builder(Component.literal("Screenz"), _ -> minecraft.setScreen(new Screenz())).build());
         layout.arrangeElements();
         layout.visitWidgets(this::addRenderableWidget);
     }

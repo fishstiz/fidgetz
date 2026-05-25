@@ -10,6 +10,7 @@ public final class FunctionUtils {
     private static final Consumer<Object> NO_OP_CONSUMER = _ -> {
     };
     private static final Supplier<@Nullable Object> NULL_SUPPLIER = () -> null;
+    private static final Function<Object, @Nullable Object> NULL_FUNCTION = _ -> null;
 
     public static Runnable nop() {
         return NO_OP;
@@ -23,6 +24,11 @@ public final class FunctionUtils {
     @SuppressWarnings("unchecked")
     public static <T> Supplier<@Nullable T> nullSupplier() {
         return (Supplier<T>) NULL_SUPPLIER;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, R> Function<T, @Nullable R> nullFunction() {
+        return (Function<T, R>) NULL_FUNCTION;
     }
 
     private FunctionUtils() {

@@ -1,7 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.state;
 
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -11,24 +10,21 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-public class FZMutableRef<T extends @Nullable Object> implements FZRef<T> {
-    private final Map<String, Runnable> subscribers = Collections.synchronizedMap(new LinkedHashMap<>());
-    private T state;
+public class FZMutableRef<T> implements FZRef<T> {
+    private volatile Map<String, Subscriber> subscribers = Collections.emptyMap();
+    private volatile T state;
 
     public FZMutableRef(T initialValue) {
         this.state = initialValue;
     }
 
     public void notifySubscribers() {
-        synchronized (subscribers) {
-            subscribers.values().forEach(Runnable::run);
-        }
+        subscribers.values().forEach(Subscriber::run);
     }
 
     public void clearSubscribers() {
-        synchronized (subscribers) {
-            subscribers.clear();
-        }
+        subscribers.values().forEach(Subscriber::cancel);
+        subscribers = Collections.emptyMap();
     }
 
     public void set(T newState) {
@@ -40,7 +36,7 @@ public class FZMutableRef<T extends @Nullable Object> implements FZRef<T> {
     }
 
     public void set(UnaryOperator<T> function) {
-        set(function.apply(state));
+        set(function.apply(this.state));
     }
 
     @Override
@@ -49,34 +45,57 @@ public class FZMutableRef<T extends @Nullable Object> implements FZRef<T> {
     }
 
     public void unsubscribe(String id) {
-        synchronized (subscribers) {
-            subscribers.remove(id);
-        }
+        Map<String, Subscriber> newSubscribers = new LinkedHashMap<>(this.subscribers);
+        Subscriber removed = newSubscribers.remove(id);
+        if (removed != null) removed.cancel();
+        this.subscribers = newSubscribers;
+    }
+
+    private void put(String key, Subscriber subscriber) {
+        Map<String, Subscriber> newSubscribers = new LinkedHashMap<>(this.subscribers);
+        Subscriber removed = newSubscribers.put(key, subscriber);
+        if (removed != null) removed.cancel();
+        this.subscribers = newSubscribers;
     }
 
     @Override
-    public <R extends @Nullable Object> Runnable subscribe(String key, Function<T, R> selector, Consumer<R> callback) {
+    public <R> Runnable subscribe(String key, Function<T, R> selector, Consumer<R> callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
         MutableObject<R> last = new MutableObject<>(selector.apply(this.state));
-        Runnable subscriber = () -> {
+        put(key, new Subscriber(() -> {
             R next = selector.apply(this.state);
             if (!Objects.equals(next, last.get())) {
                 last.setValue(next);
                 callback.accept(next);
             }
-        };
-        synchronized (subscribers) {
-            subscribers.put(key, subscriber);
-        }
+        }));
         return () -> unsubscribe(key);
     }
 
     @Override
     public Runnable subscribe(String key, Consumer<T> callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
-        synchronized (subscribers) {
-            subscribers.put(key, () -> callback.accept(this.state));
-        }
+        put(key, new Subscriber(() -> callback.accept(this.state)));
         return () -> unsubscribe(key);
+    }
+
+    private static final class Subscriber implements Runnable {
+        private final Runnable task;
+        private volatile boolean active = true;
+
+        Subscriber(Runnable task) {
+            this.task = task;
+        }
+
+        @Override
+        public void run() {
+            if (active) {
+                task.run();
+            }
+        }
+
+        void cancel() {
+            active = false;
+        }
     }
 }

@@ -9,7 +9,7 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.utils.text.TextComponentUtils;
+import io.github.fishstiz.fidgetz.v0.gui.text.TextComponentUtils;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
@@ -82,11 +82,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         for (int i = 0; i < entries.size(); i++) {
             layout.child(entries.get(i).toWidget(this));
             if (i + 1 < entries.size()) {
-                layout.child(FZIconButton.builder(entryDivider)
-                        .height(ENTRY_SPACING)
-                        .disableCursorChanges()
-                        .inactive()
-                        .build());
+                layout.child(FZIcon.builder(entryDivider).height(ENTRY_SPACING).build());
             }
         }
 
@@ -181,7 +177,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
     @Override
     public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnNavigation;
+        return propsState.focusOnInteraction;
     }
 
     @Override
@@ -257,6 +253,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         int anchor = preferredDirection.flip().edge(getRectangle());
         HorizontalDirection resolvedDirection = preferredDirection.resolve(containerBounds, containerWidth, anchor);
+        anchor = resolvedDirection.flip().edge(getRectangle());
         int containerX = resolvedDirection.clamp(containerBounds, containerWidth, anchor);
 
         int containerY;
@@ -510,6 +507,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         public void visitWidgets(Consumer<AbstractWidget> widgetVisitor) {
             if (layout != null) layout.visitWidgets(widgetVisitor);
         }
+
+        @Override
+        public int getTabOrderGroup() {
+            return FZDropdown.this.getTabOrderGroup();
+        }
     }
 
     public record Entry(FZKeyed<BooleanSupplier> selectionHandler, UnaryOperator<FZButton.Builder> builderFactory) {
@@ -695,7 +697,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             return hideMessage(true);
         }
 
-        public Builder leftIcon(WidgetElements leftIcon) {
+        public Builder leftIcon(@Nullable WidgetElements leftIcon) {
             this.leftIcon = Undefinable.of(leftIcon);
             return this;
         }

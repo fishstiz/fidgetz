@@ -1,6 +1,7 @@
 package io.github.fishstiz.testmod.gui.screens;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.*;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZClampedLayout;
@@ -226,7 +227,7 @@ public class ListScreen extends FZScreen {
 
                 layout.spacer().height(4);
                 layout.child(FZTextField.builder()
-                        .onChange(textFieldState::set)
+                        .onChange(e -> textFieldState.set(e.value()))
                         .hint(Component.literal("update below..."))
                         .build());
                 layout.child(FZTextField.bind("textfield", textFieldState.map(value -> FZTextField.builder()
@@ -244,7 +245,7 @@ public class ListScreen extends FZScreen {
                 layout.child(FZTextField.bind("textfield2", textFieldState2.map(value -> FZTextField.builder()
                         .hint(Component.literal("textfieldstate2"))
                         .text(value)
-                        .onChange(textFieldState2::set)
+                        .onChange(e -> textFieldState2.set(e.value()))
                         .toProps())));
 
                 layout.spacer().height(4);
@@ -296,7 +297,7 @@ public class ListScreen extends FZScreen {
                             .active(q.count > 0)
                             .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count - 1)))
                             .build());
-                    row.child(new WrappedComponent(FZButton.builder()
+                    row.child((FZFlexElement) new WrappedComponent(FZButton.builder()
                             .square()
                             .message(Component.literal("+"))
                             .contextEntries(FZContextMenuEntry.builder().message(Component.literal("Hello world!")).build())

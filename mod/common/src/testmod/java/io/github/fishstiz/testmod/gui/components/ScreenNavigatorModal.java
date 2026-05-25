@@ -36,6 +36,8 @@ public class ScreenNavigatorModal extends FZModal {
         contents.child(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
         contents.child(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
         contents.child(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.setScreen(new AbstractListScreen())).build());
+        contents.child(Button.builder(Component.literal("GradientScreen"), _ -> minecraft.setScreen(new GradientScreen())).build());
+        contents.child(Button.builder(Component.literal("Screenz"), _ -> minecraft.setScreen(new Screenz())).build());
         layout.arrangeElements();
         super.onOpen();
     }

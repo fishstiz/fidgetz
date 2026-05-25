@@ -3,6 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.renderables;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
 final class BoxShadow implements RenderableRectangle {

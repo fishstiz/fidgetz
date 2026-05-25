@@ -1,17 +1,21 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
+import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -27,22 +31,33 @@ import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry.Source {
+    protected static final float DEFAULT_ALIGNMENT = 0.5F;
     protected static final ScreenRectangle DEFAULT_MARGIN = ScreenRectangle.empty();
     protected static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(8);
     protected static final RenderableRectangle DEFAULT_BACKDROP = Renderables.fill(ARGB.color(0.5f, CommonColors.BLACK));
-    protected static final RenderableRectangle DEFAULT_BACKGROUND = Renderables.sprite(Identifier.withDefaultNamespace("popup/background"));
+    protected static final RenderableRectangle DEFAULT_BACKGROUND = Renderables.boxShadow(24)
+            .then(Renderables.sprite(Identifier.withDefaultNamespace("popup/background")));
     private @Nullable String id;
     private Component message = CommonComponents.EMPTY;
     private FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries = FZKeyed.selfKey(FunctionUtils.nopConsumer());
     private Runnable closeHandler = FunctionUtils.nop();
+    private Runnable openHandler = FunctionUtils.nop();
     protected Layout layout;
     protected ScreenRectangle margin = DEFAULT_MARGIN;
+    protected ScreenRectangle padding = DEFAULT_PADDING;
     protected @Nullable RenderableRectangle backdrop = DEFAULT_BACKDROP;
     protected @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
     protected boolean captureClick = true;
     protected boolean closeAfterClickOutOfBounds = true;
     protected boolean captureFocus = true;
+    protected int width;
+    protected int height;
+    protected float alignX = DEFAULT_ALIGNMENT;
+    protected float alignY = DEFAULT_ALIGNMENT;
+    protected boolean flexWidth = false;
+    protected boolean flexHeight = false;
     private boolean bound = false;
+    private boolean openBound = false;
     private ScreenRectangle bounds;
 
     protected FZModal(FZDialogContainer container, Layout layout) {
@@ -52,7 +67,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
     }
 
     public void open() {
-        if (!isBound()) {
+        if (unbounded()) {
             setOpen(true);
         }
     }
@@ -63,16 +78,18 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
 
     @Override
     protected void setOpen(boolean open) {
-        if (!isBound()) {
+        // open/close handlers should manually update open state when bound
+        if (unbounded()) {
             super.setOpen(open);
-        } else if (!open) {
-            // modal requests to close from auto-closing methods,
-            // close handler should manually update open state
+        } else if (open) {
+            openHandler.run();
+        } else {
             closeHandler.run();
         }
     }
 
-    private void forceSetOpen(boolean open) {
+    private void setOpenBound(boolean open) {
+        openBound = true;
         super.setOpen(open);
     }
 
@@ -83,6 +100,9 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         if (captureFocus) {
             refocusLastContainerPath();
         }
+        if (unbounded()) {
+            closeHandler.run();
+        }
     }
 
     @Override
@@ -91,6 +111,15 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         repositionElements();
         layout.visitWidgets(this::addRenderableWidget);
         super.onOpen();
+        if (shouldFocusOnOpen()) {
+            ComponentPath initialFocus = nextFocusPath(new FocusNavigationEvent.InitialFocus());
+            if (initialFocus != null) {
+                initialFocus.applyFocus(true);
+            }
+        }
+        if (unbounded()) {
+            openHandler.run();
+        }
     }
 
     @Override
@@ -134,11 +163,29 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
 
     @Override
     public void repositionElements() {
+        ScreenRectangle containerBounds = container.getRectangle();
+        int minWidth = flexWidth ? MathUtils.eitherOptionalMin(width, containerBounds.width()) : width;
+        int minHeight = flexHeight ? MathUtils.eitherOptionalMin(height, containerBounds.height()) : height;
+
+        if (layout instanceof FZFlexElement flexElement) {
+            if (minWidth > 0 && minHeight > 0) {
+                flexElement.fidgetz$setSize(minWidth, minHeight);
+            } else if (minWidth > 0) {
+                flexElement.fidgetz$setWidth(minWidth);
+            } else if (minHeight > 0) {
+                flexElement.fidgetz$setHeight(minHeight);
+            }
+        }
+
         FZLayouts.composer(container, layout)
                 .padded(margin.left(), margin.top(), margin.right(), margin.bottom())
                 .clamped()
                 .arrange();
-        bounds = layout.getRectangle();
+
+        ScreenRectangle layoutBounds = layout.getRectangle();
+        int newWidth = MathUtils.clampOptionalMax(layoutBounds.width(), minWidth, containerBounds.width());
+        int newHeight = MathUtils.clampOptionalMax(layoutBounds.height(), minHeight, containerBounds.height());
+        bounds = new ScreenRectangle(layoutBounds.left(), layoutBounds.top(), newWidth, newHeight);
     }
 
     @Override
@@ -152,8 +199,8 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         return id;
     }
 
-    protected boolean isBound() {
-        return bound;
+    protected boolean unbounded() {
+        return !bound || !openBound;
     }
 
     private static void ifNonDefault(TriState triState, Consumer<TriState> consumer) {
@@ -175,33 +222,38 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
 
         props.backdrop().ifDefined(backdrop -> this.backdrop = backdrop);
         props.background().ifDefined(background -> this.background = background);
+        props.openHandler().ifPresent(handler -> this.openHandler = handler.value());
         props.closeHandler().ifPresent(handler -> this.closeHandler = handler.value());
-
-        ifNonDefault(props.open(), open -> {
-            if (isBound()) {
-                forceSetOpen(open.toBoolean(isOpen()));
-            } else {
-                setOpen(open.toBoolean(false));
-            }
-        });
 
         ifNonDefault(props.captureClick(), captureClick -> this.captureClick = captureClick.toBoolean(true));
         ifNonDefault(props.closeAfterClickOutOfBounds(), close -> this.closeAfterClickOutOfBounds = close.toBoolean(true));
         ifNonDefault(props.captureFocus(), captureFocus -> this.captureFocus = captureFocus.toBoolean(true));
 
+        props.width().ifPresent(width -> this.width = width);
+        props.height().ifPresent(height -> this.height = height);
         props.margin().ifPresent(margin -> this.margin = margin);
+        props.padding().ifPresent(padding -> this.padding = padding);
+        props.alignmentX().ifPresent(alignX -> this.alignX = alignX);
+        props.alignmentY().ifPresent(alignY -> this.alignY = alignY);
+        ifNonDefault(props.flexWidth(), flexWidth -> this.flexWidth = flexWidth.toBoolean(false));
+        ifNonDefault(props.flexHeight(), flexHeight -> this.flexHeight = flexHeight.toBoolean(false));
 
         Layout baseLayout = props.layout();
         FZLayouts.Composer<?> composer = FZLayouts.composer(container, baseLayout);
-        ScreenRectangle padding = props.padding().orElse(DEFAULT_PADDING);
+
         if (!ScreenRectangleUtils.isInsetsEmpty(padding)) {
             composer = composer.padded(padding.left(), padding.top(), padding.right(), padding.bottom());
         }
-        if (props.centered().toBoolean(true)) {
-            composer = composer.centered();
+        if (alignX > 0 || alignY > 0) {
+            composer = composer.aligned(alignX, alignY);
         }
         this.layout = composer.clamped().get();
-        repositionElements();
+
+        if (isOpen()) {
+            repositionElements();
+        }
+
+        ifNonDefault(props.open(), open -> setOpenBound(open.toBoolean(isOpen())));
     }
 
     public static FZModal bind(String key, FZRef<Props> ref) {
@@ -250,6 +302,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return Optional.empty();
         }
 
+        default Optional<FZKeyed<Runnable>> openHandler() {
+            return Optional.empty();
+        }
+
         default Optional<ScreenRectangle> margin() {
             return Optional.empty();
         }
@@ -278,7 +334,19 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return TriState.DEFAULT;
         }
 
-        default TriState centered() {
+        default Optional<Float> alignmentX() {
+            return Optional.empty();
+        }
+
+        default Optional<Float> alignmentY() {
+            return Optional.empty();
+        }
+
+        default TriState flexWidth() {
+            return TriState.DEFAULT;
+        }
+
+        default TriState flexHeight() {
             return TriState.DEFAULT;
         }
 
@@ -297,6 +365,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private final Layout layout;
         private final TriState open;
         private final @Nullable FZKeyed<Runnable> closeHandler;
+        private final @Nullable FZKeyed<Runnable> openHandler;
         private final @Nullable ScreenRectangle margin;
         private final @Nullable ScreenRectangle padding;
         private final Undefinable<@Nullable RenderableRectangle> backdrop;
@@ -304,7 +373,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private final TriState captureClick;
         private final TriState closeAfterClickOutOfBounds;
         private final TriState captureFocus;
-        private final TriState centered;
+        private final @Nullable Float alignmentX;
+        private final @Nullable Float alignmentY;
+        private final TriState flexWidth;
+        private final TriState flexHeight;
         private final @Nullable Integer popoverOrder;
 
         private PropsImpl(
@@ -317,6 +389,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                 Layout layout,
                 TriState open,
                 @Nullable FZKeyed<Runnable> closeHandler,
+                @Nullable FZKeyed<Runnable> openHandler,
                 @Nullable ScreenRectangle margin,
                 @Nullable ScreenRectangle padding,
                 Undefinable<@Nullable RenderableRectangle> backdrop,
@@ -324,7 +397,11 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                 TriState captureClick,
                 TriState closeAfterClickOutOfBounds,
                 TriState captureFocus,
-                TriState centered, @Nullable Integer popoverOrder
+                @Nullable Float alignmentX,
+                @Nullable Float alignmentY,
+                TriState flexWidth,
+                TriState flexHeight,
+                @Nullable Integer popoverOrder
         ) {
             this.container = container;
             this.id = id;
@@ -335,6 +412,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             this.layout = layout;
             this.open = open;
             this.closeHandler = closeHandler;
+            this.openHandler = openHandler;
             this.margin = margin;
             this.padding = padding;
             this.backdrop = backdrop;
@@ -342,7 +420,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             this.captureClick = captureClick;
             this.closeAfterClickOutOfBounds = closeAfterClickOutOfBounds;
             this.captureFocus = captureFocus;
-            this.centered = centered;
+            this.alignmentX = alignmentX;
+            this.alignmentY = alignmentY;
+            this.flexWidth = flexWidth;
+            this.flexHeight = flexHeight;
             this.popoverOrder = popoverOrder;
         }
 
@@ -392,6 +473,11 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         }
 
         @Override
+        public Optional<FZKeyed<Runnable>> openHandler() {
+            return Optional.ofNullable(openHandler);
+        }
+
+        @Override
         public Optional<ScreenRectangle> margin() {
             return Optional.ofNullable(margin);
         }
@@ -427,8 +513,23 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         }
 
         @Override
-        public TriState centered() {
-            return centered;
+        public Optional<Float> alignmentX() {
+            return Optional.ofNullable(alignmentX);
+        }
+
+        @Override
+        public Optional<Float> alignmentY() {
+            return Optional.ofNullable(alignmentY);
+        }
+
+        @Override
+        public TriState flexWidth() {
+            return flexWidth;
+        }
+
+        @Override
+        public TriState flexHeight() {
+            return flexHeight;
         }
 
         @Override
@@ -449,6 +550,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                    Objects.equals(layout, other.layout()) &&
                    open == other.open() &&
                    Objects.equals(closeHandler(), other.closeHandler()) &&
+                   Objects.equals(openHandler(), other.openHandler()) &&
                    Objects.equals(margin(), other.margin()) &&
                    Objects.equals(padding(), other.padding()) &&
                    Objects.equals(backdrop(), other.backdrop()) &&
@@ -456,7 +558,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                    captureClick == other.captureClick() &&
                    closeAfterClickOutOfBounds == other.closeAfterClickOutOfBounds() &&
                    captureFocus == other.captureFocus() &&
-                   centered == other.centered() &&
+                   Objects.equals(alignmentX(), other.alignmentX()) &&
+                   Objects.equals(alignmentY(), other.alignmentY()) &&
+                   flexWidth == other.flexWidth() &&
+                   flexHeight == other.flexHeight() &&
                    Objects.equals(popoverOrder(), other.popoverOrder());
         }
 
@@ -472,6 +577,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                     layout,
                     open,
                     closeHandler,
+                    openHandler,
                     margin,
                     padding,
                     backdrop,
@@ -479,7 +585,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                     captureClick,
                     closeAfterClickOutOfBounds,
                     captureFocus,
-                    centered,
+                    alignmentX,
+                    alignmentY,
+                    flexWidth,
+                    flexHeight,
                     popoverOrder
             );
         }
@@ -495,6 +604,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries;
         private TriState open = TriState.DEFAULT;
         private @Nullable FZKeyed<Runnable> closeHandler;
+        private @Nullable FZKeyed<Runnable> openHandler;
         private @Nullable ScreenRectangle margin;
         private @Nullable ScreenRectangle padding;
         private Undefinable<@Nullable RenderableRectangle> background = Undefinable.undefined();
@@ -502,7 +612,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private TriState captureClick = TriState.DEFAULT;
         private TriState closeAfterClickOutOfBounds = TriState.DEFAULT;
         private TriState captureFocus = TriState.DEFAULT;
-        private TriState centered = TriState.DEFAULT;
+        private @Nullable Float alignmentX;
+        private @Nullable Float alignmentY;
+        private TriState flexWidth = TriState.DEFAULT;
+        private TriState flexHeight = TriState.DEFAULT;
         private @Nullable Integer popoverOrder;
 
         Builder(FZDialogContainer container, Layout layout) {
@@ -559,13 +672,23 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return open(true);
         }
 
-        public Builder closeHandler(FZKeyed<Runnable> closeHandler) {
-            this.closeHandler = closeHandler;
+        public Builder onOpen(FZKeyed<Runnable> openHandler) {
+            this.openHandler = Objects.requireNonNull(openHandler, "openHandler cannot be null");
             return this;
         }
 
-        public Builder closeHandler(Runnable closeHandler) {
-            this.closeHandler = FZKeyed.selfKey(closeHandler);
+        public Builder onOpen(Runnable openHandler) {
+            this.openHandler = FZKeyed.selfKey(Objects.requireNonNull(openHandler, "openHandler cannot be null"));
+            return this;
+        }
+
+        public Builder onClose(FZKeyed<Runnable> closeHandler) {
+            this.closeHandler = Objects.requireNonNull(closeHandler, "closeHandler cannot be null");
+            return this;
+        }
+
+        public Builder onClose(Runnable closeHandler) {
+            this.closeHandler = FZKeyed.selfKey(Objects.requireNonNull(closeHandler, "closeHandler cannot be null"));
             return this;
         }
 
@@ -604,9 +727,17 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return this;
         }
 
+        public Builder captureClick() {
+            return captureClick(true);
+        }
+
         public Builder closeAfterClickOutOfBounds(boolean closeAfterClickOutOfBounds) {
             this.closeAfterClickOutOfBounds = TriState.from(closeAfterClickOutOfBounds);
             return this;
+        }
+
+        public Builder closeAfterClickOutOfBounds() {
+            return closeAfterClickOutOfBounds(true);
         }
 
         public Builder captureFocus(boolean captureFocus) {
@@ -614,8 +745,27 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return this;
         }
 
+        public Builder captureFocus() {
+            return captureFocus(true);
+        }
+
+        public Builder alignX(float alignX) {
+            this.alignmentX = Math.clamp(0f, alignX, 1f);
+            return this;
+        }
+
+        public Builder alignY(float alignY) {
+            this.alignmentY = Math.clamp(0f, alignY, 1f);
+            return this;
+        }
+
+        public Builder align(float alignX, float alignY) {
+            return alignX(alignX).alignY(alignY);
+        }
+
         public Builder centered(boolean centered) {
-            this.centered = TriState.from(centered);
+            this.alignmentX = Math.clamp(0f, centered ? 0.5f : alignmentX == null ? 0f : alignmentX, 1f);
+            this.alignmentY = Math.clamp(0f, centered ? 0.5f : alignmentY == null ? 0f : alignmentY, 1f);
             return this;
         }
 
@@ -625,6 +775,60 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
 
         public Builder uncentered() {
             return centered(false);
+        }
+
+        public Builder alignTopLeft() {
+            return alignX(0f).alignY(0f);
+        }
+
+        public Builder alignTopCenter() {
+            return alignX(0.5f).alignY(0f);
+        }
+
+        public Builder alignTopRight() {
+            return alignX(1f).alignY(0f);
+        }
+
+        public Builder alignMiddleLeft() {
+            return alignX(0f).alignY(0.5f);
+        }
+
+        public Builder alignMiddleRight() {
+            return alignX(1f).alignY(0.5f);
+        }
+
+        public Builder alignBottomLeft() {
+            return alignX(0f).alignY(1f);
+        }
+
+        public Builder alignBottomCenter() {
+            return alignX(0.5f).alignY(1f);
+        }
+
+        public Builder alignBottomRight() {
+            return alignX(1f).alignY(1f);
+        }
+
+        public Builder flexWidth(boolean flex) {
+            this.flexWidth = TriState.from(flex);
+            return this;
+        }
+
+        public Builder flexWidth() {
+            return flexWidth(true);
+        }
+
+        public Builder flexHeight(boolean flex) {
+            this.flexHeight = TriState.from(flex);
+            return this;
+        }
+
+        public Builder flexHeight() {
+            return flexHeight(true);
+        }
+
+        public Builder flex() {
+            return flexWidth().flexHeight();
         }
 
         public Builder popoverOrder(int order) {
@@ -643,6 +847,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                     layout,
                     open,
                     closeHandler,
+                    openHandler,
                     margin,
                     padding,
                     backdrop,
@@ -650,7 +855,10 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                     captureClick,
                     closeAfterClickOutOfBounds,
                     captureFocus,
-                    centered,
+                    alignmentX,
+                    alignmentY,
+                    flexWidth,
+                    flexHeight,
                     popoverOrder
             );
         }

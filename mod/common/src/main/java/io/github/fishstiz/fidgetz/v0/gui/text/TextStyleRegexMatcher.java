@@ -1,4 +1,4 @@
-package io.github.fishstiz.fidgetz.v0.utils.text;
+package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import net.minecraft.network.chat.Style;
 import org.jspecify.annotations.Nullable;
@@ -7,24 +7,28 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class TextStylePatternMatcher implements TextStyleMatcher {
-    private final @Nullable Predicate<String> stylable;
+public final class TextStyleRegexMatcher implements TextStyleMatcher {
+    private final @Nullable Predicate<String> styleable;
     private final Matcher matcher;
     private final Style style;
 
-    public TextStylePatternMatcher(Pattern pattern, Style style, @Nullable Predicate<String> stylable) {
-        this.stylable = stylable;
-        this.matcher = pattern.matcher("");
+    public TextStyleRegexMatcher(Matcher matcher, Style style, @Nullable Predicate<String> styleable) {
+        this.matcher = matcher;
         this.style = style;
+        this.styleable = styleable;
     }
 
-    public TextStylePatternMatcher(Pattern pattern, Style style) {
+    public TextStyleRegexMatcher(Pattern pattern, Style style, @Nullable Predicate<String> styleable) {
+        this(pattern.matcher(""), style, styleable);
+    }
+
+    public TextStyleRegexMatcher(Pattern pattern, Style style) {
         this(pattern, style, null);
     }
 
     @Override
-    public boolean stylable(String input) {
-        return stylable == null || stylable.test(input);
+    public boolean styleable(String input) {
+        return styleable == null || styleable.test(input);
     }
 
     @Override
@@ -54,6 +58,6 @@ public final class TextStylePatternMatcher implements TextStyleMatcher {
 
     @Override
     public TextStyleMatcher copy() {
-        return new TextStylePatternMatcher(matcher.pattern(), style, stylable);
+        return new TextStyleRegexMatcher(matcher.pattern(), style, styleable);
     }
 }

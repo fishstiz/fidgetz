@@ -1,5 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
+import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -19,17 +21,32 @@ import org.jspecify.annotations.Nullable;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
-public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent {
-    private final AbstractWidget widget;
+public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent, FZFlexElement {
     private final List<AbstractWidget> children;
+    private AbstractWidget widget;
     private boolean dragging;
 
     public WrappedComponent(AbstractWidget widget) {
         super(widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), widget.getMessage());
         this.widget = widget;
         this.children = List.of(widget);
+    }
+
+    public void set(AbstractWidget widget) {
+        if (this.widget != widget) {
+            boolean focused = isFocused();
+            ScreenRectangle rectangle = getRectangle();
+            this.widget = widget;
+            setRectangle(rectangle.width(), rectangle.height(), rectangle.left(), rectangle.top());
+            setFocused(focused ? widget : null);
+        }
+    }
+
+    public static WrappedComponent bind(String key, FZRef<? extends AbstractWidget> ref) {
+        WrappedComponent wrapped = new WrappedComponent(ref.value());
+        ref.subscribe(key, wrapped::set);
+        return wrapped;
     }
 
     @Override
@@ -85,11 +102,13 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setTooltip(@Nullable Tooltip tooltip) {
+        super.setTooltip(tooltip);
         widget.setTooltip(tooltip);
     }
 
     @Override
     public void setTooltipDelay(Duration delay) {
+        super.setTooltipDelay(delay);
         widget.setTooltipDelay(delay);
     }
 
@@ -120,7 +139,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-        return widget.nextFocusPath(navigationEvent);
+        return ComponentPath.path(this, widget.nextFocusPath(navigationEvent));
     }
 
     @Override
@@ -140,16 +159,19 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setWidth(int width) {
+        super.setWidth(width);
         widget.setWidth(width);
     }
 
     @Override
     public void setHeight(int height) {
+        super.setHeight(height);
         widget.setHeight(height);
     }
 
     @Override
     public void setAlpha(float alpha) {
+        super.setAlpha(alpha);
         widget.setAlpha(alpha);
     }
 
@@ -160,6 +182,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setMessage(Component message) {
+        super.setMessage(message);
         widget.setMessage(message);
     }
 
@@ -190,6 +213,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setFocused(boolean focused) {
+        super.setFocused(focused);
         widget.setFocused(focused);
     }
 
@@ -205,6 +229,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setX(int x) {
+        super.setX(x);
         widget.setX(x);
     }
 
@@ -215,6 +240,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setY(int y) {
+        super.setY(y);
         widget.setY(y);
     }
 
@@ -229,12 +255,8 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    public void visitWidgets(Consumer<AbstractWidget> widgetVisitor) {
-        widget.visitWidgets(widgetVisitor);
-    }
-
-    @Override
     public void setSize(int width, int height) {
+        super.setSize(width, height);
         widget.setSize(width, height);
     }
 
@@ -245,6 +267,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setRectangle(int width, int height, int x, int y) {
+        super.setRectangle(width, height, x, y);
         widget.setRectangle(width, height, x, y);
     }
 
@@ -255,11 +278,13 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public void setTabOrderGroup(int tabOrderGroup) {
+        super.setTabOrderGroup(tabOrderGroup);
         widget.setTabOrderGroup(tabOrderGroup);
     }
 
     @Override
     public void setPosition(int x, int y) {
+        super.setPosition(x, y);
         widget.setPosition(x, y);
     }
 
@@ -311,5 +336,25 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     @Override
     public Collection<? extends NarratableEntry> getNarratables() {
         return widget.getNarratables();
+    }
+
+    @Override
+    public void fidgetz$setWidth(int width) {
+        setWidth(width);
+    }
+
+    @Override
+    public void fidgetz$setHeight(int height) {
+        setHeight(height);
+    }
+
+    @Override
+    public void fidgetz$setSize(int width, int height) {
+        setSize(width, height);
+    }
+
+    @Override
+    public boolean fidgetz$isVisible() {
+        return widget.visible;
     }
 }

@@ -1,4 +1,4 @@
-package io.github.fishstiz.fidgetz.v0.utils.text;
+package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.gui.components.EditBox;
@@ -61,7 +61,7 @@ public final class TextStyleFormatter implements EditBox.TextFormatter {
         Arrays.fill(write.charStyles.elements(), 0, write.charStyles.size(), null);
 
         for (TextStyleMatcher matcher : matchers) {
-            if (!matcher.stylable(text)) continue;
+            if (!matcher.styleable(text)) continue;
             matcher.reset(text);
             while (matcher.find()) {
                 for (int i = matcher.start(); i < matcher.end(); i++) {

@@ -1,17 +1,21 @@
 package io.github.fishstiz.fidgetz.v0.gui.state;
 
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public interface FZRef<T extends @Nullable Object> {
+public interface FZRef<T> {
     T value();
 
-    <R extends @Nullable Object> Runnable subscribe(String key, Function<T, R> selector, Consumer<R> callback);
+    <R> Runnable subscribe(String key, Function<T, R> selector, Consumer<R> callback);
+
+    default <R> Runnable subscribe(String key, Function<T, R> selector, Runnable callback) {
+        Objects.requireNonNull(callback, "callback cannot be null");
+        return subscribe(key, selector, _ -> callback.run());
+    }
 
     default Runnable subscribe(String key, Consumer<T> callback) {
         return subscribe(key, Function.identity(), callback);
@@ -28,7 +32,7 @@ public interface FZRef<T extends @Nullable Object> {
         return object;
     }
 
-    default <R extends @Nullable Object> FZRef<R> map(Function<T, R> selector) {
+    default <R> FZRef<R> map(Function<T, R> selector) {
         Objects.requireNonNull(selector, "selector cannot be null");
         FZRef<T> parent = this;
         return new FZRef<>() {
@@ -38,7 +42,7 @@ public interface FZRef<T extends @Nullable Object> {
             }
 
             @Override
-            public <S extends @Nullable Object> Runnable subscribe(String key, Function<R, S> innerSelector, Consumer<S> callback) {
+            public <S> Runnable subscribe(String key, Function<R, S> innerSelector, Consumer<S> callback) {
                 MutableObject<R> last = new MutableObject<>(selector.apply(parent.value()));
                 return parent.subscribe(key, innerSelector.compose(selector), (s) -> {
                     R next = selector.apply(parent.value());

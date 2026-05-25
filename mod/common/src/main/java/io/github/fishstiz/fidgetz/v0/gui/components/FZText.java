@@ -2,6 +2,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
+import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -12,11 +13,13 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.ARGB;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public final class FZText extends StringWidget implements FZComponent, FZContextMenuEntry.Source {
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
@@ -49,7 +52,7 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
 
     @Override
     public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnNavigation;
+        return propsState.focusOnInteraction;
     }
 
     @Override
@@ -78,6 +81,7 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
     void applyProps(Props props) {
         propsState.apply(this, props);
         props.maxWidth().ifPresent(pair -> setMaxWidth(pair.leftInt(), pair.right()));
+        props.componentClickHandler().ifDefined(this::setComponentClickHandler);
     }
 
     public static FZText bind(String key, FZRef<Props> ref) {
@@ -99,14 +103,24 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
         default Optional<IntObjectPair<TextOverflow>> maxWidth() {
             return Optional.empty();
         }
+
+        default Undefinable<@Nullable Consumer<Style>> componentClickHandler() {
+            return Undefinable.undefined();
+        }
     }
 
     private static final class PropsImpl extends GuiComponentPropsBase implements Props {
         private final @Nullable IntObjectPair<TextOverflow> maxWidth;
+        private final Undefinable<@Nullable Consumer<Style>> componentClickHandler;
 
-        private PropsImpl(GuiComponentProps props, @Nullable IntObjectPair<TextOverflow> maxWidth) {
+        private PropsImpl(
+                GuiComponentProps props,
+                @Nullable IntObjectPair<TextOverflow> maxWidth,
+                Undefinable<@Nullable Consumer<Style>> componentClickHandler
+        ) {
             super(props);
             this.maxWidth = maxWidth;
+            this.componentClickHandler = componentClickHandler;
         }
 
         @Override
@@ -115,20 +129,28 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
         }
 
         @Override
+        public Undefinable<@Nullable Consumer<Style>> componentClickHandler() {
+            return componentClickHandler;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof Props other)) return false;
-            return super.equals(o) && Objects.equals(maxWidth(), other.maxWidth());
+            return super.equals(o) &&
+                   Objects.equals(maxWidth(), other.maxWidth()) &&
+                   Objects.equals(componentClickHandler(), other.componentClickHandler());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(super.hashCode(), maxWidth);
+            return Objects.hash(super.hashCode(), maxWidth, componentClickHandler);
         }
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private @Nullable IntObjectPair<TextOverflow> maxWidth;
+        private Undefinable<@Nullable Consumer<Style>> componentClickHandler = Undefinable.undefined();
 
         private Builder(Component message) {
             props.message = message;
@@ -147,8 +169,13 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
             return this;
         }
 
+        public Builder onComponentClick(@Nullable Consumer<Style> componentClickHandler) {
+            this.componentClickHandler = Undefinable.of(componentClickHandler);
+            return this;
+        }
+
         public Props toProps() {
-            return new PropsImpl(props, maxWidth);
+            return new PropsImpl(props, maxWidth, componentClickHandler);
         }
 
         public FZText build() {

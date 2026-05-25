@@ -62,13 +62,13 @@ public abstract class GuiComponentPropsBuilder<T> {
         return visible(true);
     }
 
-    public T focusOnNavigation(boolean focusOnNavigation) {
-        this.props.focusOnNavigation = TriState.from(focusOnNavigation);
+    public T focusOnInteraction(boolean focusOnInteraction) {
+        props.focusOnInteraction = TriState.from(focusOnInteraction);
         return self();
     }
 
-    public T focusOnNavigation() {
-        return focusOnNavigation(true);
+    public T focusOnInteraction() {
+        return focusOnInteraction(true);
     }
 
     public T message(@Nullable Component message) {
@@ -104,6 +104,11 @@ public abstract class GuiComponentPropsBuilder<T> {
 
     public T contextEntries(Consumer<FZContextMenuEntry.Collector> contextSupplier) {
         props.contextEntries = FZKeyed.selfKey(Objects.requireNonNull(contextSupplier, "contextSupplier cannot be null"));
+        return self();
+    }
+
+    public T tabOrderGroup(int tabOrderGroup) {
+        props.tabOrderGroup = tabOrderGroup;
         return self();
     }
 }

@@ -17,7 +17,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
 import org.jspecify.annotations.Nullable;
 
@@ -31,11 +30,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     private static final int CHEVRON_RIGHT_WIDTH = Minecraft.getInstance().font.width(CHEVRON_RIGHT);
     private static final int DEFAULT_TEXT_COLOR = CommonColors.WHITE;
     private static final int DEFAULT_INACTIVE_TEXT_COLOR = CommonColors.LIGHT_GRAY;
-    private static final int ICON_SIZE = 8;
     private static final int SPACING = 8;
     private final List<FZContextMenuEntry> children;
     private final Supplier<@Nullable WidgetRenderables> backgroundSupplier;
-    private final Supplier<@Nullable WidgetRenderables> iconSupplier;
+    private final Supplier<@Nullable WidgetElements> iconSupplier;
     private final Supplier<@Nullable Component> messageSupplier;
     private final WidgetTooltipHolder tooltipHolder;
     private final BooleanSupplier activeSupplier;
@@ -47,11 +45,12 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     private final boolean playClickSoundOnInteraction;
     private final boolean applyCursorWhenActive;
     private final int height;
+    private final int minWidth;
 
     FZContextMenuEntryImpl(
             List<FZContextMenuEntry> children,
             Supplier<@Nullable WidgetRenderables> backgroundSupplier,
-            Supplier<@Nullable WidgetRenderables> iconSupplier,
+            Supplier<@Nullable WidgetElements> iconSupplier,
             Supplier<@Nullable Component> messageSupplier,
             WidgetTooltipHolder tooltipHolder,
             BooleanSupplier activeSupplier,
@@ -62,7 +61,8 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
             boolean allowAutoDivideAfterEntry,
             boolean playClickSoundOnInteraction,
             boolean applyCursorWhenActive,
-            int height
+            int height,
+            int minWidth
     ) {
         this.children = children;
         this.backgroundSupplier = backgroundSupplier;
@@ -78,15 +78,7 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
         this.playClickSoundOnInteraction = playClickSoundOnInteraction;
         this.applyCursorWhenActive = applyCursorWhenActive;
         this.height = height;
-    }
-
-    private int textColor(Component text) {
-        TextColor textComponentColor = text.getStyle().getColor();
-        if (textComponentColor == null) {
-            return activeSupplier.getAsBoolean() ? DEFAULT_TEXT_COLOR : DEFAULT_INACTIVE_TEXT_COLOR;
-        } else {
-            return textComponentColor.getValue();
-        }
+        this.minWidth = minWidth;
     }
 
     @Override
@@ -109,14 +101,17 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
 
         int x = left;
 
-        WidgetRenderables icon = iconSupplier.get();
+        WidgetElements icon = iconSupplier.get();
         if (icon != null) {
-            x += SPACING;
-            int iconSize = Math.min(ICON_SIZE, height);
-            int iconY = top + SPACING + ((height - SPACING * 2) - iconSize) / 2;
-            icon.get(context.isActive(), context.isFocusedOrHovered())
-                    .extractRenderState(graphics, x, iconY, iconSize, iconSize, mouseX, mouseY, partialTick);
-            x += iconSize;
+            x += SPACING + icon.margin().left();
+            int iconWidth = icon.width();
+            int iconHeight = icon.height();
+            int iconY = (top + SPACING + ((height - SPACING * 2) - iconHeight) / 2) + icon.margin().top() - icon.margin().bottom();
+
+            icon.elements()
+                    .get(context.isActive(), context.isFocusedOrHovered())
+                    .extractRenderState(graphics, x, iconY, iconWidth, iconHeight, mouseX, mouseY, partialTick);
+            x += iconWidth + icon.margin().right();
         }
 
         int innerRight = left + width - SPACING;
@@ -135,7 +130,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
         if (text != null) {
             x += SPACING;
             int textWidth = Math.max(0, innerRight - x);
-            GuiGraphicsUtils.scrollingText(graphics, text, x, top + 1, x + textWidth, top + height + 1, textColor(text));
+            GuiGraphicsUtils.scrollingText(graphics, text, x, top + 1, x + textWidth, top + height + 1, activeSupplier.getAsBoolean()
+                    ? DEFAULT_TEXT_COLOR
+                    : DEFAULT_INACTIVE_TEXT_COLOR
+            );
         }
 
         if (context.isHovered()) {
@@ -198,6 +196,11 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
+    public int minWidth() {
+        return minWidth;
+    }
+
+    @Override
     public Component message() {
         Component message = messageSupplier.get();
         return message == null ? CommonComponents.EMPTY : message;
@@ -211,6 +214,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     record Divider(RenderableRectangle rectangle, int height, boolean fallback) implements FZContextMenuEntry.Divider {
         static final Divider DEFAULT_SECTION = new FZContextMenuEntryImpl.Divider(Renderables.sprite(Fidgetz.id("widget/contextmenu_section_divider")), true);
         static final Divider DEFAULT_ENTRY = new FZContextMenuEntryImpl.Divider(Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider")), false);
+
+        Divider(RenderableRectangle rectangle, int height) {
+            this(rectangle, height, false);
+        }
 
         Divider(RenderableRectangle rectangle, boolean fallback) {
             this(rectangle, DEFAULT_HEIGHT, fallback);

@@ -18,16 +18,16 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.TriState;
-import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry> extends AbstractListWidget {
     protected static final int DEFAULT_SCROLL_RATE = 10;
-    protected final List<E> children = new ArrayList<>();
+    private final List<E> children = new ArrayList<>();
     private @Nullable E hovered;
     private ScreenRectangle bounds;
     private int cachedContentHeight;
@@ -54,6 +54,53 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         this(CommonComponents.EMPTY);
     }
 
+    protected void addEntry(E entry) {
+        entry.index = children.size();
+        children.add(entry);
+    }
+
+    protected void removeEntry(E entry) {
+        if (children.remove(entry)) {
+            entry.index = -1;
+            if (entry == getFocused()) {
+                setFocused(null);
+            }
+            if (entry == getHovered()) {
+                setHovered(null);
+            }
+        }
+    }
+
+    protected void clearEntries() {
+        for (Iterator<E> iterator = children.iterator(); iterator.hasNext(); ) {
+            E entry = iterator.next();
+            entry.index = -1;
+            iterator.remove();
+        }
+
+        setFocused(null);
+        setHovered(null);
+
+        this.cachedContentHeight = 0;
+
+        refreshScrollAmount();
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        if (focused == null || focused instanceof Entry) {
+            super.setFocused(focused);
+        } else {
+            focused.setFocused(false);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @Nullable E getFocused() {
+        return (E) super.getFocused();
+    }
+
     protected void setHovered(@Nullable E hovered) {
         if (this.hovered != hovered) {
             if (this.hovered != null) {
@@ -70,6 +117,24 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return this.hovered;
     }
 
+    protected @Nullable E getPreviousEntry(@Nullable E current) {
+        if (current != null && current.getIndex() > 0) {
+            return this.children().get(current.getIndex() - 1);
+        } else if (current == null && !this.children().isEmpty()) {
+            return this.children().getFirst();
+        }
+        return null;
+    }
+
+    protected @Nullable E getNextEntry(@Nullable E current) {
+        if (current != null && current.getIndex() + 1 < this.children().size()) {
+            return this.children().get(current.getIndex() + 1);
+        } else if (current == null && !this.children().isEmpty()) {
+            return this.children().getFirst();
+        }
+        return null;
+    }
+
     protected void extractFocusedRenderState(GuiGraphicsExtractor graphics, E focused) {
         graphics.outline(focused.getX(), focused.getY(), focused.getWidth(), focused.getHeight(), CommonColors.WHITE);
     }
@@ -82,13 +147,13 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
                 if (entry.isMouseOver(mouseX, mouseY)) {
                     setHovered(entry);
                 }
-
                 entry.extractRenderState(graphics, mouseX, mouseY, partialTick);
-
-                if (entry.isFocused()) {
-                    extractFocusedRenderState(graphics, entry);
-                }
             }
+        }
+
+        E focused = getFocused();
+        if (focused != null) {
+            extractFocusedRenderState(graphics, focused);
         }
     }
 
@@ -123,12 +188,54 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         this.cachedContentHeight = totalheight;
+
+        if (!reserveScrollbarWidth()) {
+            int newChildX = contentLeft();
+            int newChildWidth = contentWidth();
+            if (newChildWidth != childWidth || newChildX != childX) {
+                for (E child : children) {
+                    child.setBounds(newChildX, child.getY(), newChildWidth, child.getHeight());
+                }
+            }
+        }
+
+        refreshScrollAmount();
     }
 
     @Override
     public void setScrollAmount(double scrollAmount) {
+        double previousScrollAmount = scrollAmount();
         super.setScrollAmount(scrollAmount);
-        repositionEntries();
+        if (previousScrollAmount != scrollAmount()) {
+            repositionEntries();
+        }
+    }
+
+    protected void scrollToEntry(E entry) {
+        int topDelta = entry.getY() - getY() - 2;
+        if (topDelta < 0) {
+            scroll(topDelta);
+        }
+        int bottomDelta = getBottom() - entry.getY() - entry.getHeight() - 2;
+        if (bottomDelta < 0) {
+            scroll(-bottomDelta);
+        }
+    }
+
+    protected void centerScrollOn(E entry) {
+        int y = 0;
+        for (E child : this.children) {
+            if (child == entry) {
+                y += child.getHeight() / 2;
+                break;
+            }
+            y += child.getHeight();
+        }
+        setScrollAmount(y - getHeight() / 2.0);
+    }
+
+    protected void scroll(double amount) {
+        setScrollAmount(scrollAmount() + amount);
     }
 
     private void updateBounds() {
@@ -137,40 +244,56 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
 
     @Override
     public void setX(int x) {
+        int previousX = getX();
         super.setX(x);
-        repositionEntries();
         updateBounds();
+        if (previousX != getX()) {
+            repositionEntries();
+        }
     }
 
     @Override
     public void setY(int y) {
+        int previousY = getY();
         super.setY(y);
-        repositionEntries();
         updateBounds();
+        if (previousY != getY()) {
+            repositionEntries();
+        }
     }
 
     @Override
     public void setWidth(int width) {
+        int previousWidth = getWidth();
         super.setWidth(width);
-        int childWidth = contentWidth();
-        for (E child : children) {
-            child.setWidth(childWidth);
-        }
         updateBounds();
+        if (previousWidth != getWidth()) {
+            int childWidth = contentWidth();
+            for (E child : children) {
+                child.setWidth(childWidth);
+            }
+        }
     }
 
     @Override
     public void setHeight(int height) {
+        int previousHeight = getHeight();
         super.setHeight(height);
-        setScrollAmount(scrollAmount());
         updateBounds();
+        if (previousHeight != getHeight()) {
+            setScrollAmount(scrollAmount());
+        }
     }
 
     @Override
     public void setSize(int width, int height) {
+        int previousWidth = getWidth();
+        int previousHeight = getHeight();
         super.setSize(width, height);
-        setScrollAmount(scrollAmount());
         updateBounds();
+        if (previousWidth != getWidth() || previousHeight != getHeight()) {
+            setScrollAmount(scrollAmount());
+        }
     }
 
     @Override
@@ -272,6 +395,9 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
 
         void setHovered(boolean hovered) {
             this.hovered = hovered;
+            if (!hovered) {
+                fidgetz$setHovered(null);
+            }
         }
 
         public boolean isHovered() {
@@ -307,13 +433,11 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         @Override
-        @ApiStatus.Internal
         public final boolean fidgetz$isHovered() {
             return fidgetz$hovered == TriState.TRUE || fidgetz$getHovered() != null;
         }
 
         @Override
-        @ApiStatus.Internal
         public final void fidgetz$setHovered(boolean hovered) {
             this.fidgetz$hovered = TriState.from(hovered);
             if (!hovered) {
@@ -322,7 +446,6 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         @Override
-        @ApiStatus.Internal
         public final void fidgetz$setHovered(@Nullable GuiEventListener hovered) {
             GuiEventListener previous = fidgetz$getHovered();
             if (previous != hovered) {
@@ -337,13 +460,11 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         @Override
-        @ApiStatus.Internal
         public final @Nullable GuiEventListener fidgetz$getHovered() {
             return fidgetz$hoveredElement;
         }
 
         @Override
-        @ApiStatus.Internal
         public final boolean fidgetz$updateHovered(double mouseX, double mouseY) {
             fidgetz$setHovered(isMouseOver(mouseX, mouseY));
             boolean hovered = fidgetz$isHovered();
@@ -354,8 +475,11 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
                         return true;
                     }
                 }
+                fidgetz$setHovered(null);
+                return true;
             }
-            return hovered;
+            fidgetz$setHovered(null);
+            return false;
         }
     }
 }
