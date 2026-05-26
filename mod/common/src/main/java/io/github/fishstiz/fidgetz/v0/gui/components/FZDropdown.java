@@ -27,22 +27,21 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.TriState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class FZDropdown extends Button.Plain implements FZComponent, FZContextMenuEntry.Source, FZPopoverContainer, Layout {
     private static final int DEFAULT_ELEMENT_SPACING = 8;
     private static final int ENTRY_SPACING = 4;
     private static final int DEFAULT_SELECTION_HEIGHT = 200;
-    private static final RenderableRectangle DEFAULT_DIVIDER = Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider"));
+    private static final RenderableRectangle DEFAULT_DIVIDER = Renderables.sprite(Fidgetz.id("widget/dropdown_entry_divider"));
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private final SelectionContainer selectionContainer = new SelectionContainer();
     private final ContainerEventHandler parentContainer;
@@ -80,7 +79,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         layout.defaultChildSettings().flexCross();
 
         for (int i = 0; i < entries.size(); i++) {
-            layout.child(entries.get(i).toWidget(this));
+            layout.child(entries.get(i).createButton());
             if (i + 1 < entries.size()) {
                 layout.child(FZIcon.builder(entryDivider).height(ENTRY_SPACING).build());
             }
@@ -340,6 +339,18 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         @Override
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            return getChildAt(event.x(), event.y()).map(child -> {
+                if (child.mouseClicked(event, doubleClick)) {
+                    closeSelection();
+                    parentContainer.setFocused(FZDropdown.this);
+                    return true;
+                }
+                return false;
+            }).orElse(false);
+        }
+
+        @Override
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             if (open) {
                 background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
@@ -514,32 +525,24 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
     }
 
-    public record Entry(FZKeyed<BooleanSupplier> selectionHandler, UnaryOperator<FZButton.Builder> builderFactory) {
-        private static final WidgetRenderables BACKGROUND = new WidgetRenderables(
+    public record Entry(FZKeyed<UnaryOperator<FZButton.Builder>> builderFactory) {
+        private static final WidgetRenderables DEFAULT_BACKGROUND = new WidgetRenderables(
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry")),
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry")),
                 Renderables.sprite(Fidgetz.id("widget/dropdown_entry_highlighted"))
         );
 
-        public Entry(BooleanSupplier selectionHandler, UnaryOperator<FZButton.Builder> builderFactory) {
-            this(FZKeyed.selfKey(selectionHandler), builderFactory);
+        public Entry(UnaryOperator<FZButton.Builder> builderFactory) {
+            this(FZKeyed.selfKey(builderFactory));
         }
 
-        public Entry(BooleanSupplier selectionHandler) {
-            this(FZKeyed.selfKey(selectionHandler), (UnaryOperator<FZButton.Builder>) Function.<FZButton.Builder>identity());
-        }
-
-        private FZButton toWidget(FZDropdown dropdown) {
-            return builderFactory.apply(FZButton.builder()
+        private FZButton createButton() {
+            FZButton.Builder defaultBuilder = FZButton.builder()
                     .height(DEFAULT_HEIGHT)
-                    .sprites(BACKGROUND)
-                    .onPress(selectionHandler.key(), () -> {
-                        if (selectionHandler.value().getAsBoolean()) {
-                            dropdown.closeSelection();
-                            dropdown.parentContainer.setFocused(dropdown);
-                        }
-                    })
-                    .leftAlignedMessage()).build();
+                    .sprites(DEFAULT_BACKGROUND)
+                    .leftAlignedMessage();
+
+            return builderFactory.value().apply(defaultBuilder).build();
         }
     }
 
@@ -737,16 +740,12 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         public Builder entry(Component message, Runnable selectionHandler) {
             Objects.requireNonNull(selectionHandler, "selectionHandler cannot be null");
-            BooleanSupplier handler = () -> {
-                selectionHandler.run();
-                return true;
-            };
-            this.entries.add(new Entry(FZKeyed.selfKey(handler), builder -> builder.message(message)));
+            this.entries.add(new Entry(builder -> builder.message(message)));
             return this;
         }
 
         public Builder entry(UnaryOperator<FZButton.Builder> entryBuilder) {
-            this.entries.add(new Entry(() -> true, entryBuilder));
+            this.entries.add(new Entry(entryBuilder));
             return this;
         }
 

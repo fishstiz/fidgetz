@@ -4,6 +4,7 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
+import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractScrollArea;
@@ -18,10 +19,10 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.TriState;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class FZLayoutList extends AbstractListWidget implements Layout, FZComponent, FZContextMenuEntry.Source {
@@ -34,8 +35,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     private final List<Renderable> renderables = new ArrayList<>();
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private FZFlexLayout layout;
-    private FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer = FZKeyed.selfKey((_, _) -> {
-    });
+    private FZKeyed<Consumer<RefreshEvent>> entryInitializer = FZKeyed.selfKey(FunctionUtils.nopConsumer());
     private int maxContentWidth = DEFAULT_MAX_CONTENT_WIDTH;
     private int contentPaddingLeft;
     private int contentPaddingRight;
@@ -54,8 +54,8 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
-    protected void collectEntries(FZFlexLayout layout) {
-        entryInitializer.value().accept(this, layout);
+    protected void collectEntries(RefreshEvent event) {
+        entryInitializer.value().accept(event);
     }
 
     public final void refreshEntries() {
@@ -74,33 +74,41 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         narratables.clear();
         renderables.clear();
 
-        GuiComponentCollector collector = new GuiComponentCollector();
         FZFlexLayout newLayout = FZLayouts.flexVertical().maxWidth(contentWidth()).maxHeight(0);
-        collectEntries(newLayout);
-        newLayout.visitWidgets(collector::renderableWidget);
 
         MutableBoolean focusUnresolved = new MutableBoolean(true);
-        collector.flushTo(getWidgetSink(lastFocused, lastFocusedId, focusUnresolved), renderables::add);
+        MutableInt count = new MutableInt(0);
+        int hashCode = hashCode();
+
+        WidgetVisitor widgetSink = getWidgetSink(lastFocused, lastFocusedId, focusUnresolved, count, hashCode);
+        RefreshEvent refreshEvent = new RefreshEvent(widgetSink, newLayout);
+        collectEntries(refreshEvent);
+        refreshEvent.flushComponents();
+
         if (focusUnresolved.booleanValue()) setFocused(null);
 
         this.layout = newLayout;
         arrangeElements();
     }
 
-    private WidgetVisitor getWidgetSink(@Nullable GuiEventListener lastFocused, @Nullable String lastFocusedId, MutableBoolean focusUnresolved) {
-        int hashCode = hashCode();
+    private WidgetVisitor getWidgetSink(
+            @Nullable GuiEventListener lastFocused,
+            @Nullable String lastFocusedId,
+            MutableBoolean focusUnresolved,
+            MutableInt count,
+            int hashCode
+    ) {
         return new WidgetVisitor() {
-            private int count = 0;
-
             @Override
             public <T extends GuiEventListener & NarratableEntry> void visitWidget(T widget) {
                 String id = widget instanceof FZComponent component ? component.fidgetz$componentId() : null;
-                if (id == null) id = "FZList@%s-element-%s-%s".formatted(hashCode, count, widget.getClass().getName());
+                if (id == null)
+                    id = "FZList@%s-element-%s-%s".formatted(hashCode, count.intValue(), widget.getClass().getName());
 
                 entries.add(new Entry(id, widget));
                 children.add(widget);
                 narratables.add(widget);
-                count++;
+                count.increment();
 
                 if (widget == lastFocused || (Objects.equals(id, lastFocusedId) && focusUnresolved.booleanValue())) {
                     setFocused(widget);
@@ -144,13 +152,15 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     @Override
     public void arrangeElements() {
         int contentWidth = contentWidth();
+        int contentLeft = contentLeft();
+        layout.maxWidth(contentWidth);
         layout.arrangeElements();
-        layout.fidgetz$setWidth(contentWidth);
-        layout.setPosition(getX(), getY());
+        layout.setPosition(contentLeft(), getY());
 
         if (!reserveScrollbarWidth()) {
             int newContentWidth = contentWidth();
-            if (contentWidth != newContentWidth) {
+            int newContentLeft = contentLeft();
+            if (contentWidth != newContentWidth || contentLeft != newContentLeft) {
                 layout.fidgetz$setWidth(newContentWidth);
             }
         }
@@ -306,8 +316,8 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
 
         props.scrollRate().ifPresent(scrollRate -> this.scrollRate = scrollRate);
 
-        props.entryInitializer().ifPresent(initializer -> {
-            FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> previousEntryInitializer = this.entryInitializer;
+        props.refreshHandler().ifPresent(initializer -> {
+            FZKeyed<Consumer<RefreshEvent>> previousEntryInitializer = this.entryInitializer;
             this.entryInitializer = initializer;
             if (!Objects.equals(previousEntryInitializer, this.entryInitializer)) {
                 this.refreshEntries();
@@ -328,6 +338,34 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     private record Entry(String id, GuiEventListener widget) {
+    }
+
+    public final class RefreshEvent {
+        private final GuiComponentCollector collector = new GuiComponentCollector();
+        private final WidgetVisitor widgetSink;
+        private final FZFlexLayout layout;
+
+        private RefreshEvent(WidgetVisitor widgetSink, FZFlexLayout layout) {
+            this.widgetSink = widgetSink;
+            this.layout = layout;
+        }
+
+        public GuiComponentCollector collector() {
+            return collector;
+        }
+
+        public FZLayoutList target() {
+            return FZLayoutList.this;
+        }
+
+        public FZFlexLayout layout() {
+            return layout;
+        }
+
+        public void flushComponents() {
+            layout.visitWidgets(collector::renderableWidget);
+            collector.flushTo(widgetSink, renderables::add);
+        }
     }
 
     public interface Props extends GuiComponentProps {
@@ -351,13 +389,13 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
             return OptionalInt.empty();
         }
 
-        default Optional<FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>>> entryInitializer() {
+        default Optional<FZKeyed<Consumer<RefreshEvent>>> refreshHandler() {
             return Optional.empty();
         }
     }
 
     protected static final class PropsImpl extends GuiComponentPropsBase implements Props {
-        private final @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer;
+        private final @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler;
         private final @Nullable Integer maxContentWidth;
         private final @Nullable Integer contentPaddingLeft;
         private final @Nullable Integer contentPaddingRight;
@@ -366,7 +404,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
 
         protected PropsImpl(
                 GuiComponentProps props,
-                @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer,
+                @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler,
                 @Nullable Integer maxContentWidth,
                 @Nullable Integer contentPaddingLeft,
                 @Nullable Integer contentPaddingRight,
@@ -374,7 +412,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
                 @Nullable Integer scrollRate
         ) {
             super(props);
-            this.entryInitializer = entryInitializer;
+            this.refreshHandler = refreshHandler;
             this.maxContentWidth = maxContentWidth;
             this.contentPaddingLeft = contentPaddingLeft;
             this.contentPaddingRight = contentPaddingRight;
@@ -383,8 +421,8 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         }
 
         @Override
-        public Optional<FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>>> entryInitializer() {
-            return Optional.ofNullable(entryInitializer);
+        public Optional<FZKeyed<Consumer<RefreshEvent>>> refreshHandler() {
+            return Optional.ofNullable(refreshHandler);
         }
 
         @Override
@@ -422,7 +460,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
                    && Objects.equals(contentPaddingRight(), other.contentPaddingRight())
                    && reserveScrollbarWidth == other.reserveScrollbarWidth()
                    && Objects.equals(scrollRate(), other.scrollRate())
-                   && Objects.equals(entryInitializer(), other.entryInitializer());
+                   && Objects.equals(refreshHandler(), other.refreshHandler());
         }
 
         @Override
@@ -434,14 +472,14 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
                     contentPaddingRight,
                     reserveScrollbarWidth,
                     scrollRate,
-                    entryInitializer
+                    refreshHandler
             );
         }
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private ScrollbarSettings settings = AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
-        private @Nullable FZKeyed<BiConsumer<FZLayoutList, FZFlexLayout>> entryInitializer = null;
+        private @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler;
         private @Nullable Integer maxContentWidth;
         private @Nullable Integer contentPaddingLeft;
         private @Nullable Integer contentPaddingRight;
@@ -470,20 +508,14 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
             return this;
         }
 
-        public Builder entries(BiConsumer<FZLayoutList, FZFlexLayout> entryInitializer) {
-            this.entryInitializer = FZKeyed.selfKey(entryInitializer);
-            return this;
-        }
-
-        public Builder entries(Consumer<FZFlexLayout> entryInitializer) {
-            Objects.requireNonNull(entryInitializer, "entryInitializer cannot be null");
-            this.entryInitializer = FZKeyed.selfKey((_, layout) -> entryInitializer.accept(layout));
+        public Builder onRefresh(Consumer<RefreshEvent> refreshHandler) {
+            this.refreshHandler = FZKeyed.selfKey(refreshHandler);
             return this;
         }
 
 
-        public Builder entries(Object key, BiConsumer<FZLayoutList, FZFlexLayout> entryInitializer) {
-            this.entryInitializer = new FZKeyed<>(key, Objects.requireNonNull(entryInitializer, "entryInitializer cannot be null"));
+        public Builder onRefresh(Object key, Consumer<RefreshEvent> refreshHandler) {
+            this.refreshHandler = new FZKeyed<>(key, Objects.requireNonNull(refreshHandler, "refreshHandler cannot be null"));
             return this;
         }
 
@@ -518,7 +550,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         public Props toProps() {
             return new PropsImpl(
                     props,
-                    entryInitializer,
+                    refreshHandler,
                     maxContentWidth,
                     contentPaddingLeft,
                     contentPaddingRight,

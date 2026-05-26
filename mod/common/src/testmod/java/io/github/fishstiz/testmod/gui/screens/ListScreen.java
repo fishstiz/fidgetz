@@ -1,7 +1,7 @@
 package io.github.fishstiz.testmod.gui.screens;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.*;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZClampedLayout;
@@ -60,275 +60,281 @@ public class ListScreen extends FZScreen {
                 )));
             });
 
-            root.child(FZLayoutList.bind("list", state.map(State::quantity).map(q -> FZLayoutList.builder().contentPadding(8).entries((list, layout) -> {
-                layout.spacing(8).defaultChildSettings().flexCross();
+            root.child(FZLayoutList.bind("list", state
+                    .map(State::quantity)
+                    .map(q -> FZLayoutList.builder().contentPadding(8).onRefresh(refreshEvent -> {
+                        FZFlexLayout layout = refreshEvent.layout();
+                        FZLayoutList list = refreshEvent.target();
+                        refreshEvent.flushComponents();
 
-                layout.child(FZButton.builder()
-                        .message(Component.literal("Disabled Button"))
-                        .leftAlignedMessage()
-                        .inactive()
-                        .build());
-                layout.child(FZButton.builder()
-                        .message(Component.literal("Disabled Button"))
-                        .inactive()
-                        .build());
+                        layout.spacing(8).defaultChildSettings().flexCross();
 
-                layout.child(FZDropdown.builder(list)
-                        .message(Component.literal("Dropdown"))
-                        .entry(button -> button.message(Component.literal("Option 1")))
-                        .entry(button -> button.message(Component.literal("Option 2")))
-                        .entry(button -> button.message(Component.literal("Option 3")))
-                        .entry(button -> button.message(Component.literal("Option 4")))
-                        .entry(button -> button.message(Component.literal("Option 5")))
-                        .build());
+                        layout.child(FZButton.builder()
+                                .message(Component.literal("Disabled Button"))
+                                .leftAlignedMessage()
+                                .inactive()
+                                .build());
+                        layout.child(FZButton.builder()
+                                .message(Component.literal("Disabled Button"))
+                                .inactive()
+                                .build());
 
-                layout.child(FZDropdown.builder(list)
-                        .message(Component.literal("Dropdown 2"))
-                        .inactive()
-                        .entry(button -> button.message(Component.literal("Option 1")))
-                        .entry(button -> button.message(Component.literal("Option 2")))
-                        .entry(button -> button.message(Component.literal("Option 3")))
-                        .entry(button -> button.message(Component.literal("Option 4")))
-                        .entry(button -> button.message(Component.literal("Option 5")))
-                        .build());
+                        layout.child(FZDropdown.builder(list)
+                                .message(Component.literal("Dropdown"))
+                                .entry(button -> button.message(Component.literal("Option 1")))
+                                .entry(button -> button.message(Component.literal("Option 2")))
+                                .entry(button -> button.message(Component.literal("Option 3")))
+                                .entry(button -> button.message(Component.literal("Option 4")))
+                                .entry(button -> button.message(Component.literal("Option 5")))
+                                .build());
 
-                layout.child(FZLayouts.flexHorizontal()).also(btns -> {
-                    btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
+                        layout.child(FZDropdown.builder(list)
+                                .message(Component.literal("Dropdown 2"))
+                                .inactive()
+                                .entry(button -> button.message(Component.literal("Option 1")))
+                                .entry(button -> button.message(Component.literal("Option 2")))
+                                .entry(button -> button.message(Component.literal("Option 3")))
+                                .entry(button -> button.message(Component.literal("Option 4")))
+                                .entry(button -> button.message(Component.literal("Option 5")))
+                                .build());
 
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
-                            .size(20, 20)
-                            .build()).active = false;
+                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                            btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
-                            .size(20, 20)
-                            .build());
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
-                            .size(20, 20)
-                            .build());
-                    btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
-                            }, false)
-                            .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
-                            .size(20, 20)
-                            .build());
-                });
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
+                                    .size(20, 20)
+                                    .build()).active = false;
 
-                layout.child(FZLayouts.flexHorizontal()).also(btns -> {
-                    btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                                    }, false)
+                                    .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
+                                    .size(20, 20)
+                                    .build());
+                        });
 
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
-                            .size(20, 20)
-                            .build()).active = false;
+                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                            btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton.builder()
-                            .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
-                            .size(20, 20)
-                            .build());
-                });
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
+                                    .size(20, 20)
+                                    .build()).active = false;
 
-                layout.child(FZLayouts.flexHorizontal()).also(btns -> {
-                    btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton.builder()
+                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
+                                    .size(20, 20)
+                                    .build());
+                        });
 
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
-                            .size(20, 20)
-                            .build()).active = false;
+                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                            btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
-                            .size(20, 20)
-                            .build());
-                });
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
+                                    .size(20, 20)
+                                    .build()).active = false;
 
-                layout.child(FZLayouts.flexHorizontal()).also(btns -> {
-                    btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
+                                    .size(20, 20)
+                                    .build());
+                        });
 
-                    RenderableRectangle whiteOutline = Renderables.outline(CommonColors.WHITE);
-                    RenderableRectangle unseenNotification = Renderables.sprite(Identifier.withDefaultNamespace("icon/unseen_notification"));
-                    RenderableRectangle accessibility = Renderables.sprite(Identifier.withDefaultNamespace("icon/accessibility"));
-                    RenderableRectangle language = Renderables.sprite(Identifier.withDefaultNamespace("icon/language"));
+                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                            btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(unseenNotification, unseenNotification, unseenNotification.then(whiteOutline)))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(accessibility, accessibility, accessibility.then(whiteOutline)))
-                            .size(20, 20)
-                            .build()).active = false;
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(language, language, language.then(whiteOutline)))
-                            .size(20, 20)
-                            .build()).active = false;
+                            RenderableRectangle whiteOutline = Renderables.outline(CommonColors.WHITE);
+                            RenderableRectangle unseenNotification = Renderables.sprite(Identifier.withDefaultNamespace("icon/unseen_notification"));
+                            RenderableRectangle accessibility = Renderables.sprite(Identifier.withDefaultNamespace("icon/accessibility"));
+                            RenderableRectangle language = Renderables.sprite(Identifier.withDefaultNamespace("icon/language"));
 
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(unseenNotification, unseenNotification, unseenNotification.then(whiteOutline)))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(accessibility, accessibility, accessibility.then(whiteOutline)))
-                            .size(20, 20)
-                            .build());
-                    btns.child(FZIconButton
-                            .builder(new WidgetRenderables(language, language, language.then(whiteOutline)))
-                            .size(20, 20)
-                            .build());
-                });
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(unseenNotification, unseenNotification, unseenNotification.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(accessibility, accessibility, accessibility.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build()).active = false;
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(language, language, language.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build()).active = false;
 
-                layout.child(FZTextField.builder().inactive().build());
-                layout.child(FZTextField.builder().hint(Component.literal("Hint...")).build());
-                layout.child(FZTextField.builder().hint(Component.literal("Hint...")).inactive().build());
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(unseenNotification, unseenNotification, unseenNotification.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(accessibility, accessibility, accessibility.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build());
+                            btns.child(FZIconButton
+                                    .builder(new WidgetRenderables(language, language, language.then(whiteOutline)))
+                                    .size(20, 20)
+                                    .build());
+                        });
 
-                var box = layout.child(new EditBox(Minecraft.getInstance().font, 150, 20, CommonComponents.EMPTY));
-                box.active = false;
-                box.setEditable(false);
+                        layout.child(FZTextField.builder().inactive().build());
+                        layout.child(FZTextField.builder().hint(Component.literal("Hint...")).build());
+                        layout.child(FZTextField.builder().hint(Component.literal("Hint...")).inactive().build());
 
-                layout.spacer().height(4);
-                layout.child(FZTextField.builder()
-                        .onChange(e -> textFieldState.set(e.value()))
-                        .hint(Component.literal("update below..."))
-                        .build());
-                layout.child(FZTextField.bind("textfield", textFieldState.map(value -> FZTextField.builder()
-                        .hint(Component.literal("textfieldstate"))
-                        .text(value)
-                        .toProps())));
+                        var box = layout.child(new EditBox(Minecraft.getInstance().font, 150, 20, CommonComponents.EMPTY));
+                        box.active = false;
+                        box.setEditable(false);
 
-                layout.spacer().height(4);
-                layout.child(FZText.bind("text-2", textFieldState2.map(value -> FZText
-                        .builder(Component.literal("textFieldState2: " + value))
-                        .overlay(Renderables.fill(ARGB.color(0.2f, CommonColors.BLUE)))
-                        .active()
-                        .toProps())));
+                        layout.spacer().height(4);
+                        layout.child(FZTextField.builder()
+                                .onChange(e -> textFieldState.set(e.value()))
+                                .hint(Component.literal("update below..."))
+                                .build());
+                        layout.child(FZTextField.bind("textfield", textFieldState.map(value -> FZTextField.builder()
+                                .hint(Component.literal("textfieldstate"))
+                                .text(value)
+                                .toProps())));
 
-                layout.child(FZTextField.bind("textfield2", textFieldState2.map(value -> FZTextField.builder()
-                        .hint(Component.literal("textfieldstate2"))
-                        .text(value)
-                        .onChange(e -> textFieldState2.set(e.value()))
-                        .toProps())));
+                        layout.spacer().height(4);
+                        layout.child(FZText.bind("text-2", textFieldState2.map(value -> FZText
+                                .builder(Component.literal("textFieldState2: " + value))
+                                .overlay(Renderables.fill(ARGB.color(0.2f, CommonColors.BLUE)))
+                                .active()
+                                .toProps())));
 
-                layout.spacer().height(4);
-                layout.child(FZTextField.bind("textfield3", textFieldState3.map(value -> FZTextField.builder()
-                        .text(value)
-                        .toProps())));
+                        layout.child(FZTextField.bind("textfield2", textFieldState2.map(value -> FZTextField.builder()
+                                .hint(Component.literal("textfieldstate2"))
+                                .text(value)
+                                .onChange(e -> textFieldState2.set(e.value()))
+                                .toProps())));
+
+                        layout.spacer().height(4);
+                        layout.child(FZTextField.bind("textfield3", textFieldState3.map(value -> FZTextField.builder()
+                                .text(value)
+                                .toProps())));
 
 
-                layout.child(FZTextField.builder()
-                        .text("False!")
-                        .filter(value -> !value.contains("?"))
-                        .build());
+                        layout.child(FZTextField.builder()
+                                .text("False!")
+                                .filter(value -> !value.contains("?"))
+                                .build());
 
-                layout.spacer().height(4);
+                        layout.spacer().height(4);
 
-                layout.child(FZText.builder(Component.literal("Short entry")).active().height(20).build());
-                layout.child(FZText.builder(Component.literal("Medium entry")).active().height(30).build());
-                layout.child(FZText.builder(Component.literal("Tall entry")).active().height(50).build());
-                layout.child(FZButton.builder().message(Component.literal("Button entry")).build());
-                layout.child(FZText.builder(Component.literal("Another text entry")).height(20).build());
-                layout.child(FZButton.builder().message(Component.literal("Another button entry")).build());
-                layout.child(FZText.builder(Component.literal("Final tall entry")).height(50).build());
+                        layout.child(FZText.builder(Component.literal("Short entry")).active().height(20).build());
+                        layout.child(FZText.builder(Component.literal("Medium entry")).active().height(30).build());
+                        layout.child(FZText.builder(Component.literal("Tall entry")).active().height(50).build());
+                        layout.child(FZButton.builder().message(Component.literal("Button entry")).build());
+                        layout.child(FZText.builder(Component.literal("Another text entry")).height(20).build());
+                        layout.child(FZButton.builder().message(Component.literal("Another button entry")).build());
+                        layout.child(FZText.builder(Component.literal("Final tall entry")).height(50).build());
 
-                layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
-                    row.child(FZText.builder(Component.literal("Row with button")).build(), row.flexChildSettings());
-                    row.child(FZButton.builder().message(Component.literal("Action")).build());
-                });
+                        layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
+                            row.child(FZText.builder(Component.literal("Row with button")).build(), row.flexChildSettings());
+                            row.child(FZButton.builder().message(Component.literal("Action")).build());
+                        });
 
-                layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
-                    row.child(FZButton.builder().message(Component.literal("Option A")).build(), row.flexChildHorizontalSettings());
-                    row.child(FZButton.builder().message(Component.literal("Option B")).build(), row.flexChildHorizontalSettings());
-                });
+                        layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
+                            row.child(FZButton.builder().message(Component.literal("Option A")).build(), row.flexChildHorizontalSettings());
+                            row.child(FZButton.builder().message(Component.literal("Option B")).build(), row.flexChildHorizontalSettings());
+                        });
 
-                layout.child(FZLayouts.flexVertical().spacing(4)).also(row -> {
-                    row.child(FZText.builder(Component.literal("Stacked label")).build(), row.newChildSettings().alignHorizontallyCenter());
-                    row.child(FZButton.builder().message(Component.literal("Stacked button")).bigWidth().build(), row.newChildSettings().alignHorizontallyCenter());
-                });
+                        layout.child(FZLayouts.flexVertical().spacing(4)).also(row -> {
+                            row.child(FZText.builder(Component.literal("Stacked label")).build(), row.newChildSettings().alignHorizontallyCenter());
+                            row.child(FZButton.builder().message(Component.literal("Stacked button")).bigWidth().build(), row.newChildSettings().alignHorizontallyCenter());
+                        });
 
-                layout.child(FZLayouts.flexHorizontal().spacing(8).also(row -> {
-                    row.child(FZButton.builder()
-                            .square()
-                            .message(Component.literal(q.collapsed ? ">" : "v"))
-                            .onPress(() -> state.set(prev -> prev.withCollapse(!prev.quantity.collapsed)))
-                            .build());
-                    row.child(FZText.builder(Component.literal("Quantity")).build(), row.flexChildSettings());
-                    row.child(FZButton.builder()
-                            .square()
-                            .message(Component.literal("-"))
-                            .active(q.count > 0)
-                            .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count - 1)))
-                            .build());
-                    row.child((FZFlexElement) new WrappedComponent(FZButton.builder()
-                            .square()
-                            .message(Component.literal("+"))
-                            .contextEntries(FZContextMenuEntry.builder().message(Component.literal("Hello world!")).build())
-                            .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count + 1)))
-                            .build()));
-                }));
+                        layout.child(FZLayouts.flexHorizontal().spacing(8).also(row -> {
+                            row.child(FZButton.builder()
+                                    .square()
+                                    .message(Component.literal(q.collapsed ? ">" : "v"))
+                                    .onPress(() -> state.set(prev -> prev.withCollapse(!prev.quantity.collapsed)))
+                                    .build());
+                            row.child(FZText.builder(Component.literal("Quantity")).build(), row.flexChildSettings());
+                            row.child(FZButton.builder()
+                                    .square()
+                                    .message(Component.literal("-"))
+                                    .active(q.count > 0)
+                                    .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count - 1)))
+                                    .build());
+                            row.child(new WrappedComponent(FZButton.builder()
+                                    .square()
+                                    .message(Component.literal("+"))
+                                    .contextEntries(FZContextMenuEntry.builder().message(Component.literal("Hello world!")).build())
+                                    .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count + 1)))
+                                    .build()));
+                        }));
 
-                if (!q.collapsed) {
-                    layout.child(FZLayouts.flexVertical().spacing(4).also(row -> {
-                        row.defaultChildSettings().flexCross();
-                        for (int i = 0; i < q.count; i++) {
-                            row.child(FZText.builder(Component.literal("Item: " + i)).active().build());
+                        if (!q.collapsed) {
+                            layout.child(FZLayouts.flexVertical().spacing(4).also(row -> {
+                                row.defaultChildSettings().flexCross();
+                                for (int i = 0; i < q.count; i++) {
+                                    row.child(FZText.builder(Component.literal("Item: " + i)).active().build());
+                                }
+                            }));
                         }
-                    }));
-                }
 
-                layout.child(FZText.builder(Component.literal("Another simple entry")).height(20).build());
+                        layout.child(FZText.builder(Component.literal("Another simple entry")).height(20).build());
 
 
-                var redRect = Renderables.fill(CommonColors.RED);
-                layout.child(FZIconButton.builder(new WidgetRenderables(redRect, redRect.then(Renderables.outline(-1)))).build());
+                        var redRect = Renderables.fill(CommonColors.RED);
+                        layout.child(FZIconButton.builder(new WidgetRenderables(redRect, redRect.then(Renderables.outline(-1)))).build());
 
-                layout.child(FZIconButton.bind("rend", state.map(State::count2).map(count -> {
-                    var rect = Renderables.fill(CommonColors.BLUE).then(Renderables.text(Component.literal("Count2: " + count)));
-                    return FZIconButton
-                            .builder(new WidgetRenderables(rect, rect.then(Renderables.outline(-1))))
-                            .onPress(() -> state.set(prev -> prev.withCount2(prev.count2 + 1)))
-                            .active()
-                            .toProps();
-                })), layout.newChildSettings().unflex());
-            }).toProps())), root.flexChildSettings());
+                        layout.child(FZIconButton.bind("rend", state.map(State::count2).map(count -> {
+                            var rect = Renderables.fill(CommonColors.BLUE).then(Renderables.text(Component.literal("Count2: " + count)));
+                            return FZIconButton
+                                    .builder(new WidgetRenderables(rect, rect.then(Renderables.outline(-1))))
+                                    .onPress(() -> state.set(prev -> prev.withCount2(prev.count2 + 1)))
+                                    .active()
+                                    .toProps();
+                        })), layout.newChildSettings().unflex());
+                    }).toProps())), root.flexChildSettings());
 
 
             root.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {

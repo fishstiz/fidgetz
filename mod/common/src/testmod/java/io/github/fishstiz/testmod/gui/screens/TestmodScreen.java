@@ -103,7 +103,7 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
 
         collector.addEntry(FZContextMenuEntry.builder()
                 .message(Component.literal("f"))
-                .preventClick()
+                .preventPress()
                 .height(24)
                 .background(new WidgetRenderables(
                         Renderables.fill(CommonColors.LIGHT_GRAY),
@@ -113,6 +113,11 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
 
         collector.addEntry(FZContextMenuEntry.builder()
                 .message(Component.literal("entry 2")).build());
+
+        collector.addEntry(FZContextMenuEntry.builder()
+                .message(Component.literal("inactive"))
+                .active(false)
+                .build());
 
         collector.addEntry(FZContextMenuEntry.builder()
                 .message(Component.literal("entry 2 with a super duper long name")).build());
@@ -133,14 +138,14 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
                         .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
                         .nextSection()
                         .child(FZContextMenuEntry.builder().message(Component.literal("open modal 2"))
-                                .onClick(this::openModal2)
+                                .onPress(this::openModal2)
                                 .build())
                         .build())
                 .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
                 .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
                 .child(FZContextMenuEntry.builder()
                         .message(Component.literal("open modal"))
-                        .onClick(this::openModal)
+                        .onPress(this::openModal)
                         .build())
                 .build());
 
@@ -171,7 +176,7 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
         collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
         collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
         collector.addEntry(FZContextMenuEntry.builder()
-                .onClick(this::openModal2)
+                .onPress(this::openModal2)
                 .message(Component.literal("open modal 2")).build());
     }
 

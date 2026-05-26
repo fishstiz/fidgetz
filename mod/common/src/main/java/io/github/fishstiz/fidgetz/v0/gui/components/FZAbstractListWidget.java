@@ -353,22 +353,22 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         @Override
-        public final int getX() {
+        public int getX() {
             return bounds.left();
         }
 
         @Override
-        public final int getY() {
+        public int getY() {
             return bounds.top();
         }
 
         @Override
-        public final int getWidth() {
+        public int getWidth() {
             return bounds.width();
         }
 
         @Override
-        public final int getHeight() {
+        public int getHeight() {
             return bounds.height();
         }
 

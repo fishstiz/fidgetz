@@ -11,6 +11,7 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -318,7 +319,7 @@ public final class FZContextMenu extends FZDialog {
 
         @Override
         public boolean shouldTakeFocusAfterInteraction() {
-            return isOpen() && entry.shouldTakeFocusAfterInteraction();
+            return isOpen();
         }
 
         @Override
@@ -428,12 +429,6 @@ public final class FZContextMenu extends FZDialog {
         }
 
         @Override
-        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-            ComponentPath path = super.nextFocusPath(navigationEvent);
-            return path == null ? entry.nextFocusPath(navigationEvent, this) : path;
-        }
-
-        @Override
         public void setX(int x) {
             int previousX = getX();
             super.setX(x);
@@ -472,8 +467,8 @@ public final class FZContextMenu extends FZDialog {
         private HorizontalDirection preferredDirection = HorizontalDirection.RIGHT;
         private ScreenRectangle padding = DEFAULT_PADDING;
         private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
-        private FZContextMenuEntry.@Nullable Divider sectionDivider = FZContextMenuEntryImpl.Divider.DEFAULT_SECTION;
-        private FZContextMenuEntry.@Nullable Divider entryDivider = FZContextMenuEntryImpl.Divider.DEFAULT_ENTRY;
+        private FZContextMenuEntry.@Nullable Divider sectionDivider = FZContextMenuEntryImpl.DividerImpl.DEFAULT_SECTION;
+        private FZContextMenuEntry.@Nullable Divider entryDivider = FZContextMenuEntryImpl.DividerImpl.DEFAULT_ENTRY;
         private int maxHeight = DEFAULT_MAX_HEIGHT;
         private int minWidth = DEFAULT_ENTRY_WIDTH;
         private int popoverOrder = DEFAULT_POPOVER_ORDER;
@@ -502,7 +497,7 @@ public final class FZContextMenu extends FZDialog {
 
         public Builder sectionDivider(RenderableRectangle sectionDivider) {
             Objects.requireNonNull(entryDivider, "sectionDivider cannot be null");
-            this.sectionDivider = new FZContextMenuEntryImpl.Divider(sectionDivider, false);
+            this.sectionDivider = new FZContextMenuEntryImpl.DividerImpl(sectionDivider, false);
             return this;
         }
 
@@ -513,7 +508,7 @@ public final class FZContextMenu extends FZDialog {
 
         public Builder entryDivider(RenderableRectangle entryDivider) {
             Objects.requireNonNull(entryDivider, "entryDivider cannot be null");
-            this.sectionDivider = new FZContextMenuEntryImpl.Divider(entryDivider, false);
+            this.sectionDivider = new FZContextMenuEntryImpl.DividerImpl(entryDivider, false);
             return this;
         }
 

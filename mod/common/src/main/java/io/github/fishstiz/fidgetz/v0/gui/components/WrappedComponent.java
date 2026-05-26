@@ -1,6 +1,5 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -22,7 +21,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 
-public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent, FZFlexElement {
+public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent {
     private final List<AbstractWidget> children;
     private AbstractWidget widget;
     private boolean dragging;
@@ -336,25 +335,5 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     @Override
     public Collection<? extends NarratableEntry> getNarratables() {
         return widget.getNarratables();
-    }
-
-    @Override
-    public void fidgetz$setWidth(int width) {
-        setWidth(width);
-    }
-
-    @Override
-    public void fidgetz$setHeight(int height) {
-        setHeight(height);
-    }
-
-    @Override
-    public void fidgetz$setSize(int width, int height) {
-        setSize(width, height);
-    }
-
-    @Override
-    public boolean fidgetz$isVisible() {
-        return widget.visible;
     }
 }

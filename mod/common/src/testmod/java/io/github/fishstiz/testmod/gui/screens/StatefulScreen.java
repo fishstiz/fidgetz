@@ -64,7 +64,7 @@ public class StatefulScreen extends FZScreen {
                                     .onPress(this::incrementCount)
                                     .contextEntries(FZContextMenuEntry.builder()
                                             .message(Component.literal("Reset Count"))
-                                            .onClick(this::resetCount)
+                                            .onPress(this::resetCount)
                                             .build())
                                     .toProps()
                             )),

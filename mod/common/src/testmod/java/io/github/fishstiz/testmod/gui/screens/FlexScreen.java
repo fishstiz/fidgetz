@@ -100,12 +100,12 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
         collector.addEntry(FZContextMenuEntry.builder()
                 .message(Component.literal("Hello World!"))
-                .onClick(() -> IO.println("Hello World!"))
+                .onPress(() -> IO.println("Hello World!"))
                 .build());
         collector.nextSection();
         collector.addEntry(FZContextMenuEntry.builder()
                 .message(Component.literal("Goodbye World!"))
-                .onClick(() -> IO.println("Goodbye World!"))
+                .onPress(() -> IO.println("Goodbye World!"))
                 .build());
     }
 

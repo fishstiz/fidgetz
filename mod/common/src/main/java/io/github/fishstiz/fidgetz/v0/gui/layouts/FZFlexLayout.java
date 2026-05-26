@@ -1,8 +1,8 @@
 package io.github.fishstiz.fidgetz.v0.gui.layouts;
 
-import com.mojang.datafixers.util.Either;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIntBiConsumer;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.layouts.AbstractLayout;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -10,9 +10,11 @@ import net.minecraft.client.gui.layouts.LayoutSettings;
 import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.util.TriState;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -558,6 +560,7 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         private int minHeight;
         private int maxWidth;
         private int maxHeight;
+        private TriState visible = TriState.DEFAULT;
 
         Settings(LayoutSettings layoutSettings) {
             this.layoutSettings = layoutSettings;
@@ -618,6 +621,24 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
         public Settings maxFlexHeight(int maxHeight) {
             this.maxHeight = maxHeight;
+            return this;
+        }
+
+        public Settings visible(boolean visible) {
+            this.visible = TriState.from(visible);
+            return this;
+        }
+
+        public Settings visible() {
+            return visible(true);
+        }
+
+        public Settings invisible() {
+            return visible(false);
+        }
+
+        public Settings defaultVisibility() {
+            this.visible = TriState.DEFAULT;
             return this;
         }
 
@@ -804,21 +825,23 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
     }
 
     private static final class FlexChildContainer extends ChildContainer {
-        private final Either<FZFlexElement, AbstractWidget> flexChild;
         private final Settings flexSettings;
+        private final BooleanSupplier visibilityGetter;
+        private final IntIntBiConsumer sizeSetter;
 
-        FlexChildContainer(LayoutElement child, Settings flexSettings, Either<FZFlexElement, AbstractWidget> flexChild) {
+        FlexChildContainer(LayoutElement child, Settings flexSettings, BooleanSupplier visibilityGetter, IntIntBiConsumer sizeSetter) {
             super(child, flexSettings.layoutSettings);
-            this.flexChild = flexChild;
+            this.visibilityGetter = visibilityGetter;
+            this.sizeSetter = sizeSetter;
             this.flexSettings = flexSettings;
         }
 
         FlexChildContainer(FZFlexElement child, Settings flexSettings) {
-            this(child, flexSettings, Either.left(child));
+            this(child, flexSettings, child::fidgetz$isVisible, child::fidgetz$setSize);
         }
 
         FlexChildContainer(AbstractWidget child, Settings flexSettings) {
-            this(child, flexSettings, Either.right(child));
+            this(child, flexSettings, () -> child.visible, child::setSize);
         }
 
         @Override
@@ -833,25 +856,21 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
         @Override
         boolean visible() {
-            return flexChild.map(FZFlexElement::fidgetz$isVisible, w -> w.visible);
+            return flexSettings.visible.toBoolean(visibilityGetter.getAsBoolean());
         }
 
         @Override
         void setLength(ScreenAxis axis, int length) {
             switch (axis) {
-                case HORIZONTAL ->
-                        flexChild.ifLeft(e -> e.fidgetz$setSize(length, child.getHeight())).ifRight(w -> w.setSize(length, child.getHeight()));
-                case VERTICAL ->
-                        flexChild.ifLeft(e -> e.fidgetz$setSize(child.getWidth(), length)).ifRight(w -> w.setSize(child.getWidth(), length));
+                case HORIZONTAL -> sizeSetter.accept(length, child.getHeight());
+                case VERTICAL -> sizeSetter.accept(child.getWidth(), length);
             }
         }
 
         @Override
         void setSize(ScreenAxis axis, int length, int otherLength) {
             ScreenPosition position = ScreenPosition.of(axis, length, otherLength);
-            int width = position.x();
-            int height = position.y();
-            flexChild.ifLeft(e -> e.fidgetz$setSize(width, height)).ifRight(w -> w.setSize(width, height));
+            sizeSetter.accept(position.x(), position.y());
         }
 
         @Override

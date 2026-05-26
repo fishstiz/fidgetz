@@ -1,5 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
@@ -23,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 final class FZContextMenuEntryImpl implements FZContextMenuEntry {
@@ -37,10 +39,8 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     private final Supplier<@Nullable Component> messageSupplier;
     private final WidgetTooltipHolder tooltipHolder;
     private final BooleanSupplier activeSupplier;
-    private final Builder.MouseAction mouseAction;
-    private final Builder.KeyboardAction keyboardAction;
+    private final Function<PressEvent, @Nullable Boolean> pressHandler;
     private final boolean closeOnInteraction;
-    private final boolean takeFocusAfterInteraction;
     private final boolean allowAutoDivideAfterEntry;
     private final boolean playClickSoundOnInteraction;
     private final boolean applyCursorWhenActive;
@@ -54,10 +54,8 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
             Supplier<@Nullable Component> messageSupplier,
             WidgetTooltipHolder tooltipHolder,
             BooleanSupplier activeSupplier,
-            Builder.MouseAction mouseAction,
-            Builder.KeyboardAction keyboardAction,
+            Function<PressEvent, Boolean> pressHandler,
             boolean closeOnInteraction,
-            boolean takeFocusAfterInteraction,
             boolean allowAutoDivideAfterEntry,
             boolean playClickSoundOnInteraction,
             boolean applyCursorWhenActive,
@@ -70,10 +68,8 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
         this.messageSupplier = messageSupplier;
         this.tooltipHolder = tooltipHolder;
         this.activeSupplier = activeSupplier;
-        this.mouseAction = mouseAction;
-        this.keyboardAction = keyboardAction;
+        this.pressHandler = pressHandler;
         this.closeOnInteraction = closeOnInteraction;
-        this.takeFocusAfterInteraction = takeFocusAfterInteraction;
         this.allowAutoDivideAfterEntry = allowAutoDivideAfterEntry;
         this.playClickSoundOnInteraction = playClickSoundOnInteraction;
         this.applyCursorWhenActive = applyCursorWhenActive;
@@ -82,7 +78,7 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, FZContextMenuEntry.Context context, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, Context context, int mouseX, int mouseY, float partialTick) {
         if (applyCursorWhenActive && context.isActive() && context.isHovered()) {
             graphics.requestCursor(CursorTypes.POINTING_HAND);
         }
@@ -148,8 +144,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, FZContextMenuEntry.Context context) {
-        if (context.isActive() && mouseAction.mouseClicked(event, context)) {
+    public boolean mouseClicked(MouseButtonEvent event, Context context) {
+        if (context.isActive() &&
+            event.button() == InputConstants.MOUSE_BUTTON_LEFT &&
+            Boolean.TRUE.equals(pressHandler.apply(new PressEvent(this, context)))) {
             playClickSound();
             return true;
         }
@@ -158,7 +156,9 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent, Context context) {
-        if (context.isActive() && keyboardAction.keyPressed(keyEvent, context)) {
+        if (context.isActive() &&
+            keyEvent.isConfirmation() &&
+            Boolean.TRUE.equals(pressHandler.apply(new PressEvent(this, context)))) {
             playClickSound();
             return true;
         }
@@ -178,11 +178,6 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     @Override
     public boolean shouldCloseOnInteraction() {
         return closeOnInteraction;
-    }
-
-    @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return takeFocusAfterInteraction;
     }
 
     @Override
@@ -207,19 +202,19 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput output, FZContextMenuEntry.Context context) {
+    public void updateNarration(NarrationElementOutput output, Context context) {
         tooltipHolder.updateNarration(output);
     }
 
-    record Divider(RenderableRectangle rectangle, int height, boolean fallback) implements FZContextMenuEntry.Divider {
-        static final Divider DEFAULT_SECTION = new FZContextMenuEntryImpl.Divider(Renderables.sprite(Fidgetz.id("widget/contextmenu_section_divider")), true);
-        static final Divider DEFAULT_ENTRY = new FZContextMenuEntryImpl.Divider(Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider")), false);
+    record DividerImpl(RenderableRectangle rectangle, int height, boolean fallback) implements Divider {
+        static final DividerImpl DEFAULT_SECTION = new DividerImpl(Renderables.sprite(Fidgetz.id("widget/contextmenu_section_divider")), true);
+        static final DividerImpl DEFAULT_ENTRY = new DividerImpl(Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider")), false);
 
-        Divider(RenderableRectangle rectangle, int height) {
+        DividerImpl(RenderableRectangle rectangle, int height) {
             this(rectangle, height, false);
         }
 
-        Divider(RenderableRectangle rectangle, boolean fallback) {
+        DividerImpl(RenderableRectangle rectangle, boolean fallback) {
             this(rectangle, DEFAULT_HEIGHT, fallback);
         }
 

@@ -1,22 +1,20 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
-import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetTooltipHolder;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
@@ -25,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -50,10 +49,6 @@ public interface FZContextMenuEntry {
         return CommonComponents.EMPTY;
     }
 
-    default boolean shouldTakeFocusAfterInteraction() {
-        return true;
-    }
-
     default boolean shouldCloseOnInteraction() {
         return true;
     }
@@ -74,19 +69,19 @@ public interface FZContextMenuEntry {
         return false;
     }
 
-    default @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent, Context context) {
-        return null;
-    }
-
     default void updateNarration(NarrationElementOutput output, Context context) {
     }
 
     static Divider sectionDivider() {
-        return FZContextMenuEntryImpl.Divider.DEFAULT_SECTION;
+        return FZContextMenuEntryImpl.DividerImpl.DEFAULT_SECTION;
     }
 
     static Divider createDivider(RenderableRectangle rectangle, int height) {
-        return new FZContextMenuEntryImpl.Divider(rectangle, height);
+        return new FZContextMenuEntryImpl.DividerImpl(rectangle, height);
+    }
+
+    static Divider createDivider(Identifier sprite, int height) {
+        return new FZContextMenuEntryImpl.DividerImpl(Renderables.sprite(sprite), height);
     }
 
     static Builder builder() {
@@ -104,8 +99,6 @@ public interface FZContextMenuEntry {
         boolean isFocused();
 
         boolean isChildOpened();
-
-        Component getMessage();
 
         ScreenRectangle getRectangle();
 
@@ -169,28 +162,31 @@ public interface FZContextMenuEntry {
         }
     }
 
+    record PressEvent(FZContextMenuEntry entry, Context context) {
+    }
+
     final class Builder {
-        private static final WidgetRenderables DEFAULT_BACKGROUND = new WidgetRenderables(
-                Renderables.sprite(Fidgetz.id("widget/contextmenu_entry")),
-                Renderables.sprite(Fidgetz.id("widget/contextmenu_entry")),
-                Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_highlighted"))
-        );
+        private static final WidgetRenderables DEFAULT_BACKGROUND;
         private final List<FZContextMenuEntry> children = new ArrayList<>();
         private @Nullable Supplier<@Nullable WidgetRenderables> backgroundSupplier = () -> DEFAULT_BACKGROUND;
         private @Nullable Supplier<@Nullable WidgetElements> iconSupplier;
         private @Nullable Supplier<@Nullable Component> messageSupplier;
         private FZContextMenuEntryImpl.@Nullable TooltipHolder tooltipHolder;
         private @Nullable BooleanSupplier activeSupplier;
-        private @Nullable MouseAction mouseAction;
-        private @Nullable KeyboardAction keyboardAction;
+        private @Nullable Function<PressEvent, Boolean> pressHandler;
         private boolean closeOnInteraction = true;
-        private boolean takeFocusOnInteraction = true;
         private boolean allowDivideAfterEntry = true;
         private boolean playClickSoundOnInteraction = true;
         private boolean applyCursorWhenActive = true;
         private int height = DEFAULT_HEIGHT;
         private int minWidth = DEFAULT_MIN_WIDTH;
-        private boolean keyboardActionCopied = false;
+
+        static {
+            RenderableRectangle background = Renderables.sprite(Fidgetz.id("widget/contextmenu_entry"));
+            RenderableRectangle highlighted = Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_highlighted"));
+            DEFAULT_BACKGROUND = new WidgetRenderables(background, background, highlighted);
+        }
+
 
         private Builder() {
         }
@@ -292,15 +288,6 @@ public interface FZContextMenuEntry {
             return closeOnInteraction(true);
         }
 
-        public Builder takeFocusOnInteraction(boolean takeFocusOnInteraction) {
-            this.takeFocusOnInteraction = takeFocusOnInteraction;
-            return this;
-        }
-
-        public Builder takeFocusOnInteraction() {
-            return takeFocusOnInteraction(true);
-        }
-
         public Builder allowAutoDivideAfterEntry(boolean allowAutoDivideAfterEntry) {
             this.allowDivideAfterEntry = allowAutoDivideAfterEntry;
             return this;
@@ -334,96 +321,35 @@ public interface FZContextMenuEntry {
             return this;
         }
 
-        public Builder onClick(@Nullable MouseAction mouseAction) {
-            this.mouseAction = mouseAction;
-            if (mouseAction == null && keyboardActionCopied) keyboardAction = null;
+        public Builder minWidth(int width) {
+            this.minWidth = width;
             return this;
         }
 
-        public Builder onClick(BooleanSupplier mouseAction) {
+        public Builder onPress(@Nullable Function<PressEvent, Boolean> pressHandler) {
+            this.pressHandler = pressHandler;
+            return this;
+        }
+
+        public Builder onPress(BooleanSupplier pressHandler) {
+            Objects.requireNonNull(pressHandler, "pressHandler is null");
+            return onPress(_ -> pressHandler.getAsBoolean());
+        }
+
+        public Builder onPress(Runnable mouseAction) {
             Objects.requireNonNull(mouseAction, "mouseAction is null");
-
-            onClick((event, _) -> {
-                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-                    return mouseAction.getAsBoolean();
-                }
-                return false;
+            return onPress(_ -> {
+                mouseAction.run();
+                return true;
             });
-
-            if (keyboardAction == null) {
-                onKeyPress((event, _) -> {
-                    if (event.isSelection()) {
-                        return mouseAction.getAsBoolean();
-                    }
-                    return false;
-                });
-                this.keyboardActionCopied = true;
-            }
-
-            return this;
         }
 
-        public Builder onClick(Runnable mouseAction) {
-            Objects.requireNonNull(mouseAction, "mouseAction is null");
-
-            onClick((event, _) -> {
-                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-                    mouseAction.run();
-                    return true;
-                }
-                return false;
-            });
-
-            if (keyboardAction == null) {
-                onKeyPress((event, _) -> {
-                    if (event.isSelection()) {
-                        mouseAction.run();
-                        return true;
-                    }
-                    return false;
-                });
-                this.keyboardActionCopied = true;
-            }
-
-            return this;
-        }
-
-        public Builder preventClick() {
-            this.mouseAction = null;
-            if (this.keyboardActionCopied) {
-                this.keyboardAction = null;
-                this.keyboardActionCopied = false;
-            }
-            return this;
-        }
-
-        public Builder onKeyPress(@Nullable KeyboardAction keyboardAction) {
-            this.keyboardAction = keyboardAction;
-            this.keyboardActionCopied = false;
-            return this;
-        }
-
-        public Builder preventKeyPress() {
-            this.keyboardAction = null;
-            this.keyboardActionCopied = false;
+        public Builder preventPress() {
+            this.pressHandler = null;
             return this;
         }
 
         public FZContextMenuEntry build() {
-            KeyboardAction keyboardAction = this.keyboardAction;
-            KeyboardAction keyboardActionCopy = this.keyboardAction;
-
-            if (keyboardAction != null && keyboardActionCopied) {
-                boolean closeOnInteraction = this.closeOnInteraction;
-                keyboardAction = (event, ctx) -> {
-                    if (keyboardActionCopy.keyPressed(event, ctx)) {
-                        if (closeOnInteraction) ctx.closeMenu();
-                        return true;
-                    }
-                    return false;
-                };
-            }
-
             return new FZContextMenuEntryImpl(
                     children,
                     backgroundSupplier == null ? FunctionUtils.nullSupplier() : backgroundSupplier,
@@ -431,26 +357,14 @@ public interface FZContextMenuEntry {
                     messageSupplier == null ? FunctionUtils.nullSupplier() : messageSupplier,
                     tooltipHolder == null ? new WidgetTooltipHolder() : tooltipHolder,
                     activeSupplier == null ? () -> true : activeSupplier,
-                    mouseAction == null ? (_, _) -> false : mouseAction,
-                    keyboardAction == null ? (_, _) -> false : keyboardAction,
+                    pressHandler == null ? _ -> true : pressHandler,
                     closeOnInteraction,
-                    takeFocusOnInteraction,
                     allowDivideAfterEntry,
                     playClickSoundOnInteraction,
-                    applyCursorWhenActive && mouseAction != null,
+                    applyCursorWhenActive && pressHandler != null,
                     height,
                     minWidth
             );
-        }
-
-        @FunctionalInterface
-        public interface MouseAction {
-            boolean mouseClicked(MouseButtonEvent event, Context context);
-        }
-
-        @FunctionalInterface
-        public interface KeyboardAction {
-            boolean keyPressed(KeyEvent event, Context context);
         }
     }
 }
