@@ -29,6 +29,7 @@ public final class FZScrollableLayout extends ComposedLayout {
     private static final int DEFAULT_SCROLLBAR_SPACING = 4;
     private final Supplier<ScreenRectangle> screenArea;
     private final FZScrollableLayout.Container container;
+    private double scrollRate;
     private boolean reserveScrollbarArea;
     private int scrollbarSpacing = DEFAULT_SCROLLBAR_SPACING;
     private int minWidth;
@@ -39,27 +40,50 @@ public final class FZScrollableLayout extends ComposedLayout {
         super(content);
         this.screenArea = screenArea;
         this.container = new FZScrollableLayout.Container(0, 0, scrollbarSettings);
+        this.scrollRate = scrollbarSettings.scrollRate();
     }
 
-    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content) {
-        this(screenArea, content, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+    public static FZScrollableLayout from(Supplier<ScreenRectangle> maxScrollArea, Layout content) {
+        return new FZScrollableLayout(maxScrollArea, content, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+    }
+
+
+    public static FZScrollableLayout from(LayoutElement container, Layout content) {
+        return from(container::getRectangle, content);
+    }
+
+    public static FZScrollableLayout from(GuiEventListener container, Layout content) {
+        return from(container::getRectangle, content);
+    }
+
+    public static FZScrollableLayout from(Layout content) {
+        return from(ScreenRectangle::empty, content);
+    }
+
+    public static FZScrollableLayout from(int maxHeight, Layout content) {
+        return from(content).maxHeight(maxHeight);
     }
 
     public FZScrollableLayout minWidth(int minWidth) {
-        this.minWidth = Math.min(minWidth, screenArea.get().width());
-        container.setWidth(Math.max(layout.getWidth(), minWidth));
+        this.minWidth = MathUtils.optionalMin(minWidth, screenArea.get().width());
+        container.setWidth(Math.max(composed.getWidth(), minWidth));
         return this;
     }
 
     public FZScrollableLayout minHeight(int minHeight) {
-        this.minHeight = Math.min(minHeight, screenArea.get().height());
-        container.setHeight(Math.max(layout.getHeight(), minHeight));
+        this.minHeight = MathUtils.optionalMin(minHeight, screenArea.get().height());
+        container.setHeight(Math.max(composed.getHeight(), minHeight));
         return this;
     }
 
     public FZScrollableLayout maxHeight(int maxHeight) {
-        this.maxHeight = Math.min(maxHeight, screenArea.get().height());
+        this.maxHeight = MathUtils.optionalMin(maxHeight, screenArea.get().height());
         container.setHeight(Math.clamp(container.getHeight(), minHeight, maxHeight));
+        return this;
+    }
+
+    public FZScrollableLayout scrollRate(double scrollRate) {
+        this.scrollRate = scrollRate;
         return this;
     }
 
@@ -83,13 +107,13 @@ public final class FZScrollableLayout extends ComposedLayout {
 
     @Override
     public void arrangeElements() {
-        layout.arrangeElements();
+        composed.arrangeElements();
         container.children.clear();
-        layout.visitWidgets(container.children::add);
-        int contentWidth = layout.getWidth();
+        composed.visitWidgets(container.children::add);
+        int contentWidth = composed.getWidth();
         ScreenRectangle containerBounds = screenArea.get();
-        container.setWidth(Math.min(containerBounds.width(), Math.max(contentWidth, minWidth) + reservedWidth()));
-        container.setHeight(Math.min(containerBounds.height(), MathUtils.clampOptionalMax(layout.getHeight(), minHeight, maxHeight)));
+        container.setWidth(MathUtils.optionalMin(Math.max(contentWidth, minWidth) + reservedWidth(), containerBounds.width()));
+        container.setHeight(MathUtils.optionalMin(MathUtils.clampOptionalMax(composed.getHeight(), minHeight, maxHeight), containerBounds.height()));
         container.refreshScrollAmount();
     }
 
@@ -165,7 +189,7 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         protected int contentHeight() {
-            return layout.getHeight();
+            return composed.getHeight();
         }
 
         @Override
@@ -239,14 +263,14 @@ public final class FZScrollableLayout extends ComposedLayout {
         @Override
         public void setX(int x) {
             super.setX(x);
-            layout.setX(x);
+            composed.setX(x);
             bounds = super.getRectangle();
         }
 
         @Override
         public void setY(int y) {
             super.setY(y);
-            layout.setY(y - (int) scrollAmount());
+            composed.setY(y - (int) scrollAmount());
             bounds = super.getRectangle();
         }
 
@@ -265,13 +289,13 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         public double scrollRate() {
-            return super.scrollRate();
+            return scrollRate;
         }
 
         @Override
         public void setScrollAmount(double scrollAmount) {
             super.setScrollAmount(scrollAmount);
-            FZScrollableLayout.this.layout.setY(getRectangle().top() - (int) scrollAmount());
+            FZScrollableLayout.this.composed.setY(getRectangle().top() - (int) scrollAmount());
         }
 
         @Override

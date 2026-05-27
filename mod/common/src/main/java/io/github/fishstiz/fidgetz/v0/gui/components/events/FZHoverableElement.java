@@ -20,4 +20,8 @@ public interface FZHoverableElement {
     default boolean fidgetz$updateHovered(double mouseX, double mouseY) {
         throw notImplemented("fidgetz$updateHovered");
     }
+
+    default boolean fidgetz$isVisible() {
+        return true;
+    }
 }

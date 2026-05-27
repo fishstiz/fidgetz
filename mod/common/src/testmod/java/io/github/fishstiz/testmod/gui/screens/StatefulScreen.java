@@ -4,11 +4,8 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZText;
 import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.*;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZClampedLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.Justification;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import net.minecraft.network.chat.CommonComponents;
@@ -19,7 +16,7 @@ import org.jspecify.annotations.Nullable;
 
 public class StatefulScreen extends FZScreen {
     private final FZMutableRef<State> state = new FZMutableRef<>(State.defaults());
-    private @Nullable FZClampedLayout rootLayout;
+    private @Nullable FZLayout rootLayout;
 
     public StatefulScreen() {
         super(Component.literal("Stateful Screen"));
@@ -51,13 +48,13 @@ public class StatefulScreen extends FZScreen {
 
     @Override
     protected void collectChildren(GuiComponentCollector collector) {
-        FZFlexLayout rootLayout = FZLayouts.flexVertical(this).spacing(8).also(root -> {
+        FZFlexLayout rootLayout = FZFlexLayout.vertical(this).spacing(8).also(root -> {
             var titleText = root.child(FZText.builder(title).build(), root.newChildSettings().alignHorizontallyCenter());
 
             collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.BLUE)).toRenderable(titleText::getRectangle));
 
-            root.child(FZLayouts.flexVertical().spacing(8), root.flexChildSettings()).also(items -> {
-                items.child(FZLayouts.flexHorizontal().spacing(8), items.flexChildHorizontalSettings()).also(controls -> {
+            root.child(FZFlexLayout.vertical().spacing(8), root.flexChildSettings()).also(items -> {
+                items.child(FZFlexLayout.horizontal().spacing(8), items.flexChildHorizontalSettings()).also(controls -> {
                     controls.child(
                             FZButton.bind("count", state.map(s -> FZButton.builder()
                                     .message(Component.literal("Count: " + s.itemCount()))
@@ -121,9 +118,9 @@ public class StatefulScreen extends FZScreen {
                     collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.GREEN)).toPopover(controls::getRectangle));
                 });
 
-                var contents = FZLayouts.flexVertical().spacing(8);
+                var contents = FZFlexLayout.vertical().spacing(8);
                 var scrollableContents = items.child(
-                        FZLayouts.scrollable(this, state.bind("contents", contents, (s, c) -> {
+                        FZScrollableLayout.from(this, state.bind("contents", contents, (s, c) -> {
                             c.clear();
                             for (int i = 0; i < s.itemCount(); i++) {
                                 c.child(FZButton.builder().message(Component.literal("Item: " + i)).build(), c.flexChildHorizontalSettings());
@@ -138,7 +135,7 @@ public class StatefulScreen extends FZScreen {
                 state.subscribe("items-layout", items::arrangeElements);
             });
 
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(buttons -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(buttons -> {
                 buttons.justifyContents(Justification.CENTER);
 
                 buttons.child(FZButton.bind("cycling-button", state.map(s -> FZButton.builder()
@@ -156,7 +153,7 @@ public class StatefulScreen extends FZScreen {
                 collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.BLUE)).toPopover(buttons::getRectangle));
             });
 
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
                 footer.justifyContents(Justification.CENTER);
 
                 footer.child(FZButton.builder()
@@ -175,10 +172,10 @@ public class StatefulScreen extends FZScreen {
             });
         });
 
-        this.rootLayout = FZLayouts.composer(this, rootLayout)
-                .padded(8)
+        this.rootLayout = FZComposedLayout.contain(this, rootLayout)
+                .padding(8)
                 .arrange()
-                .clamped()
+                .clamp()
                 .arrange()
                 .get();
         this.rootLayout.visitWidgets(collector::renderableWidget);

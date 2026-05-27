@@ -43,12 +43,12 @@ public interface FZRef<T> {
 
             @Override
             public <S> Runnable subscribe(String key, Function<R, S> innerSelector, Consumer<S> callback) {
-                MutableObject<R> last = new MutableObject<>(selector.apply(parent.value()));
-                return parent.subscribe(key, innerSelector.compose(selector), (s) -> {
-                    R next = selector.apply(parent.value());
+                MutableObject<S> last = new MutableObject<>(innerSelector.apply(selector.apply(parent.value())));
+                return parent.subscribe(key, t -> {
+                    S next = innerSelector.apply(selector.apply(t));
                     if (!Objects.equals(next, last.get())) {
                         last.setValue(next);
-                        callback.accept(s);
+                        callback.accept(next);
                     }
                 });
             }

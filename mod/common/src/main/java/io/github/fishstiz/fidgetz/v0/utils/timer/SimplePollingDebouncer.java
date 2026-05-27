@@ -1,4 +1,4 @@
-package io.github.fishstiz.fidgetz.util.debounce;
+package io.github.fishstiz.fidgetz.v0.utils.timer;
 
 import net.minecraft.util.Util;
 

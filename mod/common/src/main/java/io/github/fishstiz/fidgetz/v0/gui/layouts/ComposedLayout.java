@@ -7,71 +7,79 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import java.util.function.Consumer;
 
 abstract class ComposedLayout implements FZLayout {
-    protected final Layout layout;
+    protected Layout composed;
 
-    ComposedLayout(Layout layout) {
-        this.layout = layout;
+    ComposedLayout(Layout composed) {
+        this.composed = composed;
     }
 
     @Override
     public void fidgetz$setWidth(int width) {
-        if (layout instanceof FZFlexElement flexElement) {
+        if (composed instanceof FZFlexElement flexElement) {
             flexElement.fidgetz$setWidth(width);
         }
     }
 
     @Override
     public void fidgetz$setHeight(int height) {
-        if (layout instanceof FZFlexElement flexElement) {
+        if (composed instanceof FZFlexElement flexElement) {
             flexElement.fidgetz$setHeight(height);
         }
     }
 
     @Override
     public void fidgetz$setSize(int width, int height) {
-        if (layout instanceof FZFlexElement flexElement) {
+        if (composed instanceof FZFlexElement flexElement) {
             flexElement.fidgetz$setSize(width, height);
         }
     }
 
     @Override
+    public boolean fidgetz$isVisible() {
+        if (composed instanceof FZFlexElement flexElement) {
+            return flexElement.fidgetz$isVisible();
+        }
+        return true;
+    }
+
+    @Override
     public void visitChildren(Consumer<LayoutElement> layoutElementVisitor) {
-        layout.visitChildren(layoutElementVisitor);
+        composed.visitChildren(layoutElementVisitor);
     }
 
     @Override
     public void setX(int x) {
-        layout.setX(x);
+        composed.setX(x);
     }
 
     @Override
     public void setY(int y) {
-        layout.setY(y);
+        composed.setY(y);
     }
 
     @Override
     public int getX() {
-        return layout.getX();
+        return composed.getX();
     }
 
     @Override
     public int getY() {
-        return layout.getY();
+        return composed.getY();
     }
 
     @Override
     public int getWidth() {
-        return layout.getWidth();
+        return composed.getWidth();
     }
 
     @Override
     public int getHeight() {
-        return layout.getHeight();
+        return composed.getHeight();
     }
 
     @Override
     public ScreenRectangle getRectangle() {
-        return layout.getRectangle();
+        return composed.getRectangle();
     }
 
     @Override

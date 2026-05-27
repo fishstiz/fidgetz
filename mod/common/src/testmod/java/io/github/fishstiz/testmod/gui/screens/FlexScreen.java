@@ -6,8 +6,8 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -40,8 +40,8 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
         GuiComponentCollector collector = new GuiComponentCollector();
         contextMenu = collector.renderableWidget(FZContextMenu.builder(this).build());
 
-        FZFlexLayout rootLayout = FZLayouts.flexVertical(this).spacing(8).also(root -> {
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
+        FZFlexLayout rootLayout = FZFlexLayout.vertical(this).spacing(8).also(root -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
                 header.child(btn("header-1:flex-h"), header.flexChildHorizontalSettings());
                 header.child(btn("header-2:flex-h"), header.flexChildHorizontalSettings());
                 header.child(btnBuilder("header-3").size(70, 20).build());
@@ -49,23 +49,23 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
                 header.child(btn("header-5:flex-h"), header.flexChildHorizontalSettings());
                 collector.renderableOnly(fill(ARGB.color(0.2f, CommonColors.GREEN)).toPopover(header::getRectangle));
             });
-            root.child(FZLayouts.flexVertical(this).spacing(8), root.flexChildSettings()).also(body -> {
+            root.child(FZFlexLayout.vertical(this).spacing(8), root.flexChildSettings()).also(body -> {
                 body.child(btn("body-1:flex-both"), body.flexChildSettings());
                 body.child(btn("body-2:flex-h"), body.flexChildHorizontalSettings());
-                body.child(FZLayouts.flexHorizontal().spacing(8), body.flexChildSettings()).also(center -> {
-                    center.child(FZLayouts.flexVertical().spacing(8), center.flexChildSettings()).also(cLeft -> {
+                body.child(FZFlexLayout.horizontal().spacing(8), body.flexChildSettings()).also(center -> {
+                    center.child(FZFlexLayout.vertical().spacing(8), center.flexChildSettings()).also(cLeft -> {
                         cLeft.child(btn("cLeft-1"));
                         cLeft.child(btn("cLeft-2:flex-both"), cLeft.flexChildSettings());
                         collector.renderableOnly(outline(CommonColors.RED).toPopover(cLeft::getRectangle, 1));
                     });
-                    center.child(FZLayouts.flexVertical().spacing(8), center.flexChildSettings()).also(cRight -> {
+                    center.child(FZFlexLayout.vertical().spacing(8), center.flexChildSettings()).also(cRight -> {
                         cRight.child(btn("cRight-1:flex-v"), cRight.flexChildSettings());
                         cRight.child(btn("cRight-2:flex-h"), cRight.flexChildHorizontalSettings());
                         collector.renderableOnly(outline(CommonColors.RED).toPopover(cRight::getRectangle));
                     });
                     collector.renderableOnly(outline(CommonColors.BLUE).toPopover(center::getRectangle));
                 });
-                body.child(FZLayouts.flexHorizontal().spacing(8), body.flexChildSettings()).also(bBtm -> {
+                body.child(FZFlexLayout.horizontal().spacing(8), body.flexChildSettings()).also(bBtm -> {
                     bBtm.child(btn("bBtm-btm-1:flex-v"), bBtm.flexChildVerticalSettings());
                     bBtm.spacer(bBtm.flexChildSettings());
                     bBtm.child(btn("bBtm-btm-2:flex-h"), bBtm.flexChildHorizontalSettings());
@@ -73,8 +73,8 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
                 });
                 collector.renderableOnly(fill(ARGB.color(0.2f, CommonColors.GREEN)).toPopover(body::getRectangle));
             });
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
-                footer.child(FZLayouts.flexHorizontal().spacing(8), footer.flexChildHorizontalSettings()).also(fLeft -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(footer -> {
+                footer.child(FZFlexLayout.horizontal().spacing(8), footer.flexChildHorizontalSettings()).also(fLeft -> {
                     fLeft.child(btn("fLeft-1:flex-h"), fLeft.flexChildHorizontalSettings());
                     fLeft.child(btnBuilder("fLeft-2").size(40, 20).build());
                     fLeft.child(btn("fLeft-3:flex-h"), fLeft.flexChildHorizontalSettings());
@@ -85,10 +85,10 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
             });
         });
 
-        FZLayouts.composer(this, rootLayout)
-                .padded(8)
-                .centered()
-                .clamped()
+        FZComposedLayout.contain(this, rootLayout)
+                .padding(8)
+                .center()
+                .clamp()
                 .arrange()
                 .get()
                 .visitWidgets(collector::renderableWidget);

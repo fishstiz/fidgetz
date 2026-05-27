@@ -11,9 +11,6 @@ authors = "${mod_author}" #optional
 description = "${mod_description}" #mandatory (Supports multiline text)
 
 [[mixins]]
-config = "${mod_id}.mixins.json"
-
-[[mixins]]
 config = "${mod_id}.v0.mixins.json"
 
 [[accessTransformers]]

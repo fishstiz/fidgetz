@@ -4,7 +4,6 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractListWidget;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZTextField;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -47,7 +46,7 @@ public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entr
     }
 
     class Entry extends FZAbstractListWidget.Entry {
-        private final FZFlexLayout layout = FZLayouts.flexHorizontal();
+        private final FZFlexLayout layout = FZFlexLayout.horizontal();
         private final List<AbstractWidget> children = new ArrayList<>();
 
         private Entry(int index) {

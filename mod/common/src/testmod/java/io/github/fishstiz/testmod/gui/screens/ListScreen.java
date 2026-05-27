@@ -1,12 +1,9 @@
 package io.github.fishstiz.testmod.gui.screens;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.*;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.*;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZClampedLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.Justification;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import net.minecraft.client.Minecraft;
@@ -31,7 +28,7 @@ public class ListScreen extends FZScreen {
     private final FZMutableRef<String> textFieldState = new FZMutableRef<>("");
     private final FZMutableRef<String> textFieldState2 = new FZMutableRef<>("");
     private final FZMutableRef<String> textFieldState3 = new FZMutableRef<>("uneditable");
-    private @Nullable FZClampedLayout rootLayout;
+    private @Nullable FZLayout rootLayout;
 
     public ListScreen() {
         super(Component.literal("List Screen"));
@@ -39,8 +36,8 @@ public class ListScreen extends FZScreen {
 
     @Override
     protected void collectChildren(GuiComponentCollector collector) {
-        this.rootLayout = FZLayouts.composer(this, FZLayouts.flexVertical(this).spacing(8).also(root -> {
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
+        this.rootLayout = FZComposedLayout.contain(this, FZFlexLayout.vertical(this).spacing(8).also(root -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
                 header.justifyContents(Justification.CENTER).alignContents(Justification.CENTER).defaultChildSettings().flexCross();
 
                 header.child(FZText.builder(title).build());
@@ -98,7 +95,7 @@ public class ListScreen extends FZScreen {
                                 .entry(button -> button.message(Component.literal("Option 5")))
                                 .build());
 
-                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                        layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
@@ -134,7 +131,7 @@ public class ListScreen extends FZScreen {
                                     .build());
                         });
 
-                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                        layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             btns.child(FZIconButton.builder()
@@ -164,7 +161,7 @@ public class ListScreen extends FZScreen {
                                     .build());
                         });
 
-                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                        layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
@@ -188,7 +185,7 @@ public class ListScreen extends FZScreen {
                                     .build());
                         });
 
-                        layout.child(FZLayouts.flexHorizontal()).also(btns -> {
+                        layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             RenderableRectangle whiteOutline = Renderables.outline(CommonColors.WHITE);
@@ -275,22 +272,22 @@ public class ListScreen extends FZScreen {
                         layout.child(FZButton.builder().message(Component.literal("Another button entry")).build());
                         layout.child(FZText.builder(Component.literal("Final tall entry")).height(50).build());
 
-                        layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
+                        layout.child(FZFlexLayout.horizontal().spacing(8)).also(row -> {
                             row.child(FZText.builder(Component.literal("Row with button")).build(), row.flexChildSettings());
                             row.child(FZButton.builder().message(Component.literal("Action")).build());
                         });
 
-                        layout.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
+                        layout.child(FZFlexLayout.horizontal().spacing(8)).also(row -> {
                             row.child(FZButton.builder().message(Component.literal("Option A")).build(), row.flexChildHorizontalSettings());
                             row.child(FZButton.builder().message(Component.literal("Option B")).build(), row.flexChildHorizontalSettings());
                         });
 
-                        layout.child(FZLayouts.flexVertical().spacing(4)).also(row -> {
+                        layout.child(FZFlexLayout.vertical().spacing(4)).also(row -> {
                             row.child(FZText.builder(Component.literal("Stacked label")).build(), row.newChildSettings().alignHorizontallyCenter());
                             row.child(FZButton.builder().message(Component.literal("Stacked button")).bigWidth().build(), row.newChildSettings().alignHorizontallyCenter());
                         });
 
-                        layout.child(FZLayouts.flexHorizontal().spacing(8).also(row -> {
+                        layout.child(FZFlexLayout.horizontal().spacing(8).also(row -> {
                             row.child(FZButton.builder()
                                     .square()
                                     .message(Component.literal(q.collapsed ? ">" : "v"))
@@ -312,7 +309,7 @@ public class ListScreen extends FZScreen {
                         }));
 
                         if (!q.collapsed) {
-                            layout.child(FZLayouts.flexVertical().spacing(4).also(row -> {
+                            layout.child(FZFlexLayout.vertical().spacing(4).also(row -> {
                                 row.defaultChildSettings().flexCross();
                                 for (int i = 0; i < q.count; i++) {
                                     row.child(FZText.builder(Component.literal("Item: " + i)).active().build());
@@ -337,7 +334,7 @@ public class ListScreen extends FZScreen {
                     }).toProps())), root.flexChildSettings());
 
 
-            root.child(FZLayouts.flexHorizontal().spacing(8)).also(row -> {
+            root.child(FZFlexLayout.horizontal().spacing(8)).also(row -> {
                 row.child(FZDropdown.builder(this)
                         .message(Component.literal("Dropdown"))
                         .entry(option -> option
@@ -367,7 +364,7 @@ public class ListScreen extends FZScreen {
 
             });
 
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(row -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(row -> {
                 row.justifyContents(Justification.CENTER);
                 row.child(FZIconButton.bind("sprite-test", state.map(State::count2).map(count -> FZIconButton
                         .builder(count > 5 ? SPRITES2 : SPRITES)
@@ -380,7 +377,7 @@ public class ListScreen extends FZScreen {
                         .build());
             });
 
-        })).padded(0, 8, 0, 8).clamped().arrange().visitWidgets(collector::renderableWidget).get();
+        })).padding(0, 8, 0, 8).clamp().arrange().visitWidgets(collector::renderableWidget).get();
     }
 
     @Override

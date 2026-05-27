@@ -44,6 +44,11 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
     private Consumer<FZContextMenuEntry.Collector> fidgetz$contextMenuSource;
 
     @Override
+    public boolean fidgetz$isVisible() {
+        return visible;
+    }
+
+    @Override
     public boolean fidgetz$isHovered() {
         return fidgetz$hovered == TriState.TRUE || fidgetz$getHovered() != null;
     }
@@ -84,7 +89,7 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
 
     @Override
     public boolean fidgetz$updateHovered(double mouseX, double mouseY) {
-        fidgetz$setHovered(areCoordinatesInRectangle(mouseX, mouseY) && visible);
+        fidgetz$setHovered(areCoordinatesInRectangle(mouseX, mouseY) && fidgetz$isVisible());
         boolean hovered = fidgetz$isHovered();
         if (hovered && this instanceof ContainerEventHandler container) {
             for (GuiEventListener child : container.children()) {

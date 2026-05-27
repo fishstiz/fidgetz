@@ -2,7 +2,8 @@ package io.github.fishstiz.testmod.gui.screens;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
 import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.Justification;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
@@ -21,9 +22,9 @@ public class FZTestScreen extends FZScreen {
     protected void collectChildren(GuiComponentCollector collector) {
         collector.renderableOnly(Renderables.fill(ARGB.color(0.5f, CommonColors.BLACK)).toRenderable(this.getRectangle()));
 
-        FZLayouts.flexVertical(this).spacing(8).also(root -> {
+        FZFlexLayout.vertical(this).spacing(8).also(root -> {
             collector.renderableOnly(Renderables.fill(ARGB.color(0.2f, CommonColors.GREEN)).toPopover(root::getRectangle));
-            root.child(FZLayouts.flexHorizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
+            root.child(FZFlexLayout.horizontal().spacing(8), root.flexChildHorizontalSettings()).also(header -> {
                 header.justifyContents(Justification.SPACE_EVENLY);
                 header.alignContents(Justification.END);
 
@@ -34,7 +35,7 @@ public class FZTestScreen extends FZScreen {
                 collector.renderableOnly(Renderables.fill(ARGB.color(0.3f, CommonColors.BLUE)).toPopover(titleWidget::getRectangle));
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(header::getRectangle));
             });
-            root.child(FZLayouts.flexVertical().spacing(8), root.flexChildSettings()).also(body -> {
+            root.child(FZFlexLayout.vertical().spacing(8), root.flexChildSettings()).also(body -> {
                 body.child(Button.builder(Component.literal("Top Align"), btn -> IO.println(btn.getMessage())).build());
                 body.spacer(body.newChildSettings().flexMain());
                 body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
@@ -44,15 +45,15 @@ public class FZTestScreen extends FZScreen {
                 body.child(Button.builder(Component.literal("Bot Align"), btn -> IO.println(btn.getMessage())).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(body::getRectangle));
             });
-            root.child(FZLayouts.flexHorizontal(), root.flexChildHorizontalSettings()).also(footer -> {
+            root.child(FZFlexLayout.horizontal(), root.flexChildHorizontalSettings()).also(footer -> {
                 footer.justifyContents(Justification.CENTER);
                 footer.child(Button.builder(Component.literal("Close"), _ -> onClose()).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(footer::getRectangle));
             });
 
-            FZLayouts.composer(this, root)
-                    .padded(8)
-                    .clamped()
+            FZComposedLayout.contain(this, root)
+                    .padding(8)
+                    .clamp()
                     .arrange()
                     .get()
                     .visitWidgets(collector::renderableWidget);

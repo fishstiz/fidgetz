@@ -11,10 +11,6 @@
   "environment": "client",
   "mixins": [
     {
-      "config": "${mod_id}.mixins.json",
-      "environment": "client"
-    },
-    {
       "config": "${mod_id}.v0.mixins.json",
       "environment": "client"
     }

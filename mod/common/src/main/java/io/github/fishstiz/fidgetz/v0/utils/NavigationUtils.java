@@ -3,14 +3,13 @@ package io.github.fishstiz.fidgetz.v0.utils;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.TabNavigation;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.ArrowNavigation;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -67,15 +66,25 @@ public final class NavigationUtils {
         }
 
         List<? extends GuiEventListener> children = container.children();
-        if (!children.isEmpty()) {
-            GuiEventListener firstFocusable = Collections.min(children, Comparator.comparingInt(GuiEventListener::getTabOrderGroup));
-            ComponentPath path = firstFocusable instanceof ContainerEventHandler subContainer
-                    ? initialFocus(subContainer)
-                    : firstFocusable.nextFocusPath(new FocusNavigationEvent.InitialFocus());
-            return path == null ? ComponentPath.path(firstFocusable, container) : ComponentPath.path(container, path);
+        if (children.isEmpty()) return null;
+
+        GuiEventListener firstFocusable = null;
+        for (GuiEventListener child : children) {
+            if (child instanceof NarratableEntry narratable && !narratable.isActive()) {
+                continue;
+            }
+            if (firstFocusable == null || child.getTabOrderGroup() < firstFocusable.getTabOrderGroup()) {
+                firstFocusable = child;
+            }
         }
 
-        return null;
+        if (firstFocusable == null) return null;
+
+        ComponentPath path = firstFocusable instanceof ContainerEventHandler subContainer
+                ? initialFocus(subContainer)
+                : firstFocusable.nextFocusPath(new FocusNavigationEvent.InitialFocus());
+
+        return path == null ? ComponentPath.path(firstFocusable, container) : ComponentPath.path(container, path);
     }
 
     public static @Nullable ComponentPath findPath(ContainerEventHandler container, GuiEventListener targetChild) {

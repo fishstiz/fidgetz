@@ -3,7 +3,7 @@ package io.github.fishstiz.testmod.gui.screens;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -90,7 +90,7 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
         argggLayout.addChild(Button.builder(Component.literal("Button 5"), _ -> IO.println(5)).build());
         argggLayout.addChild(Button.builder(Component.literal("Button 6"), _ -> IO.println(6)).build());
 
-        Layout midLayout = FZLayouts.centered(this, argggLayout);
+        Layout midLayout = FZComposedLayout.compose(argggLayout).center(this);
         midLayout.visitWidgets(this::addRenderableWidget);
 
         midLayout.arrangeElements();

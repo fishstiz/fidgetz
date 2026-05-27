@@ -1,5 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -21,9 +22,9 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 
-public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent {
+public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent, FZHoverableElement {
     private final List<AbstractWidget> children;
-    private AbstractWidget widget;
+    protected AbstractWidget widget;
     private boolean dragging;
 
     public WrappedComponent(AbstractWidget widget) {
@@ -268,6 +269,11 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     public void setRectangle(int width, int height, int x, int y) {
         super.setRectangle(width, height, x, y);
         widget.setRectangle(width, height, x, y);
+    }
+
+    @Override
+    public boolean fidgetz$isVisible() {
+        return widget.visible;
     }
 
     @Override

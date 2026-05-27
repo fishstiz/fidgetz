@@ -1,9 +1,9 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
@@ -177,9 +177,9 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             }
         }
 
-        FZLayouts.composer(container, layout)
-                .padded(margin.left(), margin.top(), margin.right(), margin.bottom())
-                .clamped()
+        FZComposedLayout.contain(container, layout)
+                .padding(margin.left(), margin.top(), margin.right(), margin.bottom())
+                .clamp()
                 .arrange();
 
         ScreenRectangle layoutBounds = layout.getRectangle();
@@ -239,15 +239,16 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         ifNonDefault(props.flexHeight(), flexHeight -> this.flexHeight = flexHeight.toBoolean(false));
 
         Layout baseLayout = props.layout();
-        FZLayouts.Composer<?> composer = FZLayouts.composer(container, baseLayout);
+        FZComposedLayout.Contained composer = FZComposedLayout.contain(container, baseLayout);
 
         if (!ScreenRectangleUtils.isInsetsEmpty(padding)) {
-            composer = composer.padded(padding.left(), padding.top(), padding.right(), padding.bottom());
+            composer.padding(padding.left(), padding.top(), padding.right(), padding.bottom());
         }
         if (alignX > 0 || alignY > 0) {
-            composer = composer.aligned(alignX, alignY);
+            composer.align(alignX, alignY);
         }
-        this.layout = composer.clamped().get();
+        
+        this.layout = composer.clamp().get();
 
         if (isOpen()) {
             repositionElements();

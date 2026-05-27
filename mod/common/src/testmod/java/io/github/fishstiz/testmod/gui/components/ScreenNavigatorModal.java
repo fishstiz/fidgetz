@@ -2,8 +2,8 @@ package io.github.fishstiz.testmod.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.testmod.gui.screens.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -43,12 +43,13 @@ public class ScreenNavigatorModal extends FZModal {
     }
 
     public static ScreenNavigatorModal create(FZDialogContainer screen) {
-        FZFlexLayout contents = FZLayouts.flexVertical().spacing(2);
-        Layout container = FZLayouts.composer(screen, contents)
+        FZFlexLayout contents = FZFlexLayout.vertical().spacing(2);
+        Layout container = FZComposedLayout.contain(screen, contents)
                 .scrollable()
-                .padded(8)
-                .clamped()
+                .padding(8)
+                .clamp()
                 .get();
+        
         return new ScreenNavigatorModal(screen, container, contents);
     }
 

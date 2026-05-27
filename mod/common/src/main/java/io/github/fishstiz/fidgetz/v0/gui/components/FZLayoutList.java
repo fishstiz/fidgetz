@@ -3,7 +3,6 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -46,7 +45,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     protected FZLayoutList(int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
         super(0, 0, width, height, message, scrollbarSettings);
         scrollRate = scrollbarSettings.scrollRate();
-        layout = FZLayouts.flexVertical();
+        layout = FZFlexLayout.vertical();
         bounds = super.getRectangle();
     }
 
@@ -74,7 +73,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         narratables.clear();
         renderables.clear();
 
-        FZFlexLayout newLayout = FZLayouts.flexVertical().maxWidth(contentWidth()).maxHeight(0);
+        FZFlexLayout newLayout = FZFlexLayout.vertical().maxWidth(contentWidth()).maxHeight(0);
 
         MutableBoolean focusUnresolved = new MutableBoolean(true);
         MutableInt count = new MutableInt(0);

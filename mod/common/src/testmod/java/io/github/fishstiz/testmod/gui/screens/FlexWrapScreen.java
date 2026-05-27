@@ -3,7 +3,8 @@ package io.github.fishstiz.testmod.gui.screens;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
 import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.Justification;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
@@ -18,7 +19,7 @@ public class FlexWrapScreen extends FZScreen {
 
     @Override
     protected void collectChildren(GuiComponentCollector collector) {
-        FZLayouts.flexHorizontal(this).spacing(4).maxWidth(200).wrap().also(root -> {
+        FZFlexLayout.horizontal(this).spacing(4).maxWidth(200).wrap().also(root -> {
             root.justifyContents(Justification.SPACE_EVENLY);
             root.alignContents(Justification.SPACE_EVENLY);
 
@@ -57,10 +58,10 @@ public class FlexWrapScreen extends FZScreen {
                     root.newChildSettings().alignVerticallyMiddle()
             );
 
-            FZLayouts.composer(this, root)
-                    .padded(8)
-                    .centered()
-                    .clamped()
+            FZComposedLayout.contain(this, root)
+                    .padding(8)
+                    .center()
+                    .clamp()
                     .arrange()
                     .get()
                     .visitWidgets(collector::renderableWidget);

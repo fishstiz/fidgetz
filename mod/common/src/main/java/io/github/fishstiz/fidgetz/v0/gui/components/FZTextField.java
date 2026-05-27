@@ -10,6 +10,7 @@ import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
 import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleFormatter;
 import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleMatcher;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -29,6 +30,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class FZTextField extends EditBox implements FZComponent, FZContextMenuEntry.Source {
+    private static final char SECTION_SIGN_PLACEHOLDER = '¶';
+    private static final char SECTION_SIGN = '§';
     private static final int DEFAULT_MAX_LENGTH = 64;
     private static final int DEFAULT_WIDTH = 150;
     private static final int DEFAULT_HEIGHT = 20;
@@ -40,6 +43,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private Function<ConfirmEvent, @Nullable Boolean> confirmHandler = FunctionUtils.nullFunction();
     private ScreenRectangle bounds;
     private Predicate<String> filter = _ -> true;
+    private boolean allowSectionSign;
     private int disableResponderCount = 0;
     private String previousValue = "";
     private int previousCursorPos;
@@ -50,6 +54,10 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private int pendingCursorPos;
     private int pendingHighlightPos;
     private String pendingValue = "";
+
+    // for allowing section sign
+    private IntArrayList sectionSignPositions = IntArrayList.of();
+    private int sectionSignStart;
 
     private FZTextField(Font font, int width, int height, Component narration, boolean bound) {
         super(font, width, height, narration);
@@ -87,16 +95,36 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         return ((EditBoxAccess) (Object) this).fidgetz$getHighlightPos();
     }
 
-    private void handleChange(String value) {
+    private String replacePlaceholders(String value) {
+        if (sectionSignPositions.isEmpty() || value.isEmpty()) {
+            return value;
+        }
+
+        StringBuilder stringBuilder = new StringBuilder(value);
+        for (int position : sectionSignPositions) {
+            int absolutePosition = sectionSignStart + position;
+            if (absolutePosition >= value.length()) {
+                continue;
+            }
+            if (value.charAt(absolutePosition) == SECTION_SIGN_PLACEHOLDER) {
+                stringBuilder.setCharAt(absolutePosition, SECTION_SIGN);
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private void handleChange(String originalValue) {
+        String value = replacePlaceholders(originalValue);
         boolean valid = filter.test(value);
         boolean isBound = isBound();
 
         disableResponder();
 
-        if (!valid || isBound) {
-            int cursorPos = getCursorPosition();
-            int highlightPos = getHighlightPosition();
+        int cursorPos = getCursorPosition();
+        int highlightPos = getHighlightPosition();
 
+        if (!valid || isBound) {
             setValue(previousValue);
             setCursorPosition(previousCursorPos);
             setHighlightPos(previousHighlightPos);
@@ -108,6 +136,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 changeHandler.accept(new ChangeEvent(this, value));
             }
         } else {
+            if (!value.equals(originalValue)) {
+                setValue(value);
+                setCursorPosition(cursorPos);
+                setHighlightPos(highlightPos);
+            }
+
             previousValue = value;
             previousHighlightPos = getHighlightPosition();
             previousCursorPos = getCursorPosition();
@@ -134,6 +168,33 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         previousCursorPos = getCursorPosition();
 
         enableResponder();
+    }
+
+    @Override
+    public void insertText(String input) {
+        if (!allowSectionSign) {
+            super.insertText(input);
+            return;
+        }
+
+        IntArrayList positions = new IntArrayList();
+        StringBuilder stringBuilder = new StringBuilder(input.length());
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == SECTION_SIGN) {
+                positions.add(i);
+                stringBuilder.append(SECTION_SIGN_PLACEHOLDER);
+            } else {
+                stringBuilder.append(c);
+            }
+        }
+
+        sectionSignStart = Math.min(getCursorPosition(), getHighlightPosition());
+        sectionSignPositions = positions;
+        super.insertText(stringBuilder.toString());
+        sectionSignPositions = IntArrayList.of();
+        sectionSignStart = 0;
     }
 
     @Override
@@ -210,6 +271,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
 
     private void applyProps(Props props) {
         propsState.apply(this, props);
+        if (props.editable() != TriState.DEFAULT) setEditable(props.editable().toBoolean(true));
+        if (props.allowSectionSign() != TriState.DEFAULT) allowSectionSign = props.allowSectionSign().toBoolean(false);
         props.filter().ifPresent(filter -> this.filter = filter.value());
         props.maxLength().ifPresent(this::setMaxLength);
         props.hint().ifPresent(this::setHint);
@@ -281,6 +344,10 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return OptionalInt.empty();
         }
 
+        default TriState allowSectionSign() {
+            return TriState.DEFAULT;
+        }
+
         default Optional<List<FZKeyed<TextFormatter>>> formatters() {
             return Optional.empty();
         }
@@ -308,6 +375,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private final @Nullable Component hint;
         private final Undefinable<@Nullable String> suggestion;
         private final @Nullable Integer maxLength;
+        private final TriState allowSectionSign;
         private final @Nullable List<FZKeyed<TextFormatter>> formatters;
         private final @Nullable List<TextStyleMatcher> styleMatchers;
         private final @Nullable FZKeyed<Predicate<String>> filter;
@@ -321,6 +389,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 @Nullable Component hint,
                 Undefinable<@Nullable String> suggestion,
                 @Nullable Integer maxLength,
+                TriState allowSectionSign,
                 @Nullable List<FZKeyed<TextFormatter>> formatters,
                 @Nullable List<TextStyleMatcher> styleMatchers,
                 @Nullable FZKeyed<Predicate<String>> filter,
@@ -333,6 +402,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             this.hint = hint;
             this.suggestion = suggestion;
             this.maxLength = maxLength;
+            this.allowSectionSign = allowSectionSign;
             this.formatters = formatters;
             this.styleMatchers = styleMatchers;
             this.filter = filter;
@@ -363,6 +433,11 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         @Override
         public OptionalInt maxLength() {
             return maxLength == null ? OptionalInt.empty() : OptionalInt.of(maxLength);
+        }
+
+        @Override
+        public TriState allowSectionSign() {
+            return allowSectionSign;
         }
 
         @Override
@@ -400,6 +475,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                    Objects.equals(hint(), other.hint()) &&
                    Objects.equals(suggestion(), other.suggestion()) &&
                    Objects.equals(maxLength(), other.maxLength()) &&
+                   allowSectionSign == other.allowSectionSign() &&
                    Objects.equals(formatters(), other.formatters()) &&
                    Objects.equals(styleMatchers(), other.styleMatchers()) &&
                    Objects.equals(filter(), other.filter()) &&
@@ -416,6 +492,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     hint,
                     suggestion,
                     maxLength,
+                    allowSectionSign,
                     formatters,
                     styleMatchers,
                     filter,
@@ -431,6 +508,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private @Nullable Component hint;
         private Undefinable<@Nullable String> suggestion = Undefinable.undefined();
         private @Nullable Integer maxLength;
+        private TriState allowSectionSign = TriState.DEFAULT;
         private @Nullable List<FZKeyed<TextFormatter>> formatters;
         private @Nullable FZKeyed<Predicate<String>> filter;
         private @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
@@ -471,6 +549,15 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         public Builder maxLength(int maxLength) {
             this.maxLength = maxLength;
             return this;
+        }
+
+        public Builder allowSectionSign(boolean allowSectionSign) {
+            this.allowSectionSign = TriState.from(allowSectionSign);
+            return this;
+        }
+
+        public Builder allowSectionSign() {
+            return allowSectionSign(true);
         }
 
         public Builder filter(Object key, Predicate<String> filter) {
@@ -540,6 +627,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     hint,
                     suggestion,
                     maxLength,
+                    allowSectionSign,
                     formatters,
                     styleMatchers,
                     filter,

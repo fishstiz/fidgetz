@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
@@ -11,7 +11,6 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -99,47 +98,49 @@ public final class FZContextMenu extends FZDialog {
             return;
         }
 
-        FZFlexLayout content = FZLayouts.flexVertical().spacing(rowSpacing);
-        int entryCount = 0;
-        int entryWidth = minWidth;
+        FZFlexLayout content = FZFlexLayout.vertical().spacing(rowSpacing);
+        {
+            int entryCount = 0;
+            int entryWidth = minWidth;
 
-        for (int i = 0; i < entries.size(); i++) {
-            FZContextMenuEntry current = entries.get(i);
-            FZContextMenuEntry next = (i + 1 < entries.size()) ? entries.get(i + 1) : null;
-            boolean canDivideNext = next != null && !(next instanceof FZContextMenuEntry.Divider);
+            for (int i = 0; i < entries.size(); i++) {
+                FZContextMenuEntry current = entries.get(i);
+                FZContextMenuEntry next = (i + 1 < entries.size()) ? entries.get(i + 1) : null;
+                boolean canDivideNext = next != null && !(next instanceof FZContextMenuEntry.Divider);
 
-            if (current instanceof FZContextMenuEntry.Divider divider) {
-                if (canDivideNext && entryCount > 0) {
-                    content.child(new EntryWidget(divider.fallback() && sectionDivider != null ? sectionDivider : current));
+                if (current instanceof FZContextMenuEntry.Divider divider) {
+                    if (canDivideNext && entryCount > 0) {
+                        content.child(new EntryWidget(divider.fallback() && sectionDivider != null ? sectionDivider : current));
+                    }
+                } else {
+                    content.child(new EntryWidget(current));
+                    entryWidth = Math.max(entryWidth, current.minWidth());
+                    entryCount++;
+                    if (canDivideNext && entryDivider != null && current.canAutoDivideAfterEntry()) {
+                        content.child(new EntryWidget(entryDivider));
+                    }
                 }
-            } else {
-                content.child(new EntryWidget(current));
-                entryWidth = Math.max(entryWidth, current.minWidth());
-                entryCount++;
-                if (canDivideNext && entryDivider != null && current.canAutoDivideAfterEntry()) {
-                    content.child(new EntryWidget(entryDivider));
-                }
+            }
+
+            if (entryCount == 0) {
+                close();
+                return;
+            }
+
+            if (entryWidth > minWidth) {
+                int width = entryWidth;
+                content.visitWidgets(widget -> widget.setWidth(width));
             }
         }
 
-        if (entryCount == 0) {
-            close();
-            return;
-        }
+        Layout layout = FZComposedLayout.compose(content)
+                .padding(padding.left(), padding.top(), padding.right(), padding.bottom())
+                .toScrollable(container)
+                .scrollbarSpacing(0)
+                .minWidth(minWidth)
+                .maxHeight(maxHeight);
 
-        if (entryWidth > minWidth) {
-            int width = entryWidth;
-            content.visitWidgets(widget -> widget.setWidth(width));
-        }
-
-        Layout layout = FZLayouts.composer(container, content)
-                .padded(padding.left(), padding.top(), padding.right(), padding.bottom())
-                .scrollable(scrollable -> scrollable
-                        .scrollbarSpacing(0)
-                        .minWidth(minWidth)
-                        .maxHeight(maxHeight))
-                .arrange()
-                .get();
+        layout.arrangeElements();
 
         ScreenRectangle targetBounds = layout.getRectangle();
         ScreenRectangle containerBounds = container.getRectangle();

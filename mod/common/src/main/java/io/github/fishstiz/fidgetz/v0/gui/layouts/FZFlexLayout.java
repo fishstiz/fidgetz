@@ -10,6 +10,7 @@ import net.minecraft.client.gui.layouts.LayoutSettings;
 import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.TriState;
 
 import java.util.ArrayList;
@@ -42,15 +43,35 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         return new FZFlexLayout(ScreenRectangle::empty, axis);
     }
 
+    public static FZFlexLayout horizontal(Screen screen) {
+        return new FZFlexLayout(screen::getRectangle, ScreenAxis.HORIZONTAL);
+    }
+
+    public static FZFlexLayout horizontal(LayoutElement container) {
+        return new FZFlexLayout(container::getRectangle, ScreenAxis.HORIZONTAL);
+    }
+
+    public static FZFlexLayout horizontal() {
+        return auto(ScreenAxis.HORIZONTAL);
+    }
+
+    public static FZFlexLayout vertical(Screen screen) {
+        return new FZFlexLayout(screen::getRectangle, ScreenAxis.VERTICAL);
+    }
+
+    public static FZFlexLayout vertical(LayoutElement container) {
+        return new FZFlexLayout(container::getRectangle, ScreenAxis.VERTICAL);
+    }
+
+    public static FZFlexLayout vertical() {
+        return auto(ScreenAxis.VERTICAL);
+    }
+
     private static <T> T getAxisValue(ScreenAxis axis, T horizontalValue, T verticalValue) {
         return switch (axis) {
             case HORIZONTAL -> horizontalValue;
             case VERTICAL -> verticalValue;
         };
-    }
-
-    private static int clampPreferMax(int value, int min, int max) {
-        return min > max ? max : Math.clamp(value, min, max);
     }
 
     public FZFlexLayout maxWidth(int maxWidth) {

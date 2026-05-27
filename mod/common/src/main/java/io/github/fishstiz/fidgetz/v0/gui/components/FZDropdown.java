@@ -1,8 +1,8 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayouts;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZScrollableLayout;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
@@ -46,8 +46,6 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private final SelectionContainer selectionContainer = new SelectionContainer();
     private final ContainerEventHandler parentContainer;
     private final Font font;
-    private final int collapseWidth;
-    private final int expandWidth;
     private List<Entry> entries = Collections.emptyList();
     private boolean hideMessage;
     private @Nullable WidgetElements leftIcon;
@@ -58,14 +56,12 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private Component interactSymbol = TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
     private Component inactiveInteractSymbol = defaultInactiveMessage(interactSymbol);
     private int interactIconWidth;
+    private boolean iconWidthDirty = true;
     private ScreenRectangle bounds;
 
     FZDropdown(int x, int y, int width, int height, Component message, ContainerEventHandler parentContainer) {
         super(x, y, width, height, message, FZButton.NOP, DEFAULT_NARRATION);
         this.font = Minecraft.getInstance().font;
-        this.collapseWidth = font.width(TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE);
-        this.expandWidth = font.width(TextComponentUtils.BLACK_DOWN_POINTING_TRIANGLE);
-        this.interactIconWidth = collapseWidth;
         this.parentContainer = parentContainer;
         this.bounds = super.getRectangle();
     }
@@ -75,7 +71,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     private void initializeSelection() {
-        FZFlexLayout layout = FZLayouts.flexVertical().spacing(1);
+        FZFlexLayout layout = FZFlexLayout.vertical().spacing(1);
         layout.defaultChildSettings().flexCross();
 
         for (int i = 0; i < entries.size(); i++) {
@@ -85,10 +81,9 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             }
         }
 
-        selectionContainer.setLayout(FZLayouts.composer(parentContainer, layout)
-                .padded(ENTRY_SPACING)
-                .scrollable()
-                .get()
+        selectionContainer.setLayout(FZComposedLayout.compose(layout)
+                .padding(ENTRY_SPACING)
+                .toScrollable(parentContainer)
                 .scrollbarSpacing(0));
     }
 
@@ -112,6 +107,14 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
     }
 
+    private int getInteractIconWidth() {
+        if (iconWidthDirty) {
+            interactIconWidth = font.width(interactSymbol);
+            iconWidthDirty = false;
+        }
+        return interactIconWidth;
+    }
+
     private Component getInteractSymbol() {
         return active ? interactSymbol : inactiveInteractSymbol;
     }
@@ -127,7 +130,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         int right = getRight();
         int spacing = DEFAULT_ELEMENT_SPACING;
 
-        right -= spacing + interactIconWidth;
+        right -= spacing + getInteractIconWidth();
 
         if (leftIcon != null) {
             left += spacing + leftIcon.margin().left();
@@ -335,7 +338,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             selectionContainer.open = open;
             interactSymbol = open ? TextComponentUtils.BLACK_DOWN_POINTING_TRIANGLE : TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
             inactiveInteractSymbol = defaultInactiveMessage(interactSymbol);
-            interactIconWidth = open ? expandWidth : collapseWidth;
+            iconWidthDirty = true;
         }
 
         @Override
@@ -357,7 +360,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                 super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
                 GuiEventListener sibling = parentContainer.getFocused();
-                if (sibling != this && sibling != FZDropdown.this) {
+                if ((sibling != this && sibling != FZDropdown.this) || !FZDropdown.this.isActive()) {
                     closeSelection();
                 }
             }
@@ -522,6 +525,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         @Override
         public int getTabOrderGroup() {
             return FZDropdown.this.getTabOrderGroup();
+        }
+
+        @Override
+        public boolean isActive() {
+            return FZDropdown.this.isActive() && super.isActive();
         }
     }
 
