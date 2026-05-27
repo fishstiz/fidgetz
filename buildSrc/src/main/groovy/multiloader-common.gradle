@@ -27,20 +27,20 @@ repositories {
                 url = 'https://repo.spongepowered.org/repository/maven-public'
             }
         }
-        filter { includeGroupAndSubgroups('org.spongepowered') }
+        filter {
+            includeGroupAndSubgroups('org.spongepowered')
+        }
     }
     exclusiveContent {
-        forRepositories(
-                maven {
-                    name = 'ParchmentMC'
-                    url = 'https://maven.parchmentmc.org/'
-                },
-                maven {
-                    name = "NeoForge"
-                    url = 'https://maven.neoforged.net/releases'
-                }
-        )
-        filter { includeGroup('org.parchmentmc.data') }
+        forRepository {
+            maven {
+                name = "NeoForge"
+                url = 'https://maven.neoforged.net/releases'
+            }
+        }
+        filter {
+            includeGroup('org.parchmentmc.data')
+        }
     }
 }
 
@@ -53,6 +53,18 @@ tasks.named("sourcesJar", Jar) {
 jar {
     from(rootProject.file('LICENSE')) {
         rename { "${it}_${mod_name}" }
+    }
+
+    manifest {
+        attributes([
+                'Specification-Title'   : mod_name,
+                'Specification-Vendor'  : mod_author,
+                'Specification-Version' : project.jar.archiveVersion,
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.jar.archiveVersion,
+                'Implementation-Vendor' : mod_author,
+                'Built-On-Minecraft'    : minecraft_version
+        ])
     }
 }
 
@@ -92,6 +104,3 @@ processResources {
 
     inputs.properties(expandProps)
 }
-
-ext.commonJavaConfig = { String sourceSetName -> "common${sourceSetName.capitalize()}Java" }
-ext.commonResourcesConfig = { String sourceSetName -> "common${sourceSetName.capitalize()}Resources" }

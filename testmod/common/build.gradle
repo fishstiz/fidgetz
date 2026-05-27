@@ -1,7 +1,6 @@
 plugins {
     id 'multiloader-common-provider'
     id 'net.neoforged.moddev'
-    id 'publish-local'
 }
 
 neoForge {
@@ -12,4 +11,6 @@ dependencies {
     compileOnly "org.spongepowered:mixin:$mixin_version"
     compileOnly "io.github.llamalad7:mixinextras-common:$mixinextras_version"
     annotationProcessor "io.github.llamalad7:mixinextras-common:$mixinextras_version"
+
+    compileOnly project(":common")
 }

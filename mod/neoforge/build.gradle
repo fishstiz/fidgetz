@@ -4,40 +4,12 @@ plugins {
     id 'publish-local'
 }
 
-sourceSets {
-    testmod {
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
-    }
-}
-
-loader {
-    sources = [sourceSets.main, sourceSets.testmod]
-}
-
 neoForge {
     version = neoforge_version
-
-    def at = project(loader.common).file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformers.from(at.absolutePath)
-    }
 
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
-        }
-        testmod {
-            sourceSet sourceSets.testmod
-        }
-    }
-
-    runs {
-        testmodClient {
-            type = "client"
-            gameDirectory = project.file('run/testmod')
-            ideName = "NeoForge Client Test ($project.path)"
-            sourceSet = sourceSets.testmod
         }
     }
 }
