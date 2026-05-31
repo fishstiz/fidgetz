@@ -2,16 +2,14 @@ package io.github.fishstiz.fidgetz.v0.inject.mixins;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZPopoverMenuItem;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.inject.interfaces.ContextMenuSourceConsumer;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,13 +23,22 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
     protected boolean isHovered;
 
     @Shadow
-    protected abstract boolean areCoordinatesInRectangle(double x, double y);
-
-    @Shadow
     public boolean visible;
 
     @Shadow
     public abstract boolean isHovered();
+
+    @Shadow
+    public abstract int getX();
+
+    @Shadow
+    public abstract int getY();
+
+    @Shadow
+    public abstract int getRight();
+
+    @Shadow
+    public abstract int getBottom();
 
     @Unique
     private TriState fidgetz$hovered = TriState.DEFAULT;
@@ -43,6 +50,11 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
     @Unique
     @Nullable
     private Consumer<FZContextMenu.Collector> fidgetz$contextMenuSource;
+
+    @Unique
+    private boolean fidgetz$areCoordinatesInRectangle(double x, double y) {
+        return x >= (double) getX() && y >= (double) getY() && x < (double) getRight() && y < (double) getBottom();
+    }
 
     @Override
     public boolean fidgetz$isVisible() {
@@ -90,7 +102,7 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
 
     @Override
     public boolean fidgetz$updateHovered(double mouseX, double mouseY) {
-        fidgetz$setHovered(areCoordinatesInRectangle(mouseX, mouseY) && fidgetz$isVisible());
+        fidgetz$setHovered(fidgetz$areCoordinatesInRectangle(mouseX, mouseY) && fidgetz$isVisible());
         boolean hovered = fidgetz$isHovered();
         if (hovered && this instanceof ContainerEventHandler container) {
             for (GuiEventListener child : container.children()) {
@@ -107,7 +119,7 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.@NonNull Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         if (this.fidgetz$contextMenuSource != null) {
             this.fidgetz$contextMenuSource.accept(collector);
             collector.nextSection();

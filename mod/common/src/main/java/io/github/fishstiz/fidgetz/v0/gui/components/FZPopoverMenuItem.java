@@ -16,8 +16,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +65,7 @@ public sealed interface FZPopoverMenuItem {
         return new Divider(ctx -> new FZPopoverMenuEntryImpl.Divider(ctx, rectangle, height));
     }
 
-    static Divider createDivider(Identifier sprite, int height) {
+    static Divider createDivider(ResourceLocation sprite, int height) {
         return new Divider(ctx -> new FZPopoverMenuEntryImpl.Divider(ctx, Renderables.sprite(sprite), height));
     }
 
@@ -198,13 +198,12 @@ public sealed interface FZPopoverMenuItem {
         private boolean closeOnInteraction = true;
         private boolean allowDivideAfterEntry = true;
         private boolean playClickSoundOnInteraction = true;
-        private boolean applyCursorWhenActive = true;
         private int height = Entry.DEFAULT_HEIGHT;
         private int minWidth = DEFAULT_WIDTH;
 
         static {
-            RenderableRectangle background = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry"));
-            RenderableRectangle highlighted = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_highlighted"));
+            RenderableRectangle background = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry")).withBlend();
+            RenderableRectangle highlighted = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_highlighted")).withBlend();
             WidgetRenderables renderables = new WidgetRenderables(background, background, highlighted);
             DEFAULT_BACKGROUND = () -> renderables;
         }
@@ -331,15 +330,6 @@ public sealed interface FZPopoverMenuItem {
             return playClickSoundOnInteraction(true);
         }
 
-        public Builder applyCursorChangeWhenActive(boolean applyCursorChangeWhenActive) {
-            this.applyCursorWhenActive = applyCursorChangeWhenActive;
-            return this;
-        }
-
-        public Builder applyCursorChangeWhenActive() {
-            return applyCursorChangeWhenActive(true);
-        }
-
         public Builder height(int height) {
             this.height = height;
             return this;
@@ -357,12 +347,12 @@ public sealed interface FZPopoverMenuItem {
 
         public Builder onPress(BooleanSupplier pressHandler) {
             Objects.requireNonNull(pressHandler, "pressHandler is null");
-            return onPress(_ -> pressHandler.getAsBoolean());
+            return onPress(ignored -> pressHandler.getAsBoolean());
         }
 
         public Builder onPress(Runnable mouseAction) {
             Objects.requireNonNull(mouseAction, "mouseAction is null");
-            return onPress(_ -> {
+            return onPress(ignored -> {
                 mouseAction.run();
                 return true;
             });
@@ -383,9 +373,8 @@ public sealed interface FZPopoverMenuItem {
                             messageSupplier == null ? FunctionUtils.nullSupplier() : messageSupplier,
                             tooltipHolder == null ? new WidgetTooltipHolder() : tooltipHolder,
                             activeSupplier == null ? () -> true : activeSupplier,
-                            pressHandler == null ? _ -> true : pressHandler,
+                            pressHandler == null ? ignored -> true : pressHandler,
                             playClickSoundOnInteraction,
-                            applyCursorWhenActive && pressHandler != null,
                             height,
                             minWidth
                     ),

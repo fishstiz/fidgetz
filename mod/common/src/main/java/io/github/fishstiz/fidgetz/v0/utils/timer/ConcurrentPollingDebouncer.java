@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.utils.timer;
 
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;

@@ -14,7 +14,7 @@ public interface FZRef<T> {
 
     default <R> Runnable subscribe(String key, Function<T, R> selector, Runnable callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
-        return subscribe(key, selector, _ -> callback.run());
+        return subscribe(key, selector, ignored -> callback.run());
     }
 
     default Runnable subscribe(String key, Consumer<T> callback) {
@@ -23,7 +23,7 @@ public interface FZRef<T> {
 
     default Runnable subscribe(String key, Runnable callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
-        return subscribe(key, _ -> callback.run());
+        return subscribe(key, ignored -> callback.run());
     }
 
     default <R> R bind(String key, R object, BiConsumer<T, R> effect) {
@@ -46,7 +46,7 @@ public interface FZRef<T> {
                 MutableObject<S> last = new MutableObject<>(innerSelector.apply(selector.apply(parent.value())));
                 return parent.subscribe(key, t -> {
                     S next = innerSelector.apply(selector.apply(t));
-                    if (!Objects.equals(next, last.get())) {
+                    if (!Objects.equals(next, last.getValue())) {
                         last.setValue(next);
                         callback.accept(next);
                     }

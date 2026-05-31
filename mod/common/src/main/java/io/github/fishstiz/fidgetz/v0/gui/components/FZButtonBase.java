@@ -3,32 +3,29 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class FZButtonBase extends Button.Plain implements FZComponent, FZContextMenu.Source {
+public class FZButtonBase extends Button implements FZComponent, FZContextMenu.Source {
     protected static final WidgetRenderables DEFAULT_RENDERABLES = WidgetRenderables.sprites(new WidgetSprites(
-            Identifier.withDefaultNamespace("widget/button"),
-            Identifier.withDefaultNamespace("widget/button_disabled"),
-            Identifier.withDefaultNamespace("widget/button_highlighted")
+            ResourceLocation.withDefaultNamespace("widget/button"),
+            ResourceLocation.withDefaultNamespace("widget/button_disabled"),
+            ResourceLocation.withDefaultNamespace("widget/button_highlighted")
     ));
-    protected static final OnPress NOP = _ -> {
+    protected static final OnPress NOP = ignored -> {
     };
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private Consumer<PressEvent> pressHandler = FunctionUtils.nopConsumer();
-    private boolean allowCursorChanges = true;
     private ScreenRectangle bounds;
 
     protected FZButtonBase(int width, int height, Component message) {
@@ -45,16 +42,9 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     }
 
     @Override
-    protected void handleCursor(GuiGraphicsExtractor graphics) {
-        if (allowCursorChanges) {
-            super.handleCursor(graphics);
-        }
-    }
-
-    @Override
-    public void onPress(InputWithModifiers input) {
-        super.onPress(input);
-        pressHandler.accept(new PressEvent(this, input));
+    public void onPress() {
+        super.onPress();
+        pressHandler.accept(new PressEvent(this));
     }
 
     @Override
@@ -63,20 +53,15 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractContents(graphics, mouseX, mouseY, a);
-        extractOverlay(graphics, mouseX, mouseY, a);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        extractOverlay(graphics, mouseX, mouseY, partialTick);
     }
 
-    protected void extractOverlay(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void extractOverlay(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }
-    }
-
-    @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
     }
 
     @Override
@@ -90,10 +75,6 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     protected void applyProps(Props props) {
         propsState.apply(this, props);
         props.pressHandler().ifPresent(handler -> this.pressHandler = handler.value());
-
-        if (props.allowCursorChanges() != TriState.DEFAULT) {
-            this.allowCursorChanges = props.allowCursorChanges().toBoolean(true);
-        }
     }
 
     @Override
@@ -101,27 +82,26 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
         return propsState.id;
     }
 
-    public record PressEvent(FZButtonBase target, InputWithModifiers input) {
+    @Override
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
+    }
+
+    public record PressEvent(FZButtonBase target) {
     }
 
     public interface Props extends GuiComponentProps {
         default Optional<FZKeyed<Consumer<PressEvent>>> pressHandler() {
             return Optional.empty();
         }
-
-        default TriState allowCursorChanges() {
-            return TriState.DEFAULT;
-        }
     }
 
     abstract static class PropsImpl extends GuiComponentPropsBase implements Props {
         private final @Nullable FZKeyed<Consumer<PressEvent>> pressHandler;
-        private final TriState allowCursorChanges;
 
-        PropsImpl(@Nullable FZKeyed<Consumer<PressEvent>> pressHandler, TriState allowCursorChanges, GuiComponentProps props) {
+        PropsImpl(@Nullable FZKeyed<Consumer<PressEvent>> pressHandler, GuiComponentProps props) {
             super(props);
             this.pressHandler = pressHandler;
-            this.allowCursorChanges = allowCursorChanges;
         }
 
         @Override
@@ -130,28 +110,21 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
         }
 
         @Override
-        public TriState allowCursorChanges() {
-            return allowCursorChanges;
-        }
-
-        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof Props other)) return false;
             return super.equals(o) &&
-                   Objects.equals(pressHandler(), other.pressHandler()) &&
-                   allowCursorChanges == other.allowCursorChanges();
+                   Objects.equals(pressHandler(), other.pressHandler());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(super.hashCode(), pressHandler, allowCursorChanges);
+            return Objects.hash(super.hashCode(), pressHandler);
         }
     }
 
     public static abstract class AbstractBuilder<T, B extends FZButtonBase, P extends Props> extends GuiComponentPropsBuilder<T> {
         protected @Nullable FZKeyed<Consumer<PressEvent>> pressHandler;
-        protected TriState allowCursorChanges = TriState.DEFAULT;
 
         protected AbstractBuilder() {
         }
@@ -176,7 +149,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
 
         public T onPress(Runnable clickAction) {
             Objects.requireNonNull(clickAction, "clickAction cannot be null");
-            this.pressHandler = FZKeyed.selfKey(_ -> clickAction.run());
+            this.pressHandler = FZKeyed.selfKey(ignored -> clickAction.run());
             return self();
         }
 
@@ -187,17 +160,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
 
         public T onPress(Object key, Runnable clickAction) {
             Objects.requireNonNull(clickAction, "clickAction cannot be null");
-            this.pressHandler = new FZKeyed<>(key, _ -> clickAction.run());
-            return self();
-        }
-
-        public T allowCursorChanges(boolean allowCursorChanges) {
-            this.allowCursorChanges = TriState.from(allowCursorChanges);
-            return self();
-        }
-
-        public T disableCursorChanges() {
-            this.allowCursorChanges = TriState.FALSE;
+            this.pressHandler = new FZKeyed<>(key, ignored -> clickAction.run());
             return self();
         }
 

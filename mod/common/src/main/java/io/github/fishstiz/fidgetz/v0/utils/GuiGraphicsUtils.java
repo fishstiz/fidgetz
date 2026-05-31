@@ -1,35 +1,21 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.TextAlignment;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
-import org.joml.Matrix3x2f;
-import org.jspecify.annotations.Nullable;
-
-import java.util.ServiceLoader;
 
 public final class GuiGraphicsUtils {
-    private static final Service GUI_GRAPHICS_SERVICE = ServiceLoader.load(Service.class).findFirst().orElseThrow();
-
-    public static void sprite(GuiGraphicsExtractor graphics, Identifier sprite, int x, int y, int width, int height) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height);
+    public static void sprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
+        graphics.blitSprite(sprite, x, y, width, height);
     }
 
     public static void texture(
-            GuiGraphicsExtractor graphics,
-            Identifier texture,
+            GuiGraphics graphics,
+            ResourceLocation texture,
             int x,
             int y,
             float u,
@@ -42,14 +28,13 @@ public final class GuiGraphicsUtils {
             int textureHeight
     ) {
         graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
                 texture,
                 x,
                 y,
-                u,
-                v,
                 width,
                 height,
+                u,
+                v,
                 uWidth,
                 vHeight,
                 textureWidth,
@@ -58,8 +43,8 @@ public final class GuiGraphicsUtils {
     }
 
     public static void texture(
-            GuiGraphicsExtractor graphics,
-            Identifier texture,
+            GuiGraphics graphics,
+            ResourceLocation texture,
             int x,
             int y,
             float u,
@@ -86,8 +71,8 @@ public final class GuiGraphicsUtils {
     }
 
     public static void texture(
-            GuiGraphicsExtractor graphics,
-            Identifier texture,
+            GuiGraphics graphics,
+            ResourceLocation texture,
             int x,
             int y,
             int width,
@@ -107,121 +92,16 @@ public final class GuiGraphicsUtils {
         );
     }
 
-    public static void texture(GuiGraphicsExtractor graphics, Identifier texture, int x, int y, int textureWidth, int textureHeight) {
+    public static void texture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int textureWidth, int textureHeight) {
         texture(graphics, texture, x, y, textureWidth, textureHeight, textureWidth, textureHeight);
     }
 
-    public static void fillFloat(GuiGraphicsExtractor graphics, float left, float top, float right, float bottom, int color) {
-        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
-        ScreenRectangle bounds = new ScreenRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top)).transformMaxBounds(pose);
-        ScreenRectangle intersection = scissorArea == null ? bounds : scissorArea.intersection(bounds);
-
-        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, new GuiElementRenderState() {
-            @Override
-            public void buildVertices(VertexConsumer vertexConsumer) {
-                vertexConsumer.addVertexWith2DPose(pose, left, top).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, left, bottom).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, right, bottom).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, right, top).setColor(color);
-            }
-
-            @Override
-            public RenderPipeline pipeline() {
-                return RenderPipelines.GUI;
-            }
-
-            @Override
-            public TextureSetup textureSetup() {
-                return TextureSetup.noTexture();
-            }
-
-            @Override
-            public @Nullable ScreenRectangle scissorArea() {
-                return scissorArea;
-            }
-
-            @Override
-            public @Nullable ScreenRectangle bounds() {
-                return intersection;
-            }
-        });
-    }
-
-    public static void fillHorizontal(GuiGraphicsExtractor graphics, int left, int top, int right, int bottom, int colorFrom, int colorTo) {
-        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
-        ScreenRectangle bounds = new ScreenRectangle(left, top, right - left, bottom - top).transformMaxBounds(pose);
-        ScreenRectangle intersection = scissorArea == null ? bounds : scissorArea.intersection(bounds);
-
-        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, new GuiElementRenderState() {
-            @Override
-            public void buildVertices(VertexConsumer vertexConsumer) {
-                vertexConsumer.addVertexWith2DPose(pose, left, top).setColor(colorFrom);
-                vertexConsumer.addVertexWith2DPose(pose, left, bottom).setColor(colorFrom);
-                vertexConsumer.addVertexWith2DPose(pose, right, bottom).setColor(colorTo);
-                vertexConsumer.addVertexWith2DPose(pose, right, top).setColor(colorTo);
-            }
-
-            @Override
-            public RenderPipeline pipeline() {
-                return RenderPipelines.GUI;
-            }
-
-            @Override
-            public TextureSetup textureSetup() {
-                return TextureSetup.noTexture();
-            }
-
-            @Override
-            public @Nullable ScreenRectangle scissorArea() {
-                return scissorArea;
-            }
-
-            @Override
-            public @Nullable ScreenRectangle bounds() {
-                return intersection;
-            }
-        });
-    }
-
-    public static void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
-        graphics.text(Minecraft.getInstance().font, text, x, y, color);
+    public static void text(GuiGraphics graphics, Component text, int x, int y, int color) {
+        graphics.drawString(Minecraft.getInstance().font, text, x, y, color);
     }
 
     public static void scrollingText(
-            ActiveTextCollector textCollector,
-            Font font,
-            Component component,
-            int left,
-            int top,
-            int right,
-            int bottom
-    ) {
-        int textWidth = font.width(component);
-        int textY = (top + bottom - font.lineHeight) / 2 + 1;
-        int availableWidth = right - left;
-
-        if (textWidth > availableWidth) {
-            int overflowWidth = textWidth - availableWidth;
-            double timeSeconds = Util.getMillis() / 1000.0;
-            double scrollDuration = Math.max(overflowWidth * 0.5, 3.0);
-            double scrollFactor = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * timeSeconds / scrollDuration)) / 2.0 + 0.5;
-            double scrollOffset = Mth.lerp(scrollFactor, 0.0, overflowWidth);
-
-            ActiveTextCollector.Parameters localParameters = textCollector.defaultParameters().withScissor(left, right, top, bottom);
-            textCollector.accept(TextAlignment.LEFT, left - (int) scrollOffset, textY, localParameters, component.getVisualOrderText());
-        } else {
-            textCollector.accept(TextAlignment.LEFT, left, textY, component.getVisualOrderText());
-        }
-    }
-
-    public static void scrollingText(ActiveTextCollector textCollector, Component component, int left, int top, int right, int bottom) {
-        scrollingText(textCollector, Minecraft.getInstance().font, component, left, top, right, bottom);
-    }
-
-    public static void scrollingText(
-            GuiGraphicsExtractor graphics,
+            GuiGraphics graphics,
             Font font,
             Component component,
             int left,
@@ -243,32 +123,56 @@ public final class GuiGraphicsUtils {
             double scrollOffset = Mth.lerp(scrollFactor, 0.0, overflowWidth);
 
             graphics.enableScissor(left, top, right, bottom);
-            graphics.text(font, component, left - (int) scrollOffset, textY, color, shadow);
+            graphics.drawString(font, component, left - (int) scrollOffset, textY, color, shadow);
             graphics.disableScissor();
         } else {
-            graphics.text(font, component, left, textY, color, shadow);
+            graphics.drawString(font, component, left, textY, color, shadow);
         }
     }
 
-    public static void scrollingText(GuiGraphicsExtractor graphics, Component component, int left, int top, int right, int bottom, int color, boolean shadow) {
+    public static void scrollingText(GuiGraphics graphics, Component component, int left, int top, int right, int bottom, int color, boolean shadow) {
         scrollingText(graphics, Minecraft.getInstance().font, component, left, top, right, bottom, color, shadow);
     }
 
-    public static void scrollingText(GuiGraphicsExtractor graphics, Font font, Component component, int left, int top, int right, int bottom, int color) {
+    public static void scrollingText(GuiGraphics graphics, Font font, Component component, int left, int top, int right, int bottom, int color) {
         scrollingText(graphics, font, component, left, top, right, bottom, color, true);
     }
 
-    public static void scrollingText(GuiGraphicsExtractor graphics, Component component, int left, int top, int right, int bottom, int color) {
+    public static void scrollingText(GuiGraphics graphics, Component component, int left, int top, int right, int bottom, int color) {
         scrollingText(graphics, Minecraft.getInstance().font, component, left, top, right, bottom, color);
     }
 
-    private GuiGraphicsUtils() {
+    public static void scrollingCenteredText(
+            GuiGraphics graphics,
+            Component component,
+            int centerX,
+            int left,
+            int right,
+            int top,
+            int bottom,
+            int color
+    ) {
+        Font font = Minecraft.getInstance().font;
+        int textWidth = font.width(component);
+        int textY = (top + bottom - font.lineHeight) / 2 + 1;
+        int availableWidth = right - left;
+
+        if (textWidth > availableWidth) {
+            int overflowWidth = textWidth - availableWidth;
+            double timeSeconds = Util.getMillis() / 1000.0;
+            double scrollDuration = Math.max(overflowWidth * 0.5, 3.0);
+            double scrollFactor = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * timeSeconds / scrollDuration)) / 2.0 + 0.5;
+            double scrollOffset = Mth.lerp(scrollFactor, 0.0, overflowWidth);
+
+            graphics.enableScissor(left, top, right, bottom);
+            graphics.drawString(font, component, left - (int) scrollOffset, textY, color);
+            graphics.disableScissor();
+        } else {
+            int i1 = Mth.clamp(centerX, left + textWidth / 2, right - textWidth / 2);
+            graphics.drawCenteredString(font, component, i1, textY, color);
+        }
     }
 
-    interface Service {
-        void addGuiElement(GuiGraphicsExtractor graphics, GuiElementRenderState blitState);
-
-        @Nullable
-        ScreenRectangle peekScissorStack(GuiGraphicsExtractor graphics);
+    private GuiGraphicsUtils() {
     }
 }

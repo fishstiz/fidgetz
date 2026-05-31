@@ -7,10 +7,10 @@ import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.Justification;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
+import io.github.fishstiz.testmod.utils.ARGB;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
 
 public class FZTestScreen extends FZScreen {
@@ -36,18 +36,18 @@ public class FZTestScreen extends FZScreen {
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(header::getRectangle));
             });
             root.child(FZFlexLayout.vertical().spacing(8), root.flexChildSettings()).also(body -> {
-                body.child(Button.builder(Component.literal("Top Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Top Align"), btn -> System.out.println(btn.getMessage())).build());
                 body.spacer(body.newChildSettings().flexMain());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
                 body.spacer(body.newChildSettings().flexMain());
-                body.child(Button.builder(Component.literal("Bot Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Bot Align"), btn -> System.out.println(btn.getMessage())).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(body::getRectangle));
             });
             root.child(FZFlexLayout.horizontal(), root.flexChildHorizontalSettings()).also(footer -> {
                 footer.justifyContents(Justification.CENTER);
-                footer.child(Button.builder(Component.literal("Close"), _ -> onClose()).build());
+                footer.child(Button.builder(Component.literal("Close"), ignored -> onClose()).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(footer::getRectangle));
             });
 

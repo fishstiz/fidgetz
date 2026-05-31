@@ -1,17 +1,16 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.gui.text.TextComponentUtils;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -19,21 +18,21 @@ import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.InputWithModifiers;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.network.chat.*;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
-public final class FZDropdown extends Button.Plain implements FZComponent, FZContextMenu.Source, FZPopoverContainer, Layout {
+public final class FZDropdown extends Button implements FZComponent, FZContextMenu.Source, FZPopoverContainer, Layout {
     private static final int DEFAULT_ELEMENT_SPACING = 8;
     private static final int ENTRY_SPACING = 4;
     private static final int DEFAULT_SELECTION_HEIGHT = 200;
+    private static final Component BLACK_RIGHT_POINTING_TRIANGLE = Component.literal("▶");
+    private static final Component BLACK_DOWN_POINTING_TRIANGLE = Component.literal("▼");
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private final SelectionContainer selectionContainer;
     private final ContainerEventHandler parentContainer;
@@ -41,8 +40,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private List<FZPopoverMenuItem> items = Collections.emptyList();
     private boolean hideMessage;
     private @Nullable WidgetElements leftIcon;
-    private Component interactSymbol = TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
-    private Component inactiveInteractSymbol = defaultInactiveMessage(interactSymbol);
+    private Component interactSymbol = BLACK_RIGHT_POINTING_TRIANGLE;
+    private Component inactiveInteractSymbol = inactiveMessage(interactSymbol);
     private int interactIconWidth;
     private boolean iconWidthDirty = true;
     private ScreenRectangle bounds;
@@ -59,6 +58,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         this(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, parentContainer);
     }
 
+    private static Component inactiveMessage(Component message) {
+        return ComponentUtils.mergeStyles(message.copy(), Style.EMPTY.withColor(CommonColors.LIGHT_GRAY));
+    }
+
     public void openSelection() {
         selectionContainer.build(this.items);
         selectionContainer.repositionElements();
@@ -70,8 +73,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     @Override
-    public void onPress(InputWithModifiers input) {
-        super.onPress(input);
+    public void onPress() {
+        super.onPress();
         if (selectionContainer.isOpen()) {
             closeSelection();
         } else {
@@ -92,8 +95,12 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        extractDefaultSprite(graphics);
+    public void renderString(GuiGraphics graphics, Font font, int color) {
+    }
+
+    @Override
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
 
         int left = getX();
         int top = getY();
@@ -116,15 +123,14 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             left += spacing + leftIcon.width() + leftIcon.margin().right();
         }
 
-        ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
-
         if (!hideMessage) {
-            GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left + spacing, top, right - spacing, getBottom());
+            int color = isActive() ? CommonColors.WHITE : 0xFFA0A0A0;
+            super.renderString(graphics, font, color | Mth.ceil(this.alpha * 255.0F) << 24);
         }
 
         int symbolX = MathUtils.clampOrAverage(right, getX() + spacing, right);
         int symbolY = top + (height / 2) - (font.lineHeight / 2);
-        textRenderer.accept(symbolX, symbolY, getInteractSymbol());
+        graphics.drawString(font, getInteractSymbol(), symbolX, symbolY, CommonColors.WHITE);
 
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
@@ -132,11 +138,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        if (super.keyPressed(event)) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (selectionContainer.isOpen() && event.isEscape()) {
+        if (selectionContainer.isOpen() && keyCode == InputConstants.KEY_ESCAPE) {
             closeSelection();
             parentContainer.setFocused(this);
             return true;
@@ -149,10 +155,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         propsState.contextEntries.accept(collector);
     }
 
-    @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
-    }
+//    @Override
+//    public boolean shouldTakeFocusAfterInteraction() {
+//        return propsState.focusOnInteraction;
+//    }
 
     @Override
     public void setFocused(boolean focused) {
@@ -224,6 +230,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         return propsState.id;
     }
 
+    @Override
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
+    }
+
     void applyProps(Props props) {
         if (props.parentContainer() != parentContainer) {
             throw new UnsupportedOperationException("Updating the parent container of FZDropdown is not supported.");
@@ -277,8 +288,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         private void updateIcon() {
-            interactSymbol = isOpen() ? TextComponentUtils.BLACK_DOWN_POINTING_TRIANGLE : TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
-            inactiveInteractSymbol = defaultInactiveMessage(interactSymbol);
+            interactSymbol = isOpen() ? BLACK_DOWN_POINTING_TRIANGLE : BLACK_RIGHT_POINTING_TRIANGLE;
+            inactiveInteractSymbol = inactiveMessage(interactSymbol);
             iconWidthDirty = true;
         }
 
@@ -343,7 +354,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         @Override
-        protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
 
             GuiEventListener sibling = parentContainer.getFocused();
@@ -570,11 +581,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
-        private static final WidgetRenderables DEFAULT_ENTRY_BACKGROUND = new WidgetRenderables(
-                Renderables.sprite(Fidgetz.id("widget/popovermenu_entry")),
-                Renderables.sprite(Fidgetz.id("widget/popovermenu_entry")),
-                Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_highlighted"))
-        );
+        private static final WidgetRenderables DEFAULT_ENTRY_BACKGROUND;
         private final ContainerEventHandler container;
         private final List<FZPopoverMenuItem> entries = new ArrayList<>();
         private TriState hideMessage = TriState.DEFAULT;
@@ -584,6 +591,12 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private @Nullable IntObjectPair<HorizontalDirection> minContainerWidth;
         private Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider = Undefinable.undefined();
         private Undefinable<FZPopoverMenuItem.@Nullable Divider> sectionDivider = Undefinable.undefined();
+
+        static {
+            RenderableRectangle background = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry")).withBlend();
+            RenderableRectangle higlighted = Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_highlighted")).withBlend();
+            DEFAULT_ENTRY_BACKGROUND = new WidgetRenderables(background, background, higlighted);
+        }
 
         private Builder(ContainerEventHandler container) {
             this.container = container;

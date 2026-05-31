@@ -12,4 +12,9 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
+
+    parchment {
+        minecraftVersion = minecraft_version
+        mappingsVersion = parchment_version
+    }
 }

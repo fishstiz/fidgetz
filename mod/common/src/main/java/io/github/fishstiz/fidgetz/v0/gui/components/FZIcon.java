@@ -3,14 +3,14 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -27,7 +27,7 @@ public final class FZIcon extends AbstractWidget implements FZComponent, FZConte
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         icon.get(isActive(), isHoveredOrFocused()).extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
 
         if (propsState.overlay != null) {
@@ -44,11 +44,6 @@ public final class FZIcon extends AbstractWidget implements FZComponent, FZConte
     }
 
     @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
-    }
-
-    @Override
     public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
     }
@@ -56,6 +51,11 @@ public final class FZIcon extends AbstractWidget implements FZComponent, FZConte
     @Override
     public @Nullable String fidgetz$componentId() {
         return propsState.id;
+    }
+
+    @Override
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
     }
 
     private void applyProps(Props props) {
@@ -71,7 +71,7 @@ public final class FZIcon extends AbstractWidget implements FZComponent, FZConte
         return new Builder(new WidgetRenderables(Objects.requireNonNull(icon, "icon cannot be null")));
     }
 
-    public static Builder builder(Identifier icon) {
+    public static Builder builder(ResourceLocation icon) {
         return new Builder(new WidgetRenderables(Renderables.sprite(Objects.requireNonNull(icon, "icon cannot be null"))));
     }
 

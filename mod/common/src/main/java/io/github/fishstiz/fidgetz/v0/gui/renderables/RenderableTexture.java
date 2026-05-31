@@ -1,11 +1,11 @@
 package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 
 record RenderableTexture(
-        Identifier texture,
+        ResourceLocation texture,
         int textureWidth,
         int textureHeight,
         float u,
@@ -14,7 +14,7 @@ record RenderableTexture(
         int vHeight
 ) implements RenderableRectangle {
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick) {
         GuiGraphicsUtils.texture(
                 graphics,
                 texture,

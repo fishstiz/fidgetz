@@ -1,8 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.inject.interfaces;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZPopoverMenuItem;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 

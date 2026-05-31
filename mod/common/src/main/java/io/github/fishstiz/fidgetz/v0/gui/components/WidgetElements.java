@@ -4,7 +4,7 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public record WidgetElements(WidgetRenderables elements, int width, int height, ScreenRectangle margin) {
     public WidgetElements(WidgetRenderables elements, int width, int height) {
@@ -15,7 +15,7 @@ public record WidgetElements(WidgetRenderables elements, int width, int height, 
         this(new WidgetRenderables(renderable), width, height);
     }
 
-    public WidgetElements(Identifier sprite, int width, int height) {
+    public WidgetElements(ResourceLocation sprite, int width, int height) {
         this(Renderables.sprite(sprite), width, height);
     }
 
@@ -31,7 +31,7 @@ public record WidgetElements(WidgetRenderables elements, int width, int height, 
         return new WidgetElements(WidgetRenderables.noFocus(enabled, disabled), width, height);
     }
 
-    public static WidgetElements noFocus(Identifier enabled, Identifier disabled, int width, int height) {
+    public static WidgetElements noFocus(ResourceLocation enabled, ResourceLocation disabled, int width, int height) {
         return new WidgetElements(WidgetRenderables.noFocus(enabled, disabled), width, height);
     }
 

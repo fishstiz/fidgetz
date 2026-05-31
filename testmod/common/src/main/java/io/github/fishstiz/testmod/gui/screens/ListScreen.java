@@ -6,23 +6,23 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
+import io.github.fishstiz.testmod.utils.ARGB;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.CommonColors;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class ListScreen extends FZScreen {
     private static final WidgetSprites SPRITES = new WidgetSprites(
-            Identifier.withDefaultNamespace("recipe_book/tab"), Identifier.withDefaultNamespace("recipe_book/tab_selected")
+            ResourceLocation.withDefaultNamespace("recipe_book/tab"), ResourceLocation.withDefaultNamespace("recipe_book/tab_selected")
     );
     private static final WidgetSprites SPRITES2 = new WidgetSprites(
-            Identifier.withDefaultNamespace("widget/cross_button"), Identifier.withDefaultNamespace("widget/cross_button_highlighted")
+            ResourceLocation.withDefaultNamespace("widget/cross_button"), ResourceLocation.withDefaultNamespace("widget/cross_button_highlighted")
     );
     private final FZMutableRef<State> state = new FZMutableRef<>(State.defaults());
     private final FZMutableRef<String> textFieldState = new FZMutableRef<>("");
@@ -98,35 +98,35 @@ public class ListScreen extends FZScreen {
                         layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/unseen_notification"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/accessibility"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/language"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
 
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/unseen_notification"), 16, 16)
                                     .size(20, 20)
                                     .build());
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/accessibility"), 16, 16)
                                     .size(20, 20)
                                     .build());
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
-                                    .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
+                                    .sprite(ResourceLocation.withDefaultNamespace("icon/language"), 16, 16)
                                     .size(20, 20)
                                     .build());
                         });
@@ -135,28 +135,28 @@ public class ListScreen extends FZScreen {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/unseen_notification"), 16, 16))
                                     .size(20, 20)
                                     .build()).active = false;
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/accessibility"), 16, 16))
                                     .size(20, 20)
                                     .build()).active = false;
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/language"), 16, 16))
                                     .size(20, 20)
                                     .build()).active = false;
 
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/unseen_notification"), 16, 16))
                                     .size(20, 20)
                                     .build());
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/accessibility"), 16, 16))
                                     .size(20, 20)
                                     .build());
                             btns.child(FZIconButton.builder()
-                                    .icon(new WidgetElements(Identifier.withDefaultNamespace("icon/language"), 16, 16))
+                                    .icon(new WidgetElements(ResourceLocation.withDefaultNamespace("icon/language"), 16, 16))
                                     .size(20, 20)
                                     .build());
                         });
@@ -164,23 +164,23 @@ public class ListScreen extends FZScreen {
                         layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/unseen_notification"))
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/accessibility"))
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/language"))
                                     .size(20, 20)
                                     .build()).active = false;
 
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/unseen_notification"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/unseen_notification"))
                                     .size(20, 20)
                                     .build());
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/accessibility"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/accessibility"))
                                     .size(20, 20)
                                     .build());
-                            btns.child(FZIconButton.builder(Identifier.withDefaultNamespace("icon/language"))
+                            btns.child(FZIconButton.builder(ResourceLocation.withDefaultNamespace("icon/language"))
                                     .size(20, 20)
                                     .build());
                         });
@@ -189,9 +189,9 @@ public class ListScreen extends FZScreen {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
                             RenderableRectangle whiteOutline = Renderables.outline(CommonColors.WHITE);
-                            RenderableRectangle unseenNotification = Renderables.sprite(Identifier.withDefaultNamespace("icon/unseen_notification"));
-                            RenderableRectangle accessibility = Renderables.sprite(Identifier.withDefaultNamespace("icon/accessibility"));
-                            RenderableRectangle language = Renderables.sprite(Identifier.withDefaultNamespace("icon/language"));
+                            RenderableRectangle unseenNotification = Renderables.sprite(ResourceLocation.withDefaultNamespace("icon/unseen_notification"));
+                            RenderableRectangle accessibility = Renderables.sprite(ResourceLocation.withDefaultNamespace("icon/accessibility"));
+                            RenderableRectangle language = Renderables.sprite(ResourceLocation.withDefaultNamespace("icon/language"));
 
                             btns.child(FZIconButton
                                     .builder(new WidgetRenderables(unseenNotification, unseenNotification, unseenNotification.then(whiteOutline)))
@@ -339,11 +339,11 @@ public class ListScreen extends FZScreen {
                         .message(Component.literal("Dropdown"))
                         .entry(option -> option
                                 .message(Component.literal("Option 1"))
-                                .rightIcon(new WidgetElements(Renderables.sprite(Identifier.withDefaultNamespace("icon/unseen_notification")), 16, 16)))
+                                .rightIcon(new WidgetElements(Renderables.sprite(ResourceLocation.withDefaultNamespace("icon/unseen_notification")), 16, 16)))
                         .entry(option -> option
                                 .message(Component.literal("Super long dropdown option message that will surely not fit"))
                                 .active(false)
-                                .rightIcon(new WidgetElements(Renderables.sprite(Identifier.withDefaultNamespace("icon/accessibility")), 16, 16)))
+                                .rightIcon(new WidgetElements(Renderables.sprite(ResourceLocation.withDefaultNamespace("icon/accessibility")), 16, 16)))
                         .entry(button -> button.message(Component.literal("Option 3")))
                         .entry(button -> button.message(Component.literal("Option 4")))
                         .entry(button -> button.message(Component.literal("Option 5")))

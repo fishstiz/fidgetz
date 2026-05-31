@@ -2,11 +2,11 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Consumer;

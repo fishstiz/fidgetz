@@ -4,11 +4,13 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
-import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -22,7 +24,7 @@ public final class FZButton extends FZButtonBase {
     FZButton() {
     }
 
-    private void extractSprite(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    private void extractSprite(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (sprites != null) {
             sprites.get(isActive(), isHoveredOrFocused()).extractRenderState(
                     graphics,
@@ -38,7 +40,7 @@ public final class FZButton extends FZButtonBase {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         extractSprite(graphics, mouseX, mouseY, partialTick);
 
         int margin = centeredMessage ? TEXT_MARGIN : DEFAULT_SPACING;
@@ -73,12 +75,11 @@ public final class FZButton extends FZButtonBase {
             right -= spacing / 2 + rightIcon.margin().left();
         }
 
+        int color = isActive() ? CommonColors.WHITE : 0xFFA0A0A0;
         if (centeredMessage) {
-            graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
-                    .acceptScrollingWithDefaultCenter(getMessage(), left, right, top, bottom);
+            renderString(graphics, Minecraft.getInstance().font, color | Mth.ceil(this.alpha * 255.0F) << 24);
         } else {
-            ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
-            GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left, top, right, bottom);
+            GuiGraphicsUtils.scrollingText(graphics, getMessage(), left, top, right, bottom, color);
         }
 
         extractOverlay(graphics, mouseX, mouseY, partialTick);
@@ -135,10 +136,9 @@ public final class FZButton extends FZButtonBase {
                 Undefinable<@Nullable WidgetElements> rightIcon,
                 TriState centeredMessage,
                 @Nullable FZKeyed<Consumer<PressEvent>> pressHandler,
-                TriState allowCursorChanges,
                 GuiComponentProps props
         ) {
-            super(pressHandler, allowCursorChanges, props);
+            super(pressHandler, props);
             this.sprites = sprites;
             this.leftIcon = leftIcon;
             this.rightIcon = rightIcon;
@@ -240,7 +240,7 @@ public final class FZButton extends FZButtonBase {
 
         @Override
         public Props toProps() {
-            return new PropsImpl(sprites, leftIcon, rightIcon, centeredMessage, pressHandler, allowCursorChanges, props);
+            return new PropsImpl(sprites, leftIcon, rightIcon, centeredMessage, pressHandler, props);
         }
 
         @Override

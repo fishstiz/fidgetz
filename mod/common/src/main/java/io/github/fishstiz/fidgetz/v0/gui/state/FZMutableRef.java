@@ -64,7 +64,7 @@ public class FZMutableRef<T> implements FZRef<T> {
         MutableObject<R> last = new MutableObject<>(selector.apply(this.state));
         put(key, new Subscriber(() -> {
             R next = selector.apply(this.state);
-            if (!Objects.equals(next, last.get())) {
+            if (!Objects.equals(next, last.getValue())) {
                 last.setValue(next);
                 callback.accept(next);
             }

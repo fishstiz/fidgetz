@@ -1,16 +1,16 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.*;
 
 public final class FunctionUtils {
     private static final Runnable NO_OP = () -> {
     };
-    private static final Consumer<Object> NO_OP_CONSUMER = _ -> {
+    private static final Consumer<Object> NO_OP_CONSUMER = ignored -> {
     };
     private static final Supplier<@Nullable Object> NULL_SUPPLIER = () -> null;
-    private static final Function<Object, @Nullable Object> NULL_FUNCTION = _ -> null;
+    private static final Function<Object, @Nullable Object> NULL_FUNCTION = ignored -> null;
 
     public static Runnable nop() {
         return NO_OP;

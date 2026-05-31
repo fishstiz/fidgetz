@@ -1,23 +1,32 @@
 package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import org.joml.Matrix3x2fStack;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @FunctionalInterface
 public interface RenderableRectangle {
-    void extractRenderState(GuiGraphicsExtractor graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick);
+    void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick);
 
-    default RenderableRectangle pose(Consumer<Matrix3x2fStack> transformer) {
+    default RenderableRectangle withBlend() {
         return ((graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {
-            graphics.pose().pushMatrix();
+            RenderSystem.enableBlend();
+            extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
+            RenderSystem.disableBlend();
+        });
+    }
+
+    default RenderableRectangle pose(Consumer<PoseStack> transformer) {
+        return ((graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {
+            graphics.pose().pushPose();
             transformer.accept(graphics.pose());
             extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
         });
     }
 

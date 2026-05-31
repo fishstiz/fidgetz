@@ -6,16 +6,16 @@ import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -41,9 +41,9 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
     private void openModal() {
         dialogManager.putIfClosed(MODAL_ID, () -> {
             LinearLayout modalLayout = LinearLayout.vertical().spacing(8);
-            modalLayout.addChild(Button.builder(Component.literal("Modal Button 7"), _ -> IO.println("7")).build());
-            modalLayout.addChild(Button.builder(Component.literal("Modal Button 8"), _ -> IO.println("8")).build());
-            modalLayout.addChild(Button.builder(Component.literal("Close"), _ -> dialogManager.remove(MODAL_ID)).build());
+            modalLayout.addChild(Button.builder(Component.literal("Modal Button 7"), ignored -> System.out.println("7")).build());
+            modalLayout.addChild(Button.builder(Component.literal("Modal Button 8"), ignored -> System.out.println("8")).build());
+            modalLayout.addChild(Button.builder(Component.literal("Close"), ignored -> dialogManager.remove(MODAL_ID)).build());
             return FZModal.builder(this, modalLayout).id(MODAL_ID).popoverOrder(1).buildAndOpen();
         });
     }
@@ -51,14 +51,14 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
     private void openModal2() {
         dialogManager.putIfClosed(MODAL_TWO_ID, () -> {
             LinearLayout modalLayout2 = LinearLayout.vertical().spacing(8);
-            modalLayout2.addChild(Button.builder(Component.literal("Modal Button 9"), _ -> IO.println("9")).build());
-            modalLayout2.addChild(Button.builder(Component.literal("Modal Button 10"), _ -> IO.println("10")).build());
-            modalLayout2.addChild(Button.builder(Component.literal("Close"), _ -> dialogManager.remove(MODAL_TWO_ID)).build());
+            modalLayout2.addChild(Button.builder(Component.literal("Modal Button 9"), ignored -> System.out.println("9")).build());
+            modalLayout2.addChild(Button.builder(Component.literal("Modal Button 10"), ignored -> System.out.println("10")).build());
+            modalLayout2.addChild(Button.builder(Component.literal("Close"), ignored -> dialogManager.remove(MODAL_TWO_ID)).build());
             return FZModal.builder(this, modalLayout2)
                     .id(MODAL_TWO_ID)
                     .popoverOrder(2)
                     .background(Renderables.boxShadow(24)
-                            .then(Renderables.fill(CommonColors.DARK_GRAY))
+                            .then(Renderables.fill(CommonColors.BLACK))
                             .then(Renderables.outline(CommonColors.GRAY)))
                     .uncentered()
                     .height(height)
@@ -74,21 +74,21 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
         dialogManager.clear();
 
         LinearLayout layout = LinearLayout.vertical();
-        layout.addChild(Button.builder(Component.literal("Button 1"), _ -> IO.println(1)).build());
-        layout.addChild(Button.builder(Component.literal("Button 2"), _ -> openModal()).build());
-        layout.addChild(Button.builder(Component.literal("Button 3"), _ -> IO.println(2)).build()).active = false;
+        layout.addChild(Button.builder(Component.literal("Button 1"), ignored -> System.out.println(1)).build());
+        layout.addChild(Button.builder(Component.literal("Button 2"), ignored -> openModal()).build());
+        layout.addChild(Button.builder(Component.literal("Button 3"), ignored -> System.out.println(2)).build()).active = false;
         LinearLayout horizontalLayout = LinearLayout.horizontal();
-        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.1"), _ -> IO.println(3)).build());
-        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.2"), _ -> IO.println(3)).build());
-        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.3"), _ -> IO.println(3)).build());
+        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.1"), ignored -> System.out.println(3)).build());
+        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.2"), ignored -> System.out.println(3)).build());
+        horizontalLayout.addChild(Button.builder(Component.literal("Button 4.3"), ignored -> System.out.println(3)).build());
         layout.addChild(horizontalLayout);
-        layout.addChild(Button.builder(Component.literal("Button 5"), _ -> openModal2()).build());
+        layout.addChild(Button.builder(Component.literal("Button 5"), ignored -> openModal2()).build());
 
         layout.visitWidgets(this::addRenderableWidget);
 
         LinearLayout argggLayout = LinearLayout.vertical();
-        argggLayout.addChild(Button.builder(Component.literal("Button 5"), _ -> IO.println(5)).build());
-        argggLayout.addChild(Button.builder(Component.literal("Button 6"), _ -> IO.println(6)).build());
+        argggLayout.addChild(Button.builder(Component.literal("Button 5"), ignored -> System.out.println(5)).build());
+        argggLayout.addChild(Button.builder(Component.literal("Button 6"), ignored -> System.out.println(6)).build());
 
         Layout midLayout = FZComposedLayout.compose(argggLayout).center(this);
         midLayout.visitWidgets(this::addRenderableWidget);
@@ -191,24 +191,39 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        return fidgetz$captureEventForDialogs(event) || super.keyPressed(event);
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return fidgetz$captureEventForDialogs(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (fidgetz$captureEventForDialogs(event)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (fidgetz$captureEventForDialogs(mouseX, mouseY, button)) {
             return true;
         }
-        if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
-            openContextMenu(event.x(), event.y());
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
+            openContextMenu(mouseX, mouseY);
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         fidgetz$updateHovered(mouseX, mouseY);
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, a);
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        super.setFocused(focused);
+        if (!focused) {
+            setFocused(null);
+        }
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        if (getFocused() != focused) {
+            super.setFocused(focused);
+        }
     }
 }

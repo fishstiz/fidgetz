@@ -2,10 +2,8 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
-import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,13 +11,10 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.ARGB;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.util.CommonColors;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public final class FZText extends StringWidget implements FZComponent, FZContextMenu.Source {
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
@@ -27,6 +22,7 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
 
     FZText(Component message) {
         super(message, Minecraft.getInstance().font);
+        alignLeft();
         bounds = super.getRectangle();
     }
 
@@ -36,10 +32,10 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.renderWidget(graphics, mouseX, mouseY, a);
         if (isFocused()) {
-            graphics.outline(getX(), getY(), getWidth(), getHeight(), ARGB.white(getAlpha()));
+            graphics.renderOutline(getX(), getY(), getWidth(), getHeight(), CommonColors.WHITE);
         }
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
@@ -51,18 +47,8 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
     }
 
     @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
-    }
-
-    @Override
     protected void updateWidgetNarration(NarrationElementOutput output) {
         output.add(NarratedElementType.TITLE, this.getMessage());
-    }
-
-    @Override
-    public void setMessage(Component message) {
-        this.message = message;
     }
 
     @Override
@@ -78,16 +64,20 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
         return propsState.id;
     }
 
+    @Override
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
+    }
+
     void applyProps(Props props) {
         propsState.apply(this, props);
-        props.maxWidth().ifPresent(pair -> setMaxWidth(pair.leftInt(), pair.right()));
-        props.componentClickHandler().ifDefined(this::setComponentClickHandler);
     }
 
     public static FZText bind(String key, FZRef<Props> ref) {
         Props props = ref.value();
         FZText text = new FZText(props.message().orElse(CommonComponents.EMPTY));
         text.applyProps(props);
+        props.textAlignment().ifPresent(alignment -> alignment.apply(text));
         if (props.width().isEmpty()) {
             text.setWidth(text.getFont().width(text.getMessage()));
         }
@@ -99,83 +89,66 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
         return new Builder(message);
     }
 
-    public interface Props extends GuiComponentProps {
-        default Optional<IntObjectPair<TextOverflow>> maxWidth() {
-            return Optional.empty();
-        }
+    public enum Alignment {
+        LEFT,
+        CENTER,
+        RIGHT;
 
-        default Undefinable<@Nullable Consumer<Style>> componentClickHandler() {
-            return Undefinable.undefined();
+        private void apply(FZText widget) {
+            switch (this) {
+                case LEFT -> widget.alignLeft();
+                case CENTER -> widget.alignCenter();
+                case RIGHT -> widget.alignRight();
+            }
+        }
+    }
+
+    public interface Props extends GuiComponentProps {
+        default Optional<Alignment> textAlignment() {
+            return Optional.empty();
         }
     }
 
     private static final class PropsImpl extends GuiComponentPropsBase implements Props {
-        private final @Nullable IntObjectPair<TextOverflow> maxWidth;
-        private final Undefinable<@Nullable Consumer<Style>> componentClickHandler;
+        private final @Nullable Alignment textAlignment;
 
-        private PropsImpl(
-                GuiComponentProps props,
-                @Nullable IntObjectPair<TextOverflow> maxWidth,
-                Undefinable<@Nullable Consumer<Style>> componentClickHandler
-        ) {
+        private PropsImpl(GuiComponentProps props, @Nullable Alignment textAlignment) {
             super(props);
-            this.maxWidth = maxWidth;
-            this.componentClickHandler = componentClickHandler;
+            this.textAlignment = textAlignment;
         }
 
         @Override
-        public Optional<IntObjectPair<TextOverflow>> maxWidth() {
-            return Optional.ofNullable(maxWidth);
-        }
-
-        @Override
-        public Undefinable<@Nullable Consumer<Style>> componentClickHandler() {
-            return componentClickHandler;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Props other)) return false;
-            return super.equals(o) &&
-                   Objects.equals(maxWidth(), other.maxWidth()) &&
-                   Objects.equals(componentClickHandler(), other.componentClickHandler());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), maxWidth, componentClickHandler);
+        public Optional<Alignment> textAlignment() {
+            return Optional.ofNullable(textAlignment);
         }
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
-        private @Nullable IntObjectPair<TextOverflow> maxWidth;
-        private Undefinable<@Nullable Consumer<Style>> componentClickHandler = Undefinable.undefined();
+        private @Nullable Alignment textAlignment;
 
         private Builder(Component message) {
             props.message = message;
         }
 
-        public Builder maxWidth(int maxWidth, TextOverflow overflow) {
-            this.maxWidth = IntObjectPair.of(maxWidth, overflow);
+        public Builder align(Alignment alignment) {
+            this.textAlignment = alignment;
             return this;
         }
 
-        public Builder maxWidth(int maxWidth) {
-            this.maxWidth = this.maxWidth == null
-                    ? IntObjectPair.of(maxWidth, TextOverflow.CLAMPED)
-                    : IntObjectPair.of(maxWidth, this.maxWidth.right());
-
-            return this;
+        public Builder alignLeft() {
+            return align(Alignment.LEFT);
         }
 
-        public Builder onComponentClick(@Nullable Consumer<Style> componentClickHandler) {
-            this.componentClickHandler = Undefinable.of(componentClickHandler);
-            return this;
+        public Builder alignCenter() {
+            return align(Alignment.CENTER);
+        }
+
+        public Builder alignRight() {
+            return align(Alignment.RIGHT);
         }
 
         public Props toProps() {
-            return new PropsImpl(props, maxWidth, componentClickHandler);
+            return new PropsImpl(props, textAlignment);
         }
 
         public FZText build() {

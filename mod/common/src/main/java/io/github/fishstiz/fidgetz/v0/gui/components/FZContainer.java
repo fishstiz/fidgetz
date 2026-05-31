@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -8,12 +8,12 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class FZContainer extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
+public abstract class FZContainer extends AbstractContainerEventHandler implements Renderable, NarratableEntry, ContainerEventHandlerPatch {
     private final List<GuiEventListener> children = new ArrayList<>();
     private final List<NarratableEntry> narratables = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
@@ -111,9 +111,9 @@ public abstract class FZContainer extends AbstractContainerEventHandler implemen
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         for (Renderable renderable : renderables()) {
-            renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            renderable.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 
@@ -135,10 +135,10 @@ public abstract class FZContainer extends AbstractContainerEventHandler implemen
         List<? extends NarratableEntry> narratables = narratables();
         Screen.NarratableSearchResult result = Screen.findNarratableWidget(narratables, lastNarratable);
         if (result != null) {
-            if (result.priority().isTerminal()) {
-                lastNarratable = result.entry();
+            if (result.priority.isTerminal()) {
+                lastNarratable = result.entry;
             }
-            result.entry().updateNarration(output.nest());
+            result.entry.updateNarration(output.nest());
         }
     }
 
@@ -146,6 +146,13 @@ public abstract class FZContainer extends AbstractContainerEventHandler implemen
     public void setFocused(boolean focused) {
         if (!focused) {
             setFocused(null);
+        }
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        if (getFocused() != focused) {
+            super.setFocused(focused);
         }
     }
 }

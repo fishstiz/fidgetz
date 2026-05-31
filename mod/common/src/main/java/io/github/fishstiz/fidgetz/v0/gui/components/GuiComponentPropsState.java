@@ -3,7 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import net.minecraft.client.gui.components.AbstractWidget;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 

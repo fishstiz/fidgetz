@@ -1,5 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
@@ -10,17 +11,15 @@ import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -35,8 +34,8 @@ public class FZPopoverMenu extends FZDialog {
     protected static final int DEFAULT_SPACING = 1;
     private final @Nullable FZPopoverMenu parent;
     private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
-    private FZPopoverMenuItem.@Nullable Divider sectionDivider;
-    private FZPopoverMenuItem.@Nullable Divider entryDivider;
+    private FZPopoverMenuItem.@Nullable Divider sectionDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_SECTION;
+    private FZPopoverMenuItem.@Nullable Divider entryDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_ENTRY;
     private ScreenRectangle padding = DEFAULT_PADDING;
     private int rowSpacing = DEFAULT_SPACING;
     private int maxHeight = DEFAULT_MAX_HEIGHT;
@@ -146,6 +145,11 @@ public class FZPopoverMenu extends FZDialog {
 
     protected int getY() {
         return getRectangle().top();
+    }
+
+    @Override
+    protected float getZ() {
+        return parent == null ? super.getZ() : 1f;
     }
 
     private void applyLayout(@Nullable FZScrollableLayout layout) {
@@ -352,13 +356,16 @@ public class FZPopoverMenu extends FZDialog {
     }
 
     @Override
-    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (background != null) {
             background.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
         }
         super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
         if (child != null) {
-            child.menu.extractRenderState(graphics, mouseX, mouseY, partialTick);
+//            graphics.pose().pushPose();
+//            graphics.pose().translate(0f, 0f, 1f);
+            child.menu.render(graphics, mouseX, mouseY, partialTick);
+//            graphics.pose().popPose();
         }
     }
 
@@ -395,7 +402,7 @@ public class FZPopoverMenu extends FZDialog {
     private record ChildDetails(EntryWidget key, FZPopoverMenu menu) {
     }
 
-    private final class EntryWidget extends AbstractWidget implements FZPopoverMenuItem.Context, ContainerEventHandler {
+    private final class EntryWidget extends AbstractWidget implements FZPopoverMenuItem.Context, ContainerEventHandlerPatch {
         private final FZPopoverMenuItem.Entry entry;
         private final FZPopoverMenuItem.Settings settings;
         private final List<FZPopoverMenuItem.Entry> singletonChild;
@@ -424,8 +431,8 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-            if (isActive() && entry.mouseClicked(event, doubleClick)) {
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (isActive() && entry.mouseClicked(mouseX, mouseY, button)) {
                 if (settings.closeOnInteract()) {
                     closeMenu();
                 }
@@ -434,14 +441,14 @@ public class FZPopoverMenu extends FZDialog {
             return false;
         }
 
-        @Override
-        public boolean shouldTakeFocusAfterInteraction() {
-            return isOpen() && entry.shouldTakeFocusAfterInteraction();
-        }
+//        @Override
+//        public boolean shouldTakeFocusAfterInteraction() {
+//            return isOpen() && entry.shouldTakeFocusAfterInteraction();
+//        }
 
         @Override
-        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-            entry.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            entry.render(graphics, mouseX, mouseY, partialTick);
             boolean hovered = isHovered();
             if (hovered && !lastHovered) {
                 updateChild();
@@ -523,14 +530,17 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
-        public boolean keyPressed(KeyEvent event) {
-            if (entry.keyPressed(event)) {
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (entry.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
-            if (event.isLeft()) {
+            if (keyCode == InputConstants.KEY_LEFT) {
                 return handleKeyboardFocusOnClose();
             }
-            if (event.isRight() || event.isSelection()) {
+            if (keyCode == InputConstants.KEY_RIGHT ||
+                keyCode == InputConstants.KEY_RETURN ||
+                keyCode == InputConstants.KEY_SPACE ||
+                keyCode == InputConstants.KEY_NUMPADENTER) {
                 return handleKeyboardFocusOnOpen();
             }
             return false;
@@ -539,6 +549,14 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public @Nullable GuiEventListener getFocused() {
             return entry.isFocused() ? entry : null;
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            if (!focused) {
+                setFocused(null);
+            }
         }
 
         @Override

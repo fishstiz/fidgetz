@@ -6,12 +6,9 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
-import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
-import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
-import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
+import io.github.fishstiz.fidgetz.v0.utils.*;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -19,11 +16,10 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.CommonColors;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.util.FastColor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -34,9 +30,9 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenu.Sour
     protected static final float DEFAULT_ALIGNMENT = 0.5F;
     protected static final ScreenRectangle DEFAULT_MARGIN = ScreenRectangle.empty();
     protected static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(8);
-    protected static final RenderableRectangle DEFAULT_BACKDROP = Renderables.fill(ARGB.color(0.5f, CommonColors.BLACK));
+    protected static final RenderableRectangle DEFAULT_BACKDROP = Renderables.fill(FastColor.ARGB32.color(127, CommonColors.BLACK));
     protected static final RenderableRectangle DEFAULT_BACKGROUND = Renderables.boxShadow(24)
-            .then(Renderables.sprite(Identifier.withDefaultNamespace("popup/background")));
+            .then(Renderables.sprite(ResourceLocation.withDefaultNamespace("popup/background")));
     private @Nullable String id;
     private Component message = CommonComponents.EMPTY;
     private FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries = FZKeyed.selfKey(FunctionUtils.nopConsumer());
@@ -143,7 +139,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenu.Sour
     }
 
     @Override
-    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (backdrop != null) {
             ScreenRectangle bounds = container.getRectangle();
             backdrop.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);

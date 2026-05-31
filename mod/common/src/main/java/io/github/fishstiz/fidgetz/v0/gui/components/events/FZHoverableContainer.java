@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components.events;
 
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public interface FZHoverableContainer extends FZHoverableElement {
     private UnsupportedOperationException notImplemented(String method) {

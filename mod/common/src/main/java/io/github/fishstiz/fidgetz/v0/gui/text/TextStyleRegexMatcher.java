@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import net.minecraft.network.chat.Style;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 import java.util.regex.Matcher;

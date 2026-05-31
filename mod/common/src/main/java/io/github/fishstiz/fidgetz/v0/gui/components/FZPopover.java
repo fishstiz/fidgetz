@@ -5,7 +5,7 @@ import net.minecraft.client.gui.components.Renderable;
 import java.util.function.Consumer;
 
 public interface FZPopover {
-    int DEFAULT_ORDER = 1000;
+    int DEFAULT_ORDER = 100;
 
     void fidgetz$visitWidgets(WidgetVisitor visitor);
 

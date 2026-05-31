@@ -1,30 +1,27 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractContainerWidget;
-import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
-abstract class AbstractListWidget extends AbstractContainerWidget implements ScrollableContainer {
+abstract class AbstractListWidget extends FZAbstractContainerWidget implements ScrollableContainer {
     protected static final int DEFAULT_MAX_CONTENT_WIDTH = 270;
     protected static final int DEFAULT_SCROLL_RATE = 10;
     protected static final int SEPARATOR_HEIGHT = 2;
-    private static final RenderableRectangle BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/menu_list_background.png"), 32, 32);
-    private static final RenderableRectangle INWORLD_BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/inworld_menu_list_background.png"), 32, 32);
+    private static final RenderableRectangle BACKGROUND = Renderables.texture(ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png"), 32, 32);
+    private static final RenderableRectangle INWORLD_BACKGROUND = Renderables.texture(ResourceLocation.withDefaultNamespace("textures/gui/inworld_menu_list_background.png"), 32, 32);
     private static final RenderableRectangle HEADER_SEPARATOR = Renderables.texture(Screen.HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle INWORLD_HEADER_SEPARATOR = Renderables.texture(Screen.INWORLD_HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle FOOTER_SEPARATOR = Renderables.texture(Screen.FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
@@ -37,7 +34,7 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     }
 
     protected AbstractListWidget(Minecraft minecraft, int x, int y, int width, int height, Component message) {
-        this(minecraft, x, y, width, height, message, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(minecraft, x, y, width, height, message, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
     protected AbstractListWidget(int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
@@ -48,22 +45,26 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
         this(Minecraft.getInstance(), x, y, width, height, message);
     }
 
-    protected void extractBackgroundRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractBackgroundRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         RenderableRectangle background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
+        RenderSystem.enableBlend();
         background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
+        RenderSystem.disableBlend();
     }
 
-    protected void extractSeparatorsRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractSeparatorsRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         RenderableRectangle header = minecraft.level == null ? HEADER_SEPARATOR : INWORLD_HEADER_SEPARATOR;
         RenderableRectangle footer = minecraft.level == null ? FOOTER_SEPARATOR : INWORLD_FOOTER_SEPARATOR;
+        RenderSystem.enableBlend();
         header.extractRenderState(graphics, getX(), getY() - SEPARATOR_HEIGHT, getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
         footer.extractRenderState(graphics, getX(), getBottom(), getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
+        RenderSystem.disableBlend();
     }
 
-    protected abstract void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick);
+    protected abstract void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick);
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         extractBackgroundRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.enableScissor(getX(), getY(), getRight(), getBottom());
         extractEntriesRenderState(graphics, mouseX, mouseY, partialTick);
@@ -156,13 +157,5 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput output) {
-    }
-
-    @Override
-    public ScreenRectangle getBorderForArrowNavigation(ScreenDirection opposite) {
-        GuiEventListener focused = getFocused();
-        return focused != null
-                ? focused.getBorderForArrowNavigation(opposite)
-                : new ScreenRectangle(getX(), getY(), width, contentHeight()).getBorder(opposite);
     }
 }

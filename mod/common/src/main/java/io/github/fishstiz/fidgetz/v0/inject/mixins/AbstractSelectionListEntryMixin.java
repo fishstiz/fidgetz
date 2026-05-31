@@ -2,17 +2,16 @@ package io.github.fishstiz.fidgetz.v0.inject.mixins;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.layouts.LayoutElement;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(targets = "net.minecraft.client.gui.components.AbstractSelectionList$Entry")
-abstract class AbstractSelectionListEntryMixin implements LayoutElement, FZHoverableContainer {
+abstract class AbstractSelectionListEntryMixin implements FZHoverableContainer {
     @Shadow
     public abstract boolean isMouseOver(double mx, double my);
 

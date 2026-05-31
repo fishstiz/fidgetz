@@ -8,11 +8,12 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
+import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -93,7 +94,7 @@ interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContai
                 if (child == dialog) {
                     break;
                 }
-                if (dialog.isOpen() && dialog.getRectangle().encompasses(child.getRectangle())) {
+                if (dialog.isOpen() && ScreenRectangleUtils.encompasses(dialog.getRectangle(), child.getRectangle())) {
                     visible = false;
                     break;
                 }

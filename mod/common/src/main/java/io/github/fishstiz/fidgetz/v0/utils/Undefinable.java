@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Consumer;

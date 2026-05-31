@@ -5,15 +5,14 @@ import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import io.github.fishstiz.testmod.utils.ARGB;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import static io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables.*;
 
@@ -25,11 +24,11 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     }
 
     private static Button btn(String message) {
-        return Button.builder(Component.literal(message), btn -> IO.println(btn.getMessage())).build();
+        return Button.builder(Component.literal(message), btn -> System.out.println(btn.getMessage())).build();
     }
 
     private static Button.Builder btnBuilder(String message) {
-        return Button.builder(Component.literal(message), btn -> IO.println(btn.getMessage()));
+        return Button.builder(Component.literal(message), btn -> System.out.println(btn.getMessage()));
     }
 
     @Override
@@ -97,29 +96,29 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Hello World!"))
-                .onPress(() -> IO.println("Hello World!"))
+                .onPress(() -> System.out.println("Hello World!"))
                 .build());
         collector.nextSection();
         collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Goodbye World!"))
-                .onPress(() -> IO.println("Goodbye World!"))
+                .onPress(() -> System.out.println("Goodbye World!"))
                 .build());
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (fidgetz$captureEventForDialogs(event)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (fidgetz$captureEventForDialogs(mouseX, mouseY, button)) {
             return true;
         }
-        if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT && contextMenu != null) {
-            contextMenu.open(event.x(), event.y(), fidgetz$collectContextEntries(event.x(), event.y()));
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT && contextMenu != null) {
+            contextMenu.open(mouseX, mouseY, fidgetz$collectContextEntries(mouseX, mouseY));
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         fidgetz$updateHovered(mouseX, mouseY);
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, a);
     }
 }

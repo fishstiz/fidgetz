@@ -8,7 +8,7 @@ import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class Screenz extends FZScreen {
     private final FZMutableRef<@Nullable String> active = new FZMutableRef<>(null);

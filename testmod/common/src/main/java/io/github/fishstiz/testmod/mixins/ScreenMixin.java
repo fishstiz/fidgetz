@@ -6,13 +6,13 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.testmod.gui.components.ScreenNavigatorModal;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,8 +37,8 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
     @Nullable
     private ScreenNavigatorModal fidgetz$modal;
 
-    @Inject(method = "init(II)V", at = @At("TAIL"))
-    private void onInit(int width, int height, CallbackInfo ci) {
+    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("TAIL"))
+    private void onInit(Minecraft minecraft, int width, int height, CallbackInfo ci) {
         fidgetz$modal = ScreenNavigatorModal.create(this);
     }
 
@@ -54,8 +54,8 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
     }
 
     @WrapMethod(method = "keyPressed")
-    private boolean openDebugger(KeyEvent event, Operation<Boolean> original) {
-        if (event.input() == InputConstants.KEY_F10 && fidgetz$modal != null) {
+    private boolean openDebugger(int keyCode, int scanCode, int modifiers, Operation<Boolean> original) {
+        if (keyCode == InputConstants.KEY_F10 && fidgetz$modal != null) {
             if (!fidgetz$modal.isOpen()) {
                 children.remove(fidgetz$modal);
                 narratables.remove(fidgetz$modal);
@@ -68,13 +68,13 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
             }
             return true;
         }
-        return original.call(event);
+        return original.call(keyCode, scanCode, modifiers);
     }
 
-    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("TAIL"))
-    private void renderModal(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+    @Inject(method = "renderWithTooltip", at = @At("TAIL"))
+    private void renderModal(GuiGraphics graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         if (fidgetz$modal != null) {
-            fidgetz$modal.extractRenderState(graphics, mouseX, mouseY, a);
+            fidgetz$modal.render(graphics, mouseX, mouseY, a);
         }
     }
 

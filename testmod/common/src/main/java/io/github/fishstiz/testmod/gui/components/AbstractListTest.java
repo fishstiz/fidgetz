@@ -4,7 +4,7 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractListWidget;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZTextField;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
@@ -99,9 +99,9 @@ public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entr
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
             for (AbstractWidget child : children) {
-                child.extractRenderState(graphics, mouseX, mouseY, a);
+                child.render(graphics, mouseX, mouseY, a);
             }
         }
 

@@ -5,21 +5,19 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractScrollArea;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.TriState;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -50,7 +48,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     protected FZLayoutList() {
-        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
     protected void collectEntries(RefreshEvent event) {
@@ -168,26 +166,21 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    protected void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ScreenRectangle bounds = getRectangle();
         for (Renderable renderable : renderables) {
             if (!(renderable instanceof LayoutElement element) || element.getRectangle().overlaps(bounds)) {
-                renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+                renderable.render(graphics, mouseX, mouseY, partialTick);
             }
         }
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTick);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
         }
-    }
-
-    @Override
-    public List<NarratableEntry> getNarratables() {
-        return narratables;
     }
 
     @Override
@@ -251,13 +244,13 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
+    public @Nullable String fidgetz$componentId() {
+        return propsState.id;
     }
 
     @Override
-    public @Nullable String fidgetz$componentId() {
-        return propsState.id;
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
     }
 
     private @Nullable Entry getEntryAt(double x, double y) {
@@ -281,18 +274,18 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        boolean scrolled = updateScrolling(event);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean scrolled = updateScrolling(mouseX, mouseY, button);
 
-        Entry entry = getEntryAt(event.x(), event.y());
-        if (entry != null && entry.widget.mouseClicked(event, doubleClick) && entry.widget.shouldTakeFocusAfterInteraction()) {
+        Entry entry = getEntryAt(mouseX, mouseY);
+        if (entry != null && entry.widget.mouseClicked(mouseX, mouseY, button)) {
             // buttons are only focused after end of mouseClicked,
             // so when a button inside the list reinitializes entries,
             // the new button instance with the same id as the clicked button cannot be refocused
             Entry clickedEntry = resolveEntry(entry);
-            if (clickedEntry != null && clickedEntry.widget.shouldTakeFocusAfterInteraction()) {
+            if (clickedEntry != null) {
                 setFocused(clickedEntry.widget);
-                if (isValidClickButton(event.buttonInfo())) {
+                if (isValidClickButton(button)) {
                     setDragging(true);
                 }
                 return true;
@@ -477,7 +470,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
-        private ScrollbarSettings settings = AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
+        private ScrollbarSettings settings = FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
         private @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler;
         private @Nullable Integer maxContentWidth;
         private @Nullable Integer contentPaddingLeft;

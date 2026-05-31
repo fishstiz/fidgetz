@@ -1,25 +1,22 @@
 package io.github.fishstiz.fidgetz.v0.gui.layouts;
 
+import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractContainerWidget;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractScrollArea;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractContainerWidget;
-import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.CommonComponents;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -37,7 +34,7 @@ public final class FZScrollableLayout extends ComposedLayout {
     private int minHeight;
     private int maxHeight;
 
-    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content, AbstractScrollArea.ScrollbarSettings scrollbarSettings) {
+    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content, FZAbstractScrollArea.ScrollbarSettings scrollbarSettings) {
         super(content);
         this.screenArea = screenArea;
         this.container = new FZScrollableLayout.Container(0, 0, scrollbarSettings);
@@ -45,7 +42,7 @@ public final class FZScrollableLayout extends ComposedLayout {
     }
 
     public static FZScrollableLayout from(Supplier<ScreenRectangle> maxScrollArea, Layout content) {
-        return new FZScrollableLayout(maxScrollArea, content, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        return new FZScrollableLayout(maxScrollArea, content, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
 
@@ -189,11 +186,11 @@ public final class FZScrollableLayout extends ComposedLayout {
         return container.getRectangle();
     }
 
-    private final class Container extends AbstractContainerWidget implements ScrollableContainer {
+    private final class Container extends FZAbstractContainerWidget implements ScrollableContainer {
         private final List<AbstractWidget> children = new ArrayList<>();
         private ScreenRectangle bounds;
 
-        public Container(int width, int height, AbstractScrollArea.ScrollbarSettings scrollbarSettings) {
+        public Container(int width, int height, ScrollbarSettings scrollbarSettings) {
             super(0, 0, width, height, CommonComponents.EMPTY, scrollbarSettings);
             bounds = super.getRectangle();
         }
@@ -204,11 +201,11 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         @Override
-        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             graphics.enableScissor(getX(), getY(), getRight(), getBottom());
 
             for (AbstractWidget child : children) {
-                child.extractRenderState(graphics, mouseX, mouseY, a);
+                child.render(graphics, mouseX, mouseY, partialTick);
             }
 
             graphics.disableScissor();
@@ -226,14 +223,6 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         protected void updateWidgetNarration(NarrationElementOutput output) {
-        }
-
-        @Override
-        public ScreenRectangle getBorderForArrowNavigation(ScreenDirection opposite) {
-            GuiEventListener focused = getFocused();
-            return focused != null
-                    ? focused.getBorderForArrowNavigation(opposite)
-                    : new ScreenRectangle(getX(), getY(), width, contentHeight()).getBorder(opposite);
         }
 
         @Override
@@ -311,11 +300,6 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return children;
-        }
-
-        @Override
-        public Collection<? extends NarratableEntry> getNarratables() {
             return children;
         }
 

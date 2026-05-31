@@ -5,11 +5,10 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -22,7 +21,7 @@ public final class FZIconButton extends FZButtonBase {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (background != null) {
             background.get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
@@ -68,7 +67,7 @@ public final class FZIconButton extends FZButtonBase {
         return new Builder(WidgetRenderables.sprites(sprites));
     }
 
-    public static Builder builder(Identifier sprite) {
+    public static Builder builder(ResourceLocation sprite) {
         return new Builder(new WidgetRenderables(Renderables.sprite(sprite)));
     }
 
@@ -90,10 +89,9 @@ public final class FZIconButton extends FZButtonBase {
                 Undefinable<@Nullable WidgetRenderables> background,
                 Undefinable<@Nullable WidgetElements> icon,
                 @Nullable FZKeyed<Consumer<PressEvent>> pressHandler,
-                TriState allowCursorChanges,
                 GuiComponentProps props
         ) {
-            super(pressHandler, allowCursorChanges, props);
+            super(pressHandler, props);
             this.background = background;
             this.icon = icon;
         }
@@ -148,7 +146,7 @@ public final class FZIconButton extends FZButtonBase {
 
         @Override
         public Props toProps() {
-            return new PropsImpl(background, icon, pressHandler, allowCursorChanges, props);
+            return new PropsImpl(background, icon, pressHandler, props);
         }
 
         @Override

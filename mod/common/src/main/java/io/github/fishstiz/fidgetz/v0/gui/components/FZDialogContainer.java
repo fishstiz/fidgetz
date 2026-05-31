@@ -4,8 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -15,8 +13,8 @@ public interface FZDialogContainer extends ContainerEventHandler, FZPopoverConta
         return children().stream().filter(FZDialog.class::isInstance).map(FZDialog.class::cast).toList();
     }
 
-    default boolean fidgetz$captureEventForDialogs(KeyEvent event) {
-        if (event.isEscape()) {
+    default boolean fidgetz$captureEventForDialogs(int keyCode) {
+        if (keyCode == InputConstants.KEY_ESCAPE) {
             for (FZDialog dialog : fidgetz$Dialogs()) {
                 if (dialog.isOpen() && dialog.shouldCloseOnEscape()) {
                     GuiEventListener focused = this.getFocused();
@@ -31,17 +29,17 @@ public interface FZDialogContainer extends ContainerEventHandler, FZPopoverConta
         return false;
     }
 
-    default boolean fidgetz$captureEventForDialogs(MouseButtonEvent event) {
-        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+    default boolean fidgetz$captureEventForDialogs(double mouseX, double mouseY, int button) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             for (FZDialog dialog : fidgetz$Dialogs()) {
                 if (!dialog.isOpen()) continue;
 
-                if (dialog.shouldCloseAfterClickOutOfBounds() && !dialog.areCoordinatesInBounds((int) event.x(), (int) event.y())) {
+                if (dialog.shouldCloseAfterClickOutOfBounds() && !dialog.areCoordinatesInBounds((int) mouseX, (int) mouseY)) {
                     dialog.setOpen(false);
                     return dialog.shouldCaptureClick();
                 }
 
-                if (dialog.isMouseOver(event.x(), event.y())) {
+                if (dialog.isMouseOver(mouseX, mouseY)) {
                     return false;
                 }
             }

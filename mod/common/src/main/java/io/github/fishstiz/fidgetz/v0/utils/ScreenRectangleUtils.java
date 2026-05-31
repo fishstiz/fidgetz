@@ -23,6 +23,10 @@ public final class ScreenRectangleUtils {
         return unequal(rectangle, element.getX(), element.getY(), element.getWidth(), element.getHeight());
     }
 
+    public static boolean encompasses(ScreenRectangle a, ScreenRectangle b) {
+        return b.left() >= a.left() && b.top() >= a.top() && b.right() <= a.right() && b.bottom() <= a.bottom();
+    }
+
     public static boolean containsPoint(ScreenRectangle rectangle, int x, int y) {
         return !isAreaEmpty(rectangle) && rectangle.containsPoint(x, y);
     }

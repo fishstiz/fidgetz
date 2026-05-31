@@ -5,19 +5,18 @@ import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public abstract class FZScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenu.Source {
+public abstract class FZScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenu.Source, ContainerEventHandlerPatch {
     protected static final String GLOBAL_CONTEXT_MENU_ID = "FZScreen:FZContextMenu";
     protected final FZDialogManager dialogManager = new FZDialogManager(this);
     protected ScreenRectangle screenRectangle = ScreenRectangle.empty();
@@ -85,11 +84,9 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
                 .buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
     }
 
-    protected boolean canOpenContextMenu(MouseButtonEvent mouseButtonEvent) {
-        double x = mouseButtonEvent.x();
-        double y = mouseButtonEvent.y();
-        return mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT &&
-               dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> !menu.isMouseOver(x, y)).orElse(true);
+    protected boolean canOpenContextMenu(double mouseX, double mouseY, int button) {
+        return button == InputConstants.MOUSE_BUTTON_RIGHT &&
+               dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> !menu.isMouseOver(mouseX, mouseY)).orElse(true);
     }
 
     protected boolean shouldUpdateHovered() {
@@ -107,38 +104,52 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (shouldUpdateHovered()) {
             fidgetz$updateHovered(mouseX, mouseY);
         }
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (fidgetz$captureEventForDialogs(event)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (fidgetz$captureEventForDialogs(mouseX, mouseY, button)) {
             return true;
         }
 
-        boolean clicked = super.mouseClicked(event, doubleClick);
+        boolean clicked = ContainerEventHandlerPatch.super.mouseClicked(mouseX, mouseY, button);
 
-        if (canOpenContextMenu(event)) {
-            openContextMenu(event.x(), event.y(), !clicked);
+        if (canOpenContextMenu(mouseX, mouseY, button)) {
+            openContextMenu(mouseX, mouseY, !clicked);
         }
 
         return clicked;
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        if (fidgetz$captureEventForDialogs(event) || super.keyPressed(event)) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (fidgetz$captureEventForDialogs(keyCode) || super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (event.isEscape() && shouldCloseOnEscape()) {
+        if (keyCode == InputConstants.KEY_ESCAPE && shouldCloseOnEscape()) {
             this.onClose();
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        if (!focused) {
+            setFocused(null);
+        }
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        if (getFocused() != focused) {
+            super.setFocused(focused);
+        }
     }
 
     @Override

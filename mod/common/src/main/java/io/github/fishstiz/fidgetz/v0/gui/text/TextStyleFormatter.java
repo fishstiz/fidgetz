@@ -1,20 +1,20 @@
 package io.github.fishstiz.fidgetz.v0.gui.text;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.Util;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
-import net.minecraft.util.Util;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-public final class TextStyleFormatter implements EditBox.TextFormatter {
+public final class TextStyleFormatter implements BiFunction<String, Integer, FormattedCharSequence> {
     private final TextStyleMatcher[] matchers;
     private final Supplier<String> fullText;
     private final Executor executor;
@@ -35,7 +35,7 @@ public final class TextStyleFormatter implements EditBox.TextFormatter {
     }
 
     @Override
-    public @Nullable FormattedCharSequence format(String displayText, int displayPos) {
+    public @Nullable FormattedCharSequence apply(String displayText, Integer displayPos) {
         String currentText = fullText.get();
         if (currentText.isBlank()) return null;
 

@@ -1,29 +1,27 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.inject.mixins.access.EditBoxAccess;
-import io.github.fishstiz.fidgetz.v0.utils.CollectionUtils;
-import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
-import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
+import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleFormatter;
 import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleMatcher;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -42,7 +40,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private Consumer<ChangeEvent> changeHandler = FunctionUtils.nopConsumer();
     private Function<ConfirmEvent, @Nullable Boolean> confirmHandler = FunctionUtils.nullFunction();
     private ScreenRectangle bounds;
-    private Predicate<String> filter = _ -> true;
+    private Predicate<String> filter = ignored -> true;
     private boolean allowSectionSign;
     private int disableResponderCount = 0;
     private String previousValue = "";
@@ -64,7 +62,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         this.bound = bound;
         bounds = super.getRectangle();
         setMaxLength(DEFAULT_MAX_LENGTH);
-        super.addFormatter(formatter);
+        super.setFormatter(formatter);
         this.responder = this::handleChange;
         super.setResponder(responder);
     }
@@ -214,23 +212,23 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.renderWidget(graphics, mouseX, mouseY, a);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }
     }
 
     @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
-        if (getValue().isEmpty() && (keyEvent.isLeft() || keyEvent.isRight())) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (getValue().isEmpty() && (keyCode == InputConstants.KEY_LEFT || keyCode == InputConstants.KEY_RIGHT)) {
             return false;
         }
-        if (super.keyPressed(keyEvent)) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
-        if (keyEvent.isConfirmation()) {
-            return Boolean.TRUE.equals(confirmHandler.apply(new ConfirmEvent(this, keyEvent)));
+        if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
+            return Boolean.TRUE.equals(confirmHandler.apply(new ConfirmEvent(this)));
         }
         return false;
     }
@@ -252,12 +250,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
-    public void addFormatter(TextFormatter formatter) {
+    public void setFormatter(BiFunction<String, Integer, FormattedCharSequence> textFormatter) {
         this.formatter.formatters = CollectionUtils.addLast(this.formatter.formatters, formatter);
     }
 
     @Override
-    public boolean shouldTakeFocusAfterInteraction() {
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
         return propsState.focusOnInteraction;
     }
 
@@ -280,7 +278,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         props.text().ifPresentOrElse(this::setBoundValue, () -> valueBound = false);
 
         if (props.styleMatchers().isPresent() && props.formatters().isPresent()) {
-            List<TextFormatter> formatters = props.formatters().get().stream().map(FZKeyed::value).collect(Collectors.toCollection(ArrayList::new));
+            List<BiFunction<String, Integer, FormattedCharSequence>> formatters = props.formatters()
+                    .get()
+                    .stream()
+                    .map(FZKeyed::value)
+                    .collect(Collectors.toCollection(ArrayList::new));
+
             formatters.add(new TextStyleFormatter(props.styleMatchers().get(), this::getValue));
             formatter.formatters = formatters;
         } else if (props.styleMatchers().isPresent()) {
@@ -304,23 +307,23 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         return new Builder();
     }
 
-    private static final class Formatter implements TextFormatter {
-        private List<TextFormatter> formatters = Collections.emptyList();
+    private static final class Formatter implements BiFunction<String, Integer, FormattedCharSequence> {
+        private List<BiFunction<String, Integer, FormattedCharSequence>> formatters = Collections.emptyList();
 
         @Override
-        public @Nullable FormattedCharSequence format(String text, int offset) {
-            for (TextFormatter formatter : formatters) {
-                FormattedCharSequence result = formatter.format(text, offset);
+        public FormattedCharSequence apply(String text, Integer offset) {
+            for (BiFunction<String, Integer, FormattedCharSequence> formatter : formatters) {
+                FormattedCharSequence result = formatter.apply(text, offset);
                 if (result != null) return result;
             }
-            return null;
+            return FormattedCharSequence.forward(text, Style.EMPTY);
         }
     }
 
     public record ChangeEvent(FZTextField target, String value) {
     }
 
-    public record ConfirmEvent(FZTextField target, KeyEvent keyEvent) {
+    public record ConfirmEvent(FZTextField target) {
     }
 
     public interface Props extends GuiComponentProps {
@@ -348,7 +351,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return TriState.DEFAULT;
         }
 
-        default Optional<List<FZKeyed<TextFormatter>>> formatters() {
+        default Optional<List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>>> formatters() {
             return Optional.empty();
         }
 
@@ -376,7 +379,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private final Undefinable<@Nullable String> suggestion;
         private final @Nullable Integer maxLength;
         private final TriState allowSectionSign;
-        private final @Nullable List<FZKeyed<TextFormatter>> formatters;
+        private final @Nullable List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>> formatters;
         private final @Nullable List<TextStyleMatcher> styleMatchers;
         private final @Nullable FZKeyed<Predicate<String>> filter;
         private final @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
@@ -390,7 +393,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 Undefinable<@Nullable String> suggestion,
                 @Nullable Integer maxLength,
                 TriState allowSectionSign,
-                @Nullable List<FZKeyed<TextFormatter>> formatters,
+                @Nullable List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>> formatters,
                 @Nullable List<TextStyleMatcher> styleMatchers,
                 @Nullable FZKeyed<Predicate<String>> filter,
                 @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler,
@@ -441,7 +444,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         }
 
         @Override
-        public Optional<List<FZKeyed<TextFormatter>>> formatters() {
+        public Optional<List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>>> formatters() {
             return Optional.ofNullable(formatters);
         }
 
@@ -509,7 +512,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private Undefinable<@Nullable String> suggestion = Undefinable.undefined();
         private @Nullable Integer maxLength;
         private TriState allowSectionSign = TriState.DEFAULT;
-        private @Nullable List<FZKeyed<TextFormatter>> formatters;
+        private @Nullable List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>> formatters;
         private @Nullable FZKeyed<Predicate<String>> filter;
         private @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
         private @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler;
@@ -570,7 +573,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return this;
         }
 
-        public Builder formatter(Object key, TextFormatter formatter) {
+        public Builder formatter(Object key, BiFunction<String, Integer, FormattedCharSequence> formatter) {
             if (formatters == null) {
                 formatters = Lists.newArrayList(new FZKeyed<>(key, formatter));
             } else {
@@ -579,7 +582,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return this;
         }
 
-        public Builder formatter(TextFormatter formatter) {
+        public Builder formatter(BiFunction<String, Integer, FormattedCharSequence> formatter) {
             return formatter(formatter, formatter);
         }
 

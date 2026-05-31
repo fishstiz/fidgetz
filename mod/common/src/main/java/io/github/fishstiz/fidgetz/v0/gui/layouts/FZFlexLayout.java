@@ -1,8 +1,9 @@
 package io.github.fishstiz.fidgetz.v0.gui.layouts;
 
+import io.github.fishstiz.fidgetz.v0.utils.IntIntBiConsumer;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
+import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIntBiConsumer;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.layouts.AbstractLayout;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -11,7 +12,6 @@ import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.util.TriState;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -8,11 +8,12 @@ import io.github.fishstiz.fidgetz.v0.gui.layouts.*;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
+import io.github.fishstiz.testmod.utils.ARGB;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class StatefulScreen extends FZScreen {
     private final FZMutableRef<State> state = new FZMutableRef<>(State.defaults());
@@ -35,7 +36,7 @@ public class StatefulScreen extends FZScreen {
     }
 
     private void handleCycle(FZButton.PressEvent e) {
-        if (e.input().hasShiftDown()) {
+        if (Screen.hasShiftDown()) {
             state.set(prev -> prev.withOption(prev.option().previous()));
         } else {
             state.set(prev -> prev.withOption(prev.option().next()));
@@ -74,7 +75,7 @@ public class StatefulScreen extends FZScreen {
 
                     collector.renderableOnly(Renderables.fill(ARGB.color(0.7f, CommonColors.YELLOW)).toRenderable(spacer::getRectangle));
                     collector.renderableOnly(Renderables.text(() -> Component.literal("Spacer:" + spacer.getWidth())
-                            .withColor(CommonColors.BLACK).withoutShadow()).toRenderable(spacer::getRectangle));
+                            .withColor(CommonColors.BLACK)).toRenderable(spacer::getRectangle));
 
                     var reset = controls.child(
                             FZButton.builder()
@@ -89,7 +90,7 @@ public class StatefulScreen extends FZScreen {
                     );
 
                     collector.renderableOnly(Renderables.text(() -> Component.literal("width: " + reset.getWidth()))
-                            .pose(matrix -> matrix.translate(0, (float) reset.getHeight() / 2 + 4.5f))
+                            .pose(matrix -> matrix.translate(0, (float) reset.getHeight() / 2 + 4.5f, 0f))
                             .toPopover(reset::getRectangle));
 
                     controls.child(state.bind(

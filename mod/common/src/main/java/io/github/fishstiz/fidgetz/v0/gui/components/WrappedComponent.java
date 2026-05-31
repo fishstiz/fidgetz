@@ -3,23 +3,19 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.*;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
 
 public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent, FZHoverableElement {
@@ -86,8 +82,8 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        widget.extractRenderState(graphics, mouseX, mouseY, a);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        widget.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -113,28 +109,28 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    public void onClick(MouseButtonEvent event, boolean doubleClick) {
-        widget.onClick(event, doubleClick);
+    public void onClick(double mouseX, double mouseY) {
+        widget.onClick(mouseX, mouseY);
     }
 
     @Override
-    public void onRelease(MouseButtonEvent event) {
-        widget.onRelease(event);
+    public void onRelease(double mouseX, double mouseY) {
+        widget.onRelease(mouseX, mouseY);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        return widget.mouseClicked(event, doubleClick);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return widget.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        return widget.mouseReleased(event);
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return widget.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
-        return widget.mouseDragged(event, dx, dy);
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        return widget.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
 
     @Override
@@ -173,11 +169,6 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     public void setAlpha(float alpha) {
         super.setAlpha(alpha);
         widget.setAlpha(alpha);
-    }
-
-    @Override
-    public float getAlpha() {
-        return widget.getAlpha();
     }
 
     @Override
@@ -304,28 +295,18 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        return widget.keyPressed(event);
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return widget.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean keyReleased(KeyEvent event) {
-        return widget.keyReleased(event);
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        return widget.keyReleased(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
-        return widget.charTyped(event);
-    }
-
-    @Override
-    public boolean preeditUpdated(@Nullable PreeditEvent event) {
-        return widget.preeditUpdated(event);
-    }
-
-    @Override
-    public boolean shouldTakeFocusAfterInteraction() {
-        return widget.shouldTakeFocusAfterInteraction();
+    public boolean charTyped(char codePoint, int modifiers) {
+        return widget.charTyped(codePoint, modifiers);
     }
 
     @Override
@@ -334,12 +315,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    public ScreenRectangle getBorderForArrowNavigation(ScreenDirection opposite) {
-        return widget.getBorderForArrowNavigation(opposite);
-    }
-
-    @Override
-    public Collection<? extends NarratableEntry> getNarratables() {
-        return widget.getNarratables();
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return !(widget instanceof FZComponent component) || component.fidgetz$shouldTakeFocusAfterInteraction();
     }
 }

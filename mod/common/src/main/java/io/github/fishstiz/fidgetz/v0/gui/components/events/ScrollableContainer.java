@@ -6,7 +6,7 @@ import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public interface ScrollableContainer extends ContainerEventHandler {
     double scrollRate();
@@ -16,7 +16,7 @@ public interface ScrollableContainer extends ContainerEventHandler {
     void setScrollAmount(double scrollAmount);
 
     default @Nullable ComponentPath addScrollEffectOnFocus(FocusNavigationEvent event, @Nullable ComponentPath path) {
-        if (!(path instanceof ComponentPath.Path(_, ComponentPath childPath))) {
+        if (!(path instanceof ComponentPath.Path(ContainerEventHandler ignored, ComponentPath childPath))) {
             return path;
         }
 

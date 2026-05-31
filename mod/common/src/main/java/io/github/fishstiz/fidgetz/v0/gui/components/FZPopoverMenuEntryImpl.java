@@ -1,7 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
@@ -9,7 +8,7 @@ import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetTooltipHolder;
@@ -17,11 +16,11 @@ import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.CommonColors;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.List;
@@ -44,7 +43,6 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
     private final BooleanSupplier activeSupplier;
     private final Function<FZPopoverMenuItem.Builder.PressEvent, @Nullable Boolean> pressHandler;
     private final boolean playClickSoundOnInteraction;
-    private final boolean applyCursorWhenActive;
     private final int height;
     private final int minWidth;
     private int width;
@@ -59,7 +57,6 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
             BooleanSupplier activeSupplier,
             Function<FZPopoverMenuItem.Builder.PressEvent, Boolean> pressHandler,
             boolean playClickSoundOnInteraction,
-            boolean applyCursorWhenActive,
             int height,
             int minWidth
     ) {
@@ -72,7 +69,6 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         this.activeSupplier = activeSupplier;
         this.pressHandler = pressHandler;
         this.playClickSoundOnInteraction = playClickSoundOnInteraction;
-        this.applyCursorWhenActive = applyCursorWhenActive;
         this.height = height;
         this.minWidth = minWidth;
     }
@@ -83,11 +79,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        if (applyCursorWhenActive && context.isActive() && context.isHovered()) {
-            graphics.requestCursor(CursorTypes.POINTING_HAND);
-        }
-
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ScreenRectangle bounds = context.getRectangle();
         final int left = bounds.left();
         final int top = bounds.top();
@@ -124,7 +116,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
             int chevronHeight = font.lineHeight;
             int chevronColor = activeSupplier.getAsBoolean() ? DEFAULT_TEXT_COLOR : DEFAULT_INACTIVE_TEXT_COLOR;
             int chevronY = top + (height - chevronHeight) / 2;
-            graphics.text(font, CHEVRON_RIGHT, chevronX, chevronY + 1, chevronColor);
+            graphics.drawString(font, CHEVRON_RIGHT, chevronX, chevronY + 1, chevronColor);
         }
 
         Component text = messageSupplier.get();
@@ -138,20 +130,20 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         }
 
         if (context.isHovered()) {
-            tooltipHolder.refreshTooltipForNextRenderPass(graphics, mouseX, mouseY, true, false, bounds);
+            tooltipHolder.refreshTooltipForNextRenderPass(true, isFocused(), bounds);
         }
     }
 
     private void playClickSound() {
         if (playClickSoundOnInteraction) {
-            AbstractWidget.playButtonClickSound(Minecraft.getInstance().getSoundManager());
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (context.isActive() &&
-            event.button() == InputConstants.MOUSE_BUTTON_LEFT &&
+            button == InputConstants.MOUSE_BUTTON_LEFT &&
             Boolean.TRUE.equals(pressHandler.apply(new FZPopoverMenuItem.Builder.PressEvent(context, this)))) {
             playClickSound();
             return true;
@@ -160,9 +152,9 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (context.isActive() &&
-            keyEvent.isConfirmation() &&
+            (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) &&
             Boolean.TRUE.equals(pressHandler.apply(new FZPopoverMenuItem.Builder.PressEvent(context, this)))) {
             playClickSound();
             return true;
@@ -211,13 +203,17 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         return height;
     }
 
-    record Divider(FZPopoverMenuItem.Context context, RenderableRectangle rectangle, int height) implements FZPopoverMenuItem.Entry {
+    record Divider(
+            FZPopoverMenuItem.Context context,
+            RenderableRectangle rectangle,
+            int height
+    ) implements FZPopoverMenuItem.Entry {
         static final int DEFAULT_HEIGHT = 4;
         static final FZPopoverMenuItem.Divider DEFAULT_SECTION = new FZPopoverMenuItem.Divider(
-                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_section_divider")))
+                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_section_divider")).withBlend())
         );
         static final FZPopoverMenuItem.Divider DEFAULT_ENTRY = new FZPopoverMenuItem.Divider(
-                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_divider")))
+                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_divider")).withBlend())
         );
 
         Divider(FZPopoverMenuItem.Context context, RenderableRectangle rectangle) {
@@ -245,7 +241,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             ScreenRectangle bounds = context.getRectangle();
             rectangle.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
         }
@@ -289,9 +285,9 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         }
 
         @Override
-        public void refreshTooltipForNextRenderPass(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovered, boolean isFocused, ScreenRectangle screenRectangle) {
+        public void refreshTooltipForNextRenderPass(boolean hovering, boolean focused, ScreenRectangle screenRectangle) {
             if (tooltipSupplier != null) delegate.set(tooltipSupplier.get());
-            delegate.refreshTooltipForNextRenderPass(graphics, mouseX, mouseY, isHovered, isFocused, screenRectangle);
+            delegate.refreshTooltipForNextRenderPass(hovering, focused, screenRectangle);
         }
 
         @Override

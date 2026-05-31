@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -34,12 +34,12 @@ public final class Renderables {
         return new BoxShadow(scale, xOffset, yOffset);
     }
 
-    public static RenderableRectangle sprite(Identifier sprite) {
+    public static RenderableRectangle sprite(ResourceLocation sprite) {
         return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite is null"));
     }
 
     public static RenderableRectangle texture(
-            Identifier texture,
+            ResourceLocation texture,
             int textureWidth,
             int textureHeight,
             float u,
@@ -50,11 +50,11 @@ public final class Renderables {
         return new RenderableTexture(Objects.requireNonNull(texture, "texture is null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
     }
 
-    public static RenderableRectangle texture(Identifier texture, int textureWidth, int textureHeight, int width, int height) {
+    public static RenderableRectangle texture(ResourceLocation texture, int textureWidth, int textureHeight, int width, int height) {
         return texture(texture, textureWidth, textureHeight, 0, 0, width, height);
     }
 
-    public static RenderableRectangle texture(Identifier texture, int textureWidth, int textureHeight) {
+    public static RenderableRectangle texture(ResourceLocation texture, int textureWidth, int textureHeight) {
         return texture(texture, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight);
     }
 }

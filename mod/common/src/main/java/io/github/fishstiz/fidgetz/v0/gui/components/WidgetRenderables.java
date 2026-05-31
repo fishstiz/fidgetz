@@ -3,7 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public record WidgetRenderables(
         RenderableRectangle enabled,
@@ -27,7 +27,7 @@ public record WidgetRenderables(
         return new WidgetRenderables(enabled, disabled, enabled, disabled);
     }
 
-    public static WidgetRenderables noFocus(Identifier enabled, Identifier disabled) {
+    public static WidgetRenderables noFocus(ResourceLocation enabled, ResourceLocation disabled) {
         RenderableRectangle enabledSprite = Renderables.sprite(enabled);
         RenderableRectangle disabledSprite = Renderables.sprite(disabled);
         return noFocus(enabledSprite, disabledSprite);
