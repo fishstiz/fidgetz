@@ -11,7 +11,7 @@ public class GuiComponentPropsState {
     public @Nullable String id;
     public boolean focusOnInteraction = true;
     public @Nullable RenderableRectangle overlay = null;
-    public Consumer<FZContextMenuEntry.Collector> contextEntries = FunctionUtils.nopConsumer();
+    public Consumer<FZContextMenu.Collector> contextEntries = FunctionUtils.nopConsumer();
 
     public GuiComponentPropsState() {
     }

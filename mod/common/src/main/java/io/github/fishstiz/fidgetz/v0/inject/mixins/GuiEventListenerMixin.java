@@ -1,13 +1,13 @@
 package io.github.fishstiz.fidgetz.v0.inject.mixins;
 
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(GuiEventListener.class)
-interface GuiEventListenerMixin extends FZHoverableElement, FZContextMenuEntry.Source {
+interface GuiEventListenerMixin extends FZHoverableElement, FZContextMenu.Source {
     @Shadow
     boolean isMouseOver(final double mouseX, final double mouseY);
 

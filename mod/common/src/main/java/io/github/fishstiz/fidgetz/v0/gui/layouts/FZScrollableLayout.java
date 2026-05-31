@@ -33,6 +33,7 @@ public final class FZScrollableLayout extends ComposedLayout {
     private boolean reserveScrollbarArea;
     private int scrollbarSpacing = DEFAULT_SCROLLBAR_SPACING;
     private int minWidth;
+    private int maxWidth;
     private int minHeight;
     private int maxHeight;
 
@@ -65,20 +66,30 @@ public final class FZScrollableLayout extends ComposedLayout {
     }
 
     public FZScrollableLayout minWidth(int minWidth) {
-        this.minWidth = MathUtils.optionalMin(minWidth, screenArea.get().width());
+        this.minWidth = MathUtils.clampOptionalMax(minWidth, 0, screenArea.get().width());
         container.setWidth(Math.max(composed.getWidth(), minWidth));
         return this;
     }
 
+    public FZScrollableLayout maxWidth(int maxWidth) {
+        this.maxWidth = MathUtils.clampOptionalMax(maxWidth, 0, screenArea.get().width());
+        this.minWidth = MathUtils.optionalMin(this.minWidth, this.maxWidth);
+        if (container.getWidth() > this.getWidth()) {
+            fidgetz$setWidth(this.maxWidth);
+            container.setWidth(this.maxWidth);
+        }
+        return this;
+    }
+
     public FZScrollableLayout minHeight(int minHeight) {
-        this.minHeight = MathUtils.optionalMin(minHeight, screenArea.get().height());
+        this.minHeight = MathUtils.clampOptionalMax(minHeight, 0, screenArea.get().height());
         container.setHeight(Math.max(composed.getHeight(), minHeight));
         return this;
     }
 
     public FZScrollableLayout maxHeight(int maxHeight) {
-        this.maxHeight = MathUtils.optionalMin(maxHeight, screenArea.get().height());
-        container.setHeight(Math.clamp(container.getHeight(), minHeight, maxHeight));
+        this.maxHeight = MathUtils.clampOptionalMax(maxHeight, 0, screenArea.get().height());
+        container.setHeight(MathUtils.clampOptionalMax(container.getHeight(), minHeight, this.maxHeight));
         return this;
     }
 
@@ -112,7 +123,7 @@ public final class FZScrollableLayout extends ComposedLayout {
         composed.visitWidgets(container.children::add);
         int contentWidth = composed.getWidth();
         ScreenRectangle containerBounds = screenArea.get();
-        container.setWidth(MathUtils.optionalMin(Math.max(contentWidth, minWidth) + reservedWidth(), containerBounds.width()));
+        container.setWidth(MathUtils.clampOptionalMax(Math.max(contentWidth, minWidth) + reservedWidth(), 0, containerBounds.width()));
         container.setHeight(MathUtils.optionalMin(MathUtils.clampOptionalMax(composed.getHeight(), minHeight, maxHeight), containerBounds.height()));
         container.refreshScrollAmount();
     }

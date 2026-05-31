@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public final class FZText extends StringWidget implements FZComponent, FZContextMenuEntry.Source {
+public final class FZText extends StringWidget implements FZComponent, FZContextMenu.Source {
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private ScreenRectangle bounds;
 
@@ -31,7 +31,7 @@ public final class FZText extends StringWidget implements FZComponent, FZContext
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
     }
 

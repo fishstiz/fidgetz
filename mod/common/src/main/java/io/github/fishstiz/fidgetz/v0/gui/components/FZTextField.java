@@ -29,7 +29,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class FZTextField extends EditBox implements FZComponent, FZContextMenuEntry.Source {
+public final class FZTextField extends EditBox implements FZComponent, FZContextMenu.Source {
     private static final char SECTION_SIGN_PLACEHOLDER = '¶';
     private static final char SECTION_SIGN = '§';
     private static final int DEFAULT_MAX_LENGTH = 64;
@@ -241,7 +241,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
     }
 

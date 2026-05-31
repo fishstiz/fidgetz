@@ -1,10 +1,7 @@
 package io.github.fishstiz.testmod.gui.screens;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
@@ -20,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 
 import static io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables.*;
 
-public class FlexScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenuEntry.Source {
+public class FlexScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenu.Source {
     private @Nullable FZContextMenu contextMenu;
 
     public FlexScreen() {
@@ -97,13 +94,13 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
-        collector.addEntry(FZContextMenuEntry.builder()
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Hello World!"))
                 .onPress(() -> IO.println("Hello World!"))
                 .build());
         collector.nextSection();
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Goodbye World!"))
                 .onPress(() -> IO.println("Goodbye World!"))
                 .build());

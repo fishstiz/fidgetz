@@ -91,18 +91,18 @@ public abstract class GuiComponentPropsBuilder<T> {
         return self();
     }
 
-    public T contextEntries(FZContextMenuEntry entry, FZContextMenuEntry... rest) {
+    public T contextEntries(FZPopoverMenuItem entry, FZPopoverMenuItem... rest) {
         Objects.requireNonNull(entry, "entry cannot be null");
         props.contextEntries = FZKeyed.selfKey(collector -> {
             collector.addEntry(entry);
-            for (FZContextMenuEntry e : rest) {
+            for (FZPopoverMenuItem e : rest) {
                 collector.addEntry(Objects.requireNonNull(e, "entry cannot be null"));
             }
         });
         return self();
     }
 
-    public T contextEntries(Consumer<FZContextMenuEntry.Collector> contextSupplier) {
+    public T contextEntries(Consumer<FZContextMenu.Collector> contextSupplier) {
         props.contextEntries = FZKeyed.selfKey(Objects.requireNonNull(contextSupplier, "contextSupplier cannot be null"));
         return self();
     }

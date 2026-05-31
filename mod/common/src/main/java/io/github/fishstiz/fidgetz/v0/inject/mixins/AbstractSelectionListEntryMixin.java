@@ -1,6 +1,5 @@
 package io.github.fishstiz.fidgetz.v0.inject.mixins;
 
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;

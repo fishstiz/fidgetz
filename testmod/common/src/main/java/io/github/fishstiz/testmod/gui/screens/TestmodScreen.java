@@ -19,7 +19,7 @@ import net.minecraft.util.CommonColors;
 
 import java.util.List;
 
-public class TestmodScreen extends Screen implements FZDialogContainer, FZContextMenuEntry.Source, FZHoverableContainer {
+public class TestmodScreen extends Screen implements FZDialogContainer, FZContextMenu.Source, FZHoverableContainer {
     private static final String CONTEXT_MENU_ID = "context-menu";
     private static final String MODAL_ID = "modal";
     private static final String MODAL_TWO_ID = "modal2";
@@ -98,10 +98,10 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double mouseX, double mouseY, FZContextMenuEntry.Collector collector) {
-        FZContextMenuEntry.Source.super.fidgetz$updateContextEntries(mouseX, mouseY, collector);
+    public void fidgetz$updateContextEntries(double mouseX, double mouseY, FZContextMenu.Collector collector) {
+        FZContextMenu.Source.super.fidgetz$updateContextEntries(mouseX, mouseY, collector);
 
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("f"))
                 .preventPress()
                 .height(24)
@@ -111,39 +111,44 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
                 ))
                 .build());
 
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("entry 2")).build());
 
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.fromWidget(FZButton.builder()
+                .message(Component.literal("CLose Screen"))
+                .onPress(this::onClose)
+                .build()));
+
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("inactive"))
                 .active(false)
                 .build());
 
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("entry 2 with a super duper long name")).build());
 
         collector.nextSection();
 
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 3")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 3")).build());
 
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry me"))
-                .child(FZContextMenuEntry.builder().message(Component.literal("entry")).build())
-                .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                .child(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry me"))
+                .child(FZPopoverMenuItem.builder().message(Component.literal("entry")).build())
+                .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                .child(FZPopoverMenuItem.builder()
                         .message(Component.literal("entry 2"))
-                        .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                        .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                        .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                        .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                        .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
                         .nextSection()
-                        .child(FZContextMenuEntry.builder().message(Component.literal("open modal 2"))
+                        .child(FZPopoverMenuItem.builder().message(Component.literal("open modal 2"))
                                 .onPress(this::openModal2)
                                 .build())
                         .build())
-                .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                .child(FZContextMenuEntry.builder().message(Component.literal("entry 2")).build())
-                .child(FZContextMenuEntry.builder()
+                .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                .child(FZPopoverMenuItem.builder().message(Component.literal("entry 2")).build())
+                .child(FZPopoverMenuItem.builder()
                         .message(Component.literal("open modal"))
                         .onPress(this::openModal)
                         .build())
@@ -152,30 +157,30 @@ public class TestmodScreen extends Screen implements FZDialogContainer, FZContex
         collector.nextSection();
         collector.nextSection();
         collector.nextSection();
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("entry 4"))
                 .background(Renderables.fill(CommonColors.BLACK))
                 .build());
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("entry 4"))
                 .background(Renderables.fill(CommonColors.BLACK))
                 .build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder().message(Component.literal("entry 4")).build());
-        collector.addEntry(FZContextMenuEntry.builder()
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder().message(Component.literal("entry 4")).build());
+        collector.addEntry(FZPopoverMenuItem.builder()
                 .onPress(this::openModal2)
                 .message(Component.literal("open modal 2")).build());
     }

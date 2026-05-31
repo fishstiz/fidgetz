@@ -303,7 +303,7 @@ public class ListScreen extends FZScreen {
                             row.child(new WrappedComponent(FZButton.builder()
                                     .square()
                                     .message(Component.literal("+"))
-                                    .contextEntries(FZContextMenuEntry.builder().message(Component.literal("Hello world!")).build())
+                                    .contextEntries(FZPopoverMenuItem.builder().message(Component.literal("Hello world!")).build())
                                     .onPress(() -> state.set(prev -> prev.withCount(prev.quantity.count + 1)))
                                     .build()));
                         }));
@@ -353,6 +353,8 @@ public class ListScreen extends FZScreen {
                         .entry(button -> button.message(Component.literal("Option 5")))
                         .entry(button -> button.message(Component.literal("Option 5")))
                         .build());
+
+                row.spacer().width(150);
 
                 row.child(FZDropdown.builder(this)
                         .size(20, 20)

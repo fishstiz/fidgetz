@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class FZButtonBase extends Button.Plain implements FZComponent, FZContextMenuEntry.Source {
+public class FZButtonBase extends Button.Plain implements FZComponent, FZContextMenu.Source {
     protected static final WidgetRenderables DEFAULT_RENDERABLES = WidgetRenderables.sprites(new WidgetSprites(
             Identifier.withDefaultNamespace("widget/button"),
             Identifier.withDefaultNamespace("widget/button_disabled"),
@@ -58,7 +58,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
     }
 

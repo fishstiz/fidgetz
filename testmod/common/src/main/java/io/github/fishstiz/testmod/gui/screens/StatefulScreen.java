@@ -1,7 +1,7 @@
 package io.github.fishstiz.testmod.gui.screens;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZPopoverMenuItem;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZText;
 import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.*;
@@ -59,7 +59,7 @@ public class StatefulScreen extends FZScreen {
                             FZButton.bind("count", state.map(s -> FZButton.builder()
                                     .message(Component.literal("Count: " + s.itemCount()))
                                     .onPress(this::incrementCount)
-                                    .contextEntries(FZContextMenuEntry.builder()
+                                    .contextEntries(FZPopoverMenuItem.builder()
                                             .message(Component.literal("Reset Count"))
                                             .onPress(this::resetCount)
                                             .build())

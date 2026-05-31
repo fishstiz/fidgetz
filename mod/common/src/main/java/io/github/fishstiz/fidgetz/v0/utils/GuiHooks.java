@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
 import io.github.fishstiz.fidgetz.v0.inject.interfaces.ContextMenuSourceConsumer;
 import io.github.fishstiz.fidgetz.v0.inject.interfaces.WidgetOperator;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -26,7 +26,7 @@ public final class GuiHooks {
         ((WidgetOperator) screen).fidgetz$modifyNarratables(modifier);
     }
 
-    public static void supplyContextMenuEntries(AbstractWidget widget, Consumer<FZContextMenuEntry.Collector> entrySupplier) {
+    public static void supplyContextMenuEntries(AbstractWidget widget, Consumer<FZContextMenu.Collector> entrySupplier) {
         ((ContextMenuSourceConsumer) widget).fidgetz$setContextMenuSource(entrySupplier);
     }
 

@@ -1,0 +1,611 @@
+package io.github.fishstiz.fidgetz.v0.gui.components;
+
+import io.github.fishstiz.fidgetz.v0.Fidgetz;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZScrollableLayout;
+import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
+import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
+import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
+import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
+import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.CommonComponents;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+import java.util.Objects;
+
+public class FZPopoverMenu extends FZDialog {
+    protected static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(4);
+    protected static final RenderableRectangle DEFAULT_BACKGROUND = Renderables
+            .boxShadow(24)
+            .then(Renderables.sprite(Fidgetz.id("widget/popovermenu")));
+    protected static final int DEFAULT_MAX_HEIGHT = 240;
+    protected static final int DEFAULT_ENTRY_WIDTH = 150;
+    protected static final int DEFAULT_SPACING = 1;
+    private final @Nullable FZPopoverMenu parent;
+    private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
+    private FZPopoverMenuItem.@Nullable Divider sectionDivider;
+    private FZPopoverMenuItem.@Nullable Divider entryDivider;
+    private ScreenRectangle padding = DEFAULT_PADDING;
+    private int rowSpacing = DEFAULT_SPACING;
+    private int maxHeight = DEFAULT_MAX_HEIGHT;
+    private int minWidth = DEFAULT_ENTRY_WIDTH;
+    private int maxWidth;
+    private @Nullable ChildDetails child;
+    private HorizontalDirection preferredDirection = HorizontalDirection.RIGHT;
+    private HorizontalDirection currentDirection = HorizontalDirection.RIGHT;
+    private ScreenRectangle bounds = ScreenRectangle.empty();
+    private @Nullable FZScrollableLayout layout;
+
+    private FZPopoverMenu(ContainerEventHandler container, @Nullable FZPopoverMenu parent) {
+        super(container);
+        this.parent = parent;
+    }
+
+    protected FZPopoverMenu(ContainerEventHandler container) {
+        this(container, null);
+    }
+
+    protected void setBackground(@Nullable RenderableRectangle background) {
+        this.background = background;
+        if (child != null) {
+            child.menu.setBackground(background);
+        }
+    }
+
+    protected void setSectionDivider(FZPopoverMenuItem.@Nullable Divider sectionDivider) {
+        this.sectionDivider = sectionDivider;
+        if (child != null) {
+            child.menu.setSectionDivider(sectionDivider);
+        }
+    }
+
+    protected void setEntryDivider(FZPopoverMenuItem.@Nullable Divider entryDivider) {
+        this.entryDivider = entryDivider;
+        if (child != null) {
+            child.menu.setEntryDivider(entryDivider);
+        }
+    }
+
+    protected void setPreferredDirection(HorizontalDirection preferredDirection) {
+        this.preferredDirection = preferredDirection;
+        if (child != null) {
+            child.menu.setPreferredDirection(preferredDirection);
+        }
+    }
+
+    protected void setPadding(ScreenRectangle padding) {
+        this.padding = padding;
+        if (child != null) {
+            child.menu.setPadding(padding);
+        }
+    }
+
+    protected void setRowSpacing(int rowSpacing) {
+        this.rowSpacing = rowSpacing;
+        if (child != null) {
+            child.menu.setRowSpacing(rowSpacing);
+        }
+    }
+
+    protected void setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
+        if (child != null) {
+            child.menu.setMaxHeight(maxHeight);
+        }
+    }
+
+    protected void setMinWidth(int minWidth) {
+        this.minWidth = minWidth;
+        if (child != null) {
+            child.menu.setMinWidth(minWidth);
+        }
+    }
+
+    protected void setMaxWidth(int maxWidth) {
+        this.maxWidth = maxWidth;
+        if (child != null) {
+            child.menu.setMinWidth(maxWidth);
+        }
+    }
+
+    protected void setX(int x) {
+        if (layout != null) {
+            if (child != null) {
+                child.menu.setX(child.menu.getX() + x - layout.getX());
+            }
+            layout.setX(x);
+            bounds = layout.getRectangle();
+        }
+    }
+
+    protected void setY(int y) {
+        if (layout != null) {
+            if (child != null) {
+                child.menu.setY(child.menu.getY() + y - layout.getY());
+            }
+            layout.setY(y);
+            bounds = layout.getRectangle();
+        }
+    }
+
+    protected int getX() {
+        return getRectangle().left();
+    }
+
+    protected int getY() {
+        return getRectangle().top();
+    }
+
+    private void applyLayout(@Nullable FZScrollableLayout layout) {
+        if (layout == null) {
+            this.layout = null;
+            this.bounds = ScreenRectangle.empty();
+            return;
+        }
+
+        layout.maxHeight(maxHeight);
+        layout.arrangeElements();
+        if (layout.getWidth() < this.minWidth || layout.getWidth() > this.maxWidth) {
+            layout.fidgetz$setWidth(MathUtils.optionalMin(this.minWidth, this.maxWidth));
+        }
+
+        clearWidgets();
+        layout.visitWidgets(this::addRenderableWidget);
+
+        this.layout = layout;
+        this.bounds = layout.getRectangle();
+    }
+
+    @Override
+    public void repositionElements() {
+        applyLayout(this.layout);
+        if (child != null) {
+            child.menu.repositionElements();
+        }
+    }
+
+    protected HorizontalDirection getPreferredDirection() {
+        return HorizontalDirection.RIGHT;
+    }
+
+    @Override
+    public boolean shouldCaptureClick() {
+        return false;
+    }
+
+    @Override
+    public boolean shouldFocusOnOpen() {
+        return parent == null;
+    }
+
+    @Override
+    public boolean shouldRefocusLastPath() {
+        return parent == null;
+    }
+
+    @Override
+    public ScreenRectangle getRectangle() {
+        return bounds;
+    }
+
+    protected void build(List<FZPopoverMenuItem> items) {
+        FZFlexLayout content = FZFlexLayout.vertical().spacing(rowSpacing);
+        content.defaultChildSettings().flexCross();
+
+        int entryCount = 0;
+        int maxEntryWidth = 0;
+
+        for (int i = 0; i < items.size(); i++) {
+            FZPopoverMenuItem current = items.get(i);
+            FZPopoverMenuItem next = (i + 1 < items.size()) ? items.get(i + 1) : null;
+            boolean canDivideNext = next != null && !(next instanceof FZPopoverMenuItem.Divider);
+
+            if (current instanceof FZPopoverMenuItem.Divider divider) {
+                if (canDivideNext && entryCount > 0) {
+                    FZPopoverMenuItem.Divider resolved = FZPopoverMenuEntryImpl.Divider.DEFAULT_SECTION;
+                    if (divider.factory() != null) {
+                        resolved = divider;
+                    }
+                    if (sectionDivider != null && sectionDivider.factory() != null) {
+                        resolved = sectionDivider;
+                    }
+                    content.child(new EntryWidget(resolved));
+                }
+            } else {
+                EntryWidget entryWidget = new EntryWidget(current);
+                FZPopoverMenuItem.Entry entry = entryWidget.entry;
+                content.child(entryWidget);
+                maxEntryWidth = Math.max(maxEntryWidth, entry.getWidth());
+                entryCount++;
+                if (canDivideNext && entryDivider != null && current.settings().autoDividerAfter()) {
+                    content.child(new EntryWidget(Objects.requireNonNullElse(
+                            entryDivider,
+                            FZPopoverMenuEntryImpl.Divider.DEFAULT_ENTRY
+                    )));
+                }
+            }
+        }
+
+        if (entryCount == 0) {
+            applyLayout(null);
+            return;
+        }
+
+        content.fidgetz$setWidth(maxEntryWidth);
+        applyLayout(FZComposedLayout.compose(content)
+                .padding(padding.left(), padding.top(), padding.right(), padding.bottom())
+                .toScrollable(container)
+                .scrollbarSpacing(0)
+                .maxHeight(maxHeight));
+    }
+
+    private void openAndPosition(int x, int y, HorizontalDirection direction, List<FZPopoverMenuItem> items) {
+        build(items);
+        if (layout == null) {
+            close();
+        } else {
+            ScreenRectangle targetBounds = layout.getRectangle();
+            ScreenRectangle containerBounds = container.getRectangle();
+            HorizontalDirection newDirection = direction.resolve(containerBounds, targetBounds.width(), x);
+            layout.setX(newDirection.clamp(containerBounds, targetBounds.width(), x));
+            layout.setY(Math.max(0, y + targetBounds.height() > containerBounds.height() ? containerBounds.height() - targetBounds.height() : y));
+            this.currentDirection = newDirection;
+            this.bounds = layout.getRectangle();
+            setOpen(true);
+        }
+    }
+
+    protected void openAndPosition(int x, int y, List<FZPopoverMenuItem> entries) {
+        openAndPosition(x, y, getPreferredDirection(), entries);
+    }
+
+    @Override
+    protected void clearWidgets() {
+        super.clearWidgets();
+        this.child = null;
+    }
+
+    @Override
+    protected void onClose() {
+        super.onClose();
+
+        if (child != null) {
+            child.menu.close();
+        }
+
+        clearWidgets();
+        this.currentDirection = getPreferredDirection();
+        this.layout = null;
+        this.bounds = ScreenRectangle.empty();
+
+        if (parent != null) {
+            if (parent.child != null) {
+                parent.child.key.setFocused(false);
+            }
+
+            parent.child = null;
+
+            if (parent.getFocused() == this) {
+                parent.setFocused(null);
+                ComponentPath path = menuPath(parent, null);
+                if (path != null) {
+                    path.applyFocus(true);
+                }
+            }
+        }
+    }
+
+    public void close() {
+        setOpen(false);
+    }
+
+    private void closeAll() {
+        if (parent != null) {
+            parent.closeAll();
+        } else {
+            close();
+        }
+    }
+
+    private void closeChild() {
+        if (child != null) {
+            child.menu.close();
+        }
+    }
+
+    private void openChild(EntryWidget entry, List<FZPopoverMenuItem> entries) {
+        if (child != null && child.key == entry) return;
+
+        FZPopoverMenu menu = new FZPopoverMenu(container, this);
+        menu.background = background;
+        menu.sectionDivider = sectionDivider;
+        menu.entryDivider = entryDivider;
+        menu.padding = padding;
+        menu.preferredDirection = preferredDirection;
+        menu.rowSpacing = rowSpacing;
+        menu.maxHeight = maxHeight;
+        menu.minWidth = minWidth;
+
+        ScreenRectangle entryBounds = entry.getRectangle();
+        int anchor = currentDirection.edge(entryBounds);
+        HorizontalDirection newDirection = currentDirection.resolve(container.getRectangle(), getRectangle().width(), anchor);
+        int x = newDirection.edge(entryBounds);
+        int y = entryBounds.top();
+
+        menu.openAndPosition(x, y, newDirection, entries);
+        closeChild();
+        addWidgetFirst(menu);
+
+        child = new ChildDetails(entry, menu);
+    }
+
+    @Override
+    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        if (background != null) {
+            background.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
+        }
+        super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
+        if (child != null) {
+            child.menu.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        }
+    }
+
+    @Override
+    protected boolean areCoordinatesInBounds(double x, double y) {
+        return super.areCoordinatesInBounds(x, y) || (child != null && child.menu.areCoordinatesInBounds(x, y));
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return super.isMouseOver(mouseX, mouseY) || (child != null && child.menu.isMouseOver(mouseX, mouseY));
+    }
+
+    @Override
+    public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent event) {
+        if (child != null) {
+            ComponentPath path = child.menu.nextFocusPath(event);
+            if (path != null) {
+                return path;
+            }
+        }
+
+        return super.nextFocusPath(event);
+    }
+
+    private static @Nullable ComponentPath menuPath(FZPopoverMenu current, @Nullable ComponentPath childPath) {
+        if (childPath == null) {
+            return current.parent == null ? ComponentPath.path(current, current.container) : menuPath(current.parent, ComponentPath.leaf(current));
+        }
+        ComponentPath path = childPath.component() == current ? childPath : ComponentPath.path(current, childPath);
+        return current.parent == null ? ComponentPath.path(current.container, path) : menuPath(current.parent, path);
+    }
+
+    private record ChildDetails(EntryWidget key, FZPopoverMenu menu) {
+    }
+
+    private final class EntryWidget extends AbstractWidget implements FZPopoverMenuItem.Context, ContainerEventHandler {
+        private final FZPopoverMenuItem.Entry entry;
+        private final FZPopoverMenuItem.Settings settings;
+        private final List<FZPopoverMenuItem.Entry> singletonChild;
+        private ScreenRectangle entryBounds = ScreenRectangle.empty();
+        private boolean lastHovered;
+        private boolean dragging;
+
+        private EntryWidget(FZPopoverMenuItem item) {
+            super(0, 0, minWidth, 0, CommonComponents.EMPTY);
+            this.settings = item.settings();
+            this.entry = item.factory().create(this);
+            this.singletonChild = List.of(entry);
+            this.entryBounds = super.getRectangle();
+            this.height = this.entry.getHeight();
+            this.width = this.entry.getWidth();
+        }
+
+        @Override
+        public void closeMenu() {
+            closeAll();
+        }
+
+        @Override
+        public List<FZPopoverMenuItem.Entry> children() {
+            return singletonChild;
+        }
+
+        @Override
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            if (isActive() && entry.mouseClicked(event, doubleClick)) {
+                if (settings.closeOnInteract()) {
+                    closeMenu();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean shouldTakeFocusAfterInteraction() {
+            return isOpen() && entry.shouldTakeFocusAfterInteraction();
+        }
+
+        @Override
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+            entry.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            boolean hovered = isHovered();
+            if (hovered && !lastHovered) {
+                updateChild();
+            }
+            lastHovered = hovered;
+        }
+
+        private void updateChild() {
+            if (FZPopoverMenu.this.getFocused() == null || !FZPopoverMenu.this.isDragging()) {
+                List<FZPopoverMenuItem> children = entry.childItems();
+                if (children.isEmpty()) {
+                    closeChild();
+                } else {
+                    openChild(this, children);
+                }
+            }
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            entry.updateNarration(output);
+        }
+
+        @Override
+        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
+            return ComponentPath.path(this, entry.nextFocusPath(navigationEvent));
+        }
+
+        @Override
+        public boolean isActive() {
+            return entry.isActive();
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return super.isMouseOver(mouseX, mouseY) && (child == null || !child.menu().isMouseOver(mouseX, mouseY));
+        }
+
+        @Override
+        public boolean isChildOpened() {
+            return child != null && child.key == this && child.menu.isOpen();
+        }
+
+        private boolean handleKeyboardFocusOnClose() {
+            if (parent == null) return false;
+
+            ChildDetails child = parent.child;
+            close();
+
+            ComponentPath path = menuPath(parent, child == null
+                    ? parent.nextFocusPath(new FocusNavigationEvent.InitialFocus())
+                    : NavigationUtils.findPath(parent, child.key)
+            );
+
+            if (path != null) {
+                path.applyFocus(true);
+                return true;
+            }
+
+            return false;
+        }
+
+        private boolean handleKeyboardFocusOnOpen() {
+            if (isChildOpened()) return false;
+
+            List<FZPopoverMenuItem> children = entry.childItems();
+            if (children.isEmpty()) return false;
+
+            openChild(this, children);
+            if (child == null) return false;
+
+            ComponentPath path = menuPath(child.menu, NavigationUtils.initialFocus(child.menu));
+            if (path != null) {
+                path.applyFocus(true);
+                setFocused(true);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean keyPressed(KeyEvent event) {
+            if (entry.keyPressed(event)) {
+                return true;
+            }
+            if (event.isLeft()) {
+                return handleKeyboardFocusOnClose();
+            }
+            if (event.isRight() || event.isSelection()) {
+                return handleKeyboardFocusOnOpen();
+            }
+            return false;
+        }
+
+        @Override
+        public @Nullable GuiEventListener getFocused() {
+            return entry.isFocused() ? entry : null;
+        }
+
+        @Override
+        public void setFocused(@Nullable GuiEventListener focused) {
+            GuiEventListener previous = getFocused();
+            if (previous != focused) {
+                if (previous != null) {
+                    previous.setFocused(false);
+                }
+                if (focused == entry) {
+                    focused.setFocused(true);
+                }
+            }
+        }
+
+        @Override
+        public boolean isDragging() {
+            return this.dragging;
+        }
+
+        @Override
+        public void setDragging(boolean dragging) {
+            this.dragging = dragging;
+        }
+
+        @Override
+        public void setX(int x) {
+            int previousX = getX();
+            super.setX(x);
+            if (previousX != getX()) entryBounds = super.getRectangle();
+            entry.setX(x);
+        }
+
+        @Override
+        public void setY(int y) {
+            int previousY = getY();
+            super.setY(y);
+            if (previousY != getY()) entryBounds = super.getRectangle();
+            entry.setY(y);
+        }
+
+        @Override
+        public void setSize(int width, int height) {
+            setWidth(width);
+            setHeight(height);
+        }
+
+        @Override
+        public void setWidth(int width) {
+            int previousWidth = getWidth();
+            super.setWidth(width);
+            if (previousWidth != getWidth()) {
+                entry.setWidth(width);
+                entryBounds = super.getRectangle();
+            }
+        }
+
+        @Override
+        public void setHeight(int height) {
+            int previousHeight = getHeight();
+            super.setHeight(height);
+            if (previousHeight != getHeight()) entryBounds = super.getRectangle();
+        }
+
+        @Override
+        public ScreenRectangle getRectangle() {
+            return entryBounds;
+        }
+    }
+}

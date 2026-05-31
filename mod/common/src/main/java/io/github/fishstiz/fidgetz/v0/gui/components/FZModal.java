@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
-public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry.Source {
+public class FZModal extends FZDialog implements FZComponent, FZContextMenu.Source {
     protected static final float DEFAULT_ALIGNMENT = 0.5F;
     protected static final ScreenRectangle DEFAULT_MARGIN = ScreenRectangle.empty();
     protected static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(8);
@@ -39,7 +39,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             .then(Renderables.sprite(Identifier.withDefaultNamespace("popup/background")));
     private @Nullable String id;
     private Component message = CommonComponents.EMPTY;
-    private FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries = FZKeyed.selfKey(FunctionUtils.nopConsumer());
+    private FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries = FZKeyed.selfKey(FunctionUtils.nopConsumer());
     private Runnable closeHandler = FunctionUtils.nop();
     private Runnable openHandler = FunctionUtils.nop();
     protected Layout layout;
@@ -189,9 +189,9 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         contextEntries.value().accept(collector);
-        FZContextMenuEntry.Source.super.fidgetz$updateContextEntries(x, y, collector);
+        FZContextMenu.Source.super.fidgetz$updateContextEntries(x, y, collector);
     }
 
     @Override
@@ -291,7 +291,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return Optional.empty();
         }
 
-        default Optional<FZKeyed<Consumer<FZContextMenuEntry.Collector>>> contextEntries() {
+        default Optional<FZKeyed<Consumer<FZContextMenu.Collector>>> contextEntries() {
             return Optional.empty();
         }
 
@@ -362,7 +362,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private final @Nullable Integer width;
         private final @Nullable Integer height;
         private final @Nullable Component message;
-        private final @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries;
+        private final @Nullable FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries;
         private final Layout layout;
         private final TriState open;
         private final @Nullable FZKeyed<Runnable> closeHandler;
@@ -386,7 +386,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
                 @Nullable Integer width,
                 @Nullable Integer height,
                 @Nullable Component message,
-                @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries,
+                @Nullable FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries,
                 Layout layout,
                 TriState open,
                 @Nullable FZKeyed<Runnable> closeHandler,
@@ -454,7 +454,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         }
 
         @Override
-        public Optional<FZKeyed<Consumer<FZContextMenuEntry.Collector>>> contextEntries() {
+        public Optional<FZKeyed<Consumer<FZContextMenu.Collector>>> contextEntries() {
             return Optional.ofNullable(contextEntries);
         }
 
@@ -602,7 +602,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
         private @Nullable Integer width;
         private @Nullable Integer height;
         private @Nullable Component message;
-        private @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries;
+        private @Nullable FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries;
         private TriState open = TriState.DEFAULT;
         private @Nullable FZKeyed<Runnable> closeHandler;
         private @Nullable FZKeyed<Runnable> openHandler;
@@ -648,18 +648,18 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenuEntry
             return this;
         }
 
-        public Builder contextEntries(FZContextMenuEntry entry, FZContextMenuEntry... rest) {
+        public Builder contextEntries(FZPopoverMenuItem entry, FZPopoverMenuItem... rest) {
             Objects.requireNonNull(entry, "entry cannot be null");
             this.contextEntries = FZKeyed.selfKey(collector -> {
                 collector.addEntry(entry);
-                for (FZContextMenuEntry e : rest) {
+                for (FZPopoverMenuItem e : rest) {
                     collector.addEntry(Objects.requireNonNull(e, "entry cannot be null"));
                 }
             });
             return this;
         }
 
-        public Builder contextEntries(Consumer<FZContextMenuEntry.Collector> contextSupplier) {
+        public Builder contextEntries(Consumer<FZContextMenu.Collector> contextSupplier) {
             this.contextEntries = FZKeyed.selfKey(Objects.requireNonNull(contextSupplier, "contextSupplier cannot be null"));
             return this;
         }

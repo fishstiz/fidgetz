@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class FZLayoutList extends AbstractListWidget implements Layout, FZComponent, FZContextMenuEntry.Source {
+public class FZLayoutList extends AbstractListWidget implements Layout, FZComponent, FZContextMenu.Source {
     protected static final int DEFAULT_WIDTH = 300;
     protected static final int DEFAULT_HEIGHT = 150;
     protected static final int DEFAULT_SCROLL_RATE = 10;
@@ -245,9 +245,9 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
-        FZContextMenuEntry.Source.super.fidgetz$updateContextEntries(x, y, collector);
+        FZContextMenu.Source.super.fidgetz$updateContextEntries(x, y, collector);
     }
 
     @Override

@@ -4,10 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.InputConstants;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.testmod.gui.screens.*;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -94,12 +91,12 @@ public abstract class TitleScreenMixin extends Screen implements FZDialogContain
     @Inject(method = "mouseClicked", at = @At("HEAD"))
     private void openContextMenu(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
         if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
-            List<FZContextMenuEntry> items = new ArrayList<>();
-            items.add(FZContextMenuEntry.builder().message(Component.literal("Hello World!")).build());
-            items.add(FZContextMenuEntry.builder().message(Component.literal("Parent Item"))
-                    .child(FZContextMenuEntry.builder().message(Component.literal("Item 1")).build())
-                    .child(FZContextMenuEntry.builder().message(Component.literal("Item 2")).build())
-                    .child(FZContextMenuEntry.builder().message(Component.literal("Item 3")).build())
+            List<FZPopoverMenuItem> items = new ArrayList<>();
+            items.add(FZPopoverMenuItem.builder().message(Component.literal("Hello World!")).build());
+            items.add(FZPopoverMenuItem.builder().message(Component.literal("Parent Item"))
+                    .child(FZPopoverMenuItem.builder().message(Component.literal("Item 1")).build())
+                    .child(FZPopoverMenuItem.builder().message(Component.literal("Item 2")).build())
+                    .child(FZPopoverMenuItem.builder().message(Component.literal("Item 3")).build())
                     .build());
 
             fidgetz$contextMenu.open(event.x(), event.y(), items);

@@ -96,13 +96,13 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
     }
 
     protected void onClose() {
-        if (container.getFocused() == this) {
-            container.setFocused(null);
-        }
-
         ComponentPath path = getCurrentFocusPath();
         if (path != null) {
             path.applyFocus(false);
+        }
+
+        if (container.getFocused() == this) {
+            container.setFocused(null);
         }
     }
 

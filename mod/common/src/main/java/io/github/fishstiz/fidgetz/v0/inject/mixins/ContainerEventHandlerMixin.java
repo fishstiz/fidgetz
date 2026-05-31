@@ -3,9 +3,9 @@ package io.github.fishstiz.fidgetz.v0.inject.mixins;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import net.minecraft.client.gui.ComponentPath;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(ContainerEventHandler.class)
-interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContainer, FZContextMenuEntry.Source {
+interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContainer, FZContextMenu.Source {
     @Shadow
     List<? extends GuiEventListener> children();
 

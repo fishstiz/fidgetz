@@ -7,16 +7,18 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetTooltipHolder;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import org.jspecify.annotations.Nullable;
@@ -27,41 +29,41 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-final class FZContextMenuEntryImpl implements FZContextMenuEntry {
+final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
     private static final Component CHEVRON_RIGHT = Component.literal(">");
     private static final int CHEVRON_RIGHT_WIDTH = Minecraft.getInstance().font.width(CHEVRON_RIGHT);
     private static final int DEFAULT_TEXT_COLOR = CommonColors.WHITE;
     private static final int DEFAULT_INACTIVE_TEXT_COLOR = CommonColors.LIGHT_GRAY;
     private static final int SPACING = 8;
-    private final List<FZContextMenuEntry> children;
+    private final FZPopoverMenuItem.Context context;
+    private final List<FZPopoverMenuItem> children;
     private final Supplier<@Nullable WidgetRenderables> backgroundSupplier;
     private final Supplier<@Nullable WidgetElements> iconSupplier;
     private final Supplier<@Nullable Component> messageSupplier;
     private final WidgetTooltipHolder tooltipHolder;
     private final BooleanSupplier activeSupplier;
-    private final Function<PressEvent, @Nullable Boolean> pressHandler;
-    private final boolean closeOnInteraction;
-    private final boolean allowAutoDivideAfterEntry;
+    private final Function<FZPopoverMenuItem.Builder.PressEvent, @Nullable Boolean> pressHandler;
     private final boolean playClickSoundOnInteraction;
     private final boolean applyCursorWhenActive;
     private final int height;
     private final int minWidth;
+    private int width;
 
-    FZContextMenuEntryImpl(
-            List<FZContextMenuEntry> children,
+    FZPopoverMenuEntryImpl(
+            FZPopoverMenuItem.Context context,
+            List<FZPopoverMenuItem> children,
             Supplier<@Nullable WidgetRenderables> backgroundSupplier,
             Supplier<@Nullable WidgetElements> iconSupplier,
             Supplier<@Nullable Component> messageSupplier,
             WidgetTooltipHolder tooltipHolder,
             BooleanSupplier activeSupplier,
-            Function<PressEvent, Boolean> pressHandler,
-            boolean closeOnInteraction,
-            boolean allowAutoDivideAfterEntry,
+            Function<FZPopoverMenuItem.Builder.PressEvent, Boolean> pressHandler,
             boolean playClickSoundOnInteraction,
             boolean applyCursorWhenActive,
             int height,
             int minWidth
     ) {
+        this.context = context;
         this.children = children;
         this.backgroundSupplier = backgroundSupplier;
         this.iconSupplier = iconSupplier;
@@ -69,8 +71,6 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
         this.tooltipHolder = tooltipHolder;
         this.activeSupplier = activeSupplier;
         this.pressHandler = pressHandler;
-        this.closeOnInteraction = closeOnInteraction;
-        this.allowAutoDivideAfterEntry = allowAutoDivideAfterEntry;
         this.playClickSoundOnInteraction = playClickSoundOnInteraction;
         this.applyCursorWhenActive = applyCursorWhenActive;
         this.height = height;
@@ -78,7 +78,12 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, Context context, int mouseX, int mouseY, float partialTick) {
+    public FZPopoverMenuItem.Context context() {
+        return context;
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (applyCursorWhenActive && context.isActive() && context.isHovered()) {
             graphics.requestCursor(CursorTypes.POINTING_HAND);
         }
@@ -144,10 +149,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, Context context) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (context.isActive() &&
             event.button() == InputConstants.MOUSE_BUTTON_LEFT &&
-            Boolean.TRUE.equals(pressHandler.apply(new PressEvent(this, context)))) {
+            Boolean.TRUE.equals(pressHandler.apply(new FZPopoverMenuItem.Builder.PressEvent(context, this)))) {
             playClickSound();
             return true;
         }
@@ -155,10 +160,10 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent keyEvent, Context context) {
+    public boolean keyPressed(KeyEvent keyEvent) {
         if (context.isActive() &&
             keyEvent.isConfirmation() &&
-            Boolean.TRUE.equals(pressHandler.apply(new PressEvent(this, context)))) {
+            Boolean.TRUE.equals(pressHandler.apply(new FZPopoverMenuItem.Builder.PressEvent(context, this)))) {
             playClickSound();
             return true;
         }
@@ -166,62 +171,88 @@ final class FZContextMenuEntryImpl implements FZContextMenuEntry {
     }
 
     @Override
-    public List<FZContextMenuEntry> childEntries() {
+    public List<FZPopoverMenuItem> childItems() {
         return children;
     }
 
     @Override
-    public boolean active() {
+    public boolean isActive() {
         return activeSupplier.getAsBoolean();
     }
 
     @Override
-    public boolean shouldCloseOnInteraction() {
-        return closeOnInteraction;
-    }
-
-    @Override
-    public boolean canAutoDivideAfterEntry() {
-        return allowAutoDivideAfterEntry;
-    }
-
-    @Override
-    public int height() {
-        return height;
-    }
-
-    @Override
-    public int minWidth() {
-        return minWidth;
-    }
-
-    @Override
-    public Component message() {
+    public void updateNarration(NarrationElementOutput output) {
         Component message = messageSupplier.get();
-        return message == null ? CommonComponents.EMPTY : message;
-    }
-
-    @Override
-    public void updateNarration(NarrationElementOutput output, Context context) {
+        if (message != null) {
+            output.add(NarratedElementType.TITLE, AbstractWidget.wrapDefaultNarrationMessage(message));
+            if (isActive()) {
+                if (isFocused()) {
+                    output.add(NarratedElementType.USAGE, Component.translatable("narration.button.usage.focused"));
+                } else if (context.isHovered()) {
+                    output.add(NarratedElementType.USAGE, Component.translatable("narration.button.usage.hovered"));
+                }
+            }
+        }
         tooltipHolder.updateNarration(output);
     }
 
-    record DividerImpl(RenderableRectangle rectangle, int height, boolean fallback) implements Divider {
-        static final DividerImpl DEFAULT_SECTION = new DividerImpl(Renderables.sprite(Fidgetz.id("widget/contextmenu_section_divider")), true);
-        static final DividerImpl DEFAULT_ENTRY = new DividerImpl(Renderables.sprite(Fidgetz.id("widget/contextmenu_entry_divider")), false);
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
+    }
 
-        DividerImpl(RenderableRectangle rectangle, int height) {
-            this(rectangle, height, false);
-        }
+    @Override
+    public int getWidth() {
+        return Math.max(width, minWidth);
+    }
 
-        DividerImpl(RenderableRectangle rectangle, boolean fallback) {
-            this(rectangle, DEFAULT_HEIGHT, fallback);
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
+    record Divider(FZPopoverMenuItem.Context context, RenderableRectangle rectangle, int height) implements FZPopoverMenuItem.Entry {
+        static final int DEFAULT_HEIGHT = 4;
+        static final FZPopoverMenuItem.Divider DEFAULT_SECTION = new FZPopoverMenuItem.Divider(
+                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_section_divider")))
+        );
+        static final FZPopoverMenuItem.Divider DEFAULT_ENTRY = new FZPopoverMenuItem.Divider(
+                ctx -> new Divider(ctx, Renderables.sprite(Fidgetz.id("widget/popovermenu_entry_divider")))
+        );
+
+        Divider(FZPopoverMenuItem.Context context, RenderableRectangle rectangle) {
+            this(context, rectangle, DEFAULT_HEIGHT);
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, Context context, int mouseX, int mouseY, float partialTick) {
+        public int getWidth() {
+            return context().getRectangle().width();
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+        @Override
+        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
+            return null;
+        }
+
+        @Override
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             ScreenRectangle bounds = context.getRectangle();
             rectangle.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
+        }
+
+        @Override
+        public NarrationPriority narrationPriority() {
+            return NarrationPriority.NONE;
         }
     }
 

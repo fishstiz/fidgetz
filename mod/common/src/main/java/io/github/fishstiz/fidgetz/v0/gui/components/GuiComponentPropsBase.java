@@ -23,7 +23,7 @@ public class GuiComponentPropsBase implements GuiComponentProps {
     public @Nullable Component message;
     public Undefinable<@Nullable Tooltip> tooltip = Undefinable.undefined();
     public Undefinable<@Nullable RenderableRectangle> overlay = Undefinable.undefined();
-    public @Nullable FZKeyed<Consumer<FZContextMenuEntry.Collector>> contextEntries;
+    public @Nullable FZKeyed<Consumer<FZContextMenu.Collector>> contextEntries;
     public @Nullable Integer tabOrderGroup;
 
     private GuiComponentPropsBase() {
@@ -103,7 +103,7 @@ public class GuiComponentPropsBase implements GuiComponentProps {
     }
 
     @Override
-    public Optional<FZKeyed<Consumer<FZContextMenuEntry.Collector>>> contextEntries() {
+    public Optional<FZKeyed<Consumer<FZContextMenu.Collector>>> contextEntries() {
         return Optional.ofNullable(contextEntries);
     }
 

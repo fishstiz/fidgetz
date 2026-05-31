@@ -49,7 +49,7 @@ public interface GuiComponentProps {
         return Undefinable.undefined();
     }
 
-    default Optional<FZKeyed<Consumer<FZContextMenuEntry.Collector>>> contextEntries() {
+    default Optional<FZKeyed<Consumer<FZContextMenu.Collector>>> contextEntries() {
         return Optional.empty();
     }
 

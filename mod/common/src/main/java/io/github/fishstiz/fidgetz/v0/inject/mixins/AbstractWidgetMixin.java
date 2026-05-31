@@ -1,7 +1,8 @@
 package io.github.fishstiz.fidgetz.v0.inject.mixins;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenuEntry;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZPopoverMenuItem;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.inject.interfaces.ContextMenuSourceConsumer;
@@ -19,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.function.Consumer;
 
 @Mixin(AbstractWidget.class)
-abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableContainer, FZContextMenuEntry.Source, ContextMenuSourceConsumer {
+abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableContainer, FZContextMenu.Source, ContextMenuSourceConsumer {
     @Shadow
     protected boolean isHovered;
 
@@ -41,7 +42,7 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
 
     @Unique
     @Nullable
-    private Consumer<FZContextMenuEntry.Collector> fidgetz$contextMenuSource;
+    private Consumer<FZContextMenu.Collector> fidgetz$contextMenuSource;
 
     @Override
     public boolean fidgetz$isVisible() {
@@ -106,17 +107,17 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.@NonNull Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.@NonNull Collector collector) {
         if (this.fidgetz$contextMenuSource != null) {
             this.fidgetz$contextMenuSource.accept(collector);
             collector.nextSection();
         }
 
-        FZContextMenuEntry.Source.super.fidgetz$updateContextEntries(x, y, collector);
+        FZContextMenu.Source.super.fidgetz$updateContextEntries(x, y, collector);
     }
 
     @Override
-    public void fidgetz$setContextMenuSource(Consumer<FZContextMenuEntry.Collector> contextMenuSource) {
+    public void fidgetz$setContextMenuSource(Consumer<FZContextMenu.Collector> contextMenuSource) {
         this.fidgetz$contextMenuSource = contextMenuSource;
     }
 }

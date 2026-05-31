@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public abstract class FZScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenuEntry.Source {
+public abstract class FZScreen extends Screen implements FZDialogContainer, FZHoverableContainer, FZContextMenu.Source {
     protected static final String GLOBAL_CONTEXT_MENU_ID = "FZScreen:FZContextMenu";
     protected final FZDialogManager dialogManager = new FZDialogManager(this);
     protected ScreenRectangle screenRectangle = ScreenRectangle.empty();

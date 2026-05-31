@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
-public final class FZIcon extends AbstractWidget implements FZComponent, FZContextMenuEntry.Source {
+public final class FZIcon extends AbstractWidget implements FZComponent, FZContextMenu.Source {
     private static final int DEFAULT_WIDTH = 20;
     private static final int DEFAULT_HEIGHT = 20;
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
@@ -49,7 +49,7 @@ public final class FZIcon extends AbstractWidget implements FZComponent, FZConte
     }
 
     @Override
-    public void fidgetz$updateContextEntries(double x, double y, FZContextMenuEntry.Collector collector) {
+    public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         propsState.contextEntries.accept(collector);
     }
 
