@@ -402,7 +402,7 @@ public class FZPopoverMenu extends FZDialog {
     private record ChildDetails(EntryWidget key, FZPopoverMenu menu) {
     }
 
-    private final class EntryWidget extends AbstractWidget implements FZPopoverMenuItem.Context, ContainerEventHandlerPatch {
+    private final class EntryWidget extends AbstractWidget implements FZPopoverMenuItem.Context, FZComponent, ContainerEventHandlerPatch {
         private final FZPopoverMenuItem.Entry entry;
         private final FZPopoverMenuItem.Settings settings;
         private final List<FZPopoverMenuItem.Entry> singletonChild;
@@ -440,11 +440,6 @@ public class FZPopoverMenu extends FZDialog {
             }
             return false;
         }
-
-//        @Override
-//        public boolean shouldTakeFocusAfterInteraction() {
-//            return isOpen() && entry.shouldTakeFocusAfterInteraction();
-//        }
 
         @Override
         protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -532,6 +527,10 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             if (entry.keyPressed(keyCode, scanCode, modifiers)) {
+                if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) &&
+                    settings.closeOnInteract()) {
+                    closeMenu();
+                }
                 return true;
             }
             if (keyCode == InputConstants.KEY_LEFT) {
@@ -624,6 +623,11 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public ScreenRectangle getRectangle() {
             return entryBounds;
+        }
+
+        @Override
+        public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+            return isOpen() && (!(entry instanceof FZComponent component) || component.fidgetz$shouldTakeFocusAfterInteraction());
         }
     }
 }
