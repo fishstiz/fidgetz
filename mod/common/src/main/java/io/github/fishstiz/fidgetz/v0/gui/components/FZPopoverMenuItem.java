@@ -5,24 +5,28 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetTooltipHolder;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.*;
 
 public sealed interface FZPopoverMenuItem {
@@ -70,17 +74,207 @@ public sealed interface FZPopoverMenuItem {
     }
 
     static Widget fromWidget(AbstractWidget widget) {
-        class Wrapped extends WrappedComponent implements Entry {
+        // cant use WrappedComponent because of some mapping issue on fabric where the default methods of the Entry
+        // interface are used instead of the methods on the concrete WrappedComponent class
+        class Wrapped implements Entry, FZComponent, ContainerEventHandler {
             private final Context context;
+            private final AbstractWidget widget;
+            private final List<AbstractWidget> children;
+            private boolean dragging;
 
-            public Wrapped(Context context, AbstractWidget widget) {
-                super(widget);
+            Wrapped(Context context, AbstractWidget widget) {
                 this.context = context;
+                this.widget = widget;
+                this.children = List.of(widget);
             }
 
             @Override
             public Context context() {
                 return context;
+            }
+
+            @Override
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+                widget.render(graphics, mouseX, mouseY, partialTick);
+            }
+
+            @Override
+            public void setX(int x) {
+                widget.setX(x);
+            }
+
+            @Override
+            public void setY(int y) {
+                widget.setY(y);
+            }
+
+            @Override
+            public void setWidth(int width) {
+                widget.setWidth(width);
+            }
+
+            @Override
+            public int getX() {
+                return widget.getX();
+            }
+
+            @Override
+            public int getY() {
+                return widget.getY();
+            }
+
+            @Override
+            public int getWidth() {
+                return widget.getWidth();
+            }
+
+            @Override
+            public int getHeight() {
+                return widget.getHeight();
+            }
+
+            @Override
+            public void setFocused(boolean focused) {
+                widget.setFocused(focused);
+            }
+
+            @Override
+            public boolean isFocused() {
+                return widget.isFocused();
+            }
+
+            @Override
+            public void updateNarration(NarrationElementOutput output) {
+                widget.updateNarration(output);
+            }
+
+            @Override
+            public NarrationPriority narrationPriority() {
+                return widget.narrationPriority();
+            }
+
+            @Override
+            public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
+                return widget.nextFocusPath(navigationEvent);
+            }
+
+            @Override
+            public void visitWidgets(Consumer<AbstractWidget> widgetVisitor) {
+                widget.visitWidgets(widgetVisitor);
+            }
+
+            @Override
+            public ScreenRectangle getRectangle() {
+                return widget.getRectangle();
+            }
+
+            @Override
+            public void mouseMoved(double mouseX, double mouseY) {
+                widget.mouseMoved(mouseX, mouseY);
+            }
+
+            @Override
+            public List<AbstractWidget> children() {
+                return children;
+            }
+
+            @Override
+            public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+                return widget.mouseClicked(event, doubleClick);
+            }
+
+            @Override
+            public boolean mouseReleased(MouseButtonEvent event) {
+                return widget.mouseReleased(event);
+            }
+
+            @Override
+            public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+                return widget.mouseDragged(event, dx, dy);
+            }
+
+            @Override
+            public boolean isDragging() {
+                return dragging;
+            }
+
+            @Override
+            public void setDragging(boolean dragging) {
+                this.dragging = dragging;
+            }
+
+            @Override
+            public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+                return widget.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            }
+
+            @Override
+            public boolean keyPressed(KeyEvent event) {
+                return widget.keyPressed(event);
+            }
+
+            @Override
+            public boolean keyReleased(KeyEvent event) {
+                return widget.keyReleased(event);
+            }
+
+            @Override
+            public boolean charTyped(CharacterEvent event) {
+                return widget.charTyped(event);
+            }
+
+            @Override
+            public @Nullable GuiEventListener getFocused() {
+                return widget.isFocused() ? widget : null;
+            }
+
+            @Override
+            public void setFocused(@Nullable GuiEventListener focused) {
+                if (focused == null) {
+                    widget.setFocused(false);
+                } else if (focused == widget) {
+                    widget.setFocused(true);
+                }
+            }
+
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return widget.isMouseOver(mouseX, mouseY);
+            }
+
+            @Override
+            public @Nullable ComponentPath getCurrentFocusPath() {
+                return widget.getCurrentFocusPath();
+            }
+
+            @Override
+            public int getTabOrderGroup() {
+                return widget.getTabOrderGroup();
+            }
+
+            @Override
+            public void setPosition(int x, int y) {
+                widget.setPosition(x, y);
+            }
+
+            @Override
+            public boolean isActive() {
+                return widget.isActive();
+            }
+
+            @Override
+            public boolean shouldTakeFocusAfterInteraction() {
+                return widget.shouldTakeFocusAfterInteraction();
+            }
+
+            @Override
+            public ScreenRectangle getBorderForArrowNavigation(ScreenDirection direction) {
+                return widget.getBorderForArrowNavigation(direction);
+            }
+
+            @Override
+            public Collection<? extends NarratableEntry> getNarratables() {
+                return widget.getNarratables();
             }
         }
 
@@ -91,6 +285,7 @@ public sealed interface FZPopoverMenuItem {
         return new Builder();
     }
 
+    @ApiStatus.NonExtendable
     interface Context {
         void closeMenu();
 
