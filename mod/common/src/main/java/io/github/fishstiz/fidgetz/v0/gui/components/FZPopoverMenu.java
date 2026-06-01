@@ -362,10 +362,7 @@ public class FZPopoverMenu extends FZDialog {
         }
         super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
         if (child != null) {
-//            graphics.pose().pushPose();
-//            graphics.pose().translate(0f, 0f, 1f);
             child.menu.render(graphics, mouseX, mouseY, partialTick);
-//            graphics.pose().popPose();
         }
     }
 
@@ -415,9 +412,9 @@ public class FZPopoverMenu extends FZDialog {
             this.settings = item.settings();
             this.entry = item.factory().create(this);
             this.singletonChild = List.of(entry);
-            this.entryBounds = super.getRectangle();
             this.height = this.entry.getHeight();
             this.width = this.entry.getWidth();
+            this.entryBounds = super.getRectangle();
         }
 
         @Override
@@ -583,17 +580,15 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public void setX(int x) {
-            int previousX = getX();
             super.setX(x);
-            if (previousX != getX()) entryBounds = super.getRectangle();
+            entryBounds = super.getRectangle();
             entry.setX(x);
         }
 
         @Override
         public void setY(int y) {
-            int previousY = getY();
             super.setY(y);
-            if (previousY != getY()) entryBounds = super.getRectangle();
+            entryBounds = super.getRectangle();
             entry.setY(y);
         }
 
@@ -605,19 +600,15 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public void setWidth(int width) {
-            int previousWidth = getWidth();
             super.setWidth(width);
-            if (previousWidth != getWidth()) {
-                entry.setWidth(width);
-                entryBounds = super.getRectangle();
-            }
+            entryBounds = super.getRectangle();
+            entry.setWidth(width);
         }
 
         @Override
         public void setHeight(int height) {
-            int previousHeight = getHeight();
             super.setHeight(height);
-            if (previousHeight != getHeight()) entryBounds = super.getRectangle();
+            entryBounds = super.getRectangle();
         }
 
         @Override
@@ -628,6 +619,23 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public boolean fidgetz$shouldTakeFocusAfterInteraction() {
             return isOpen() && (!(entry instanceof FZComponent component) || component.fidgetz$shouldTakeFocusAfterInteraction());
+        }
+
+        // override methods to resolve mappings on fabric
+
+        @Override
+        public boolean isHovered() {
+            return super.isHovered();
+        }
+
+        @Override
+        public boolean isFocused() {
+            return super.isFocused();
+        }
+
+        @Override
+        public boolean isFocusedOrHovered() {
+            return isFocused() || isHovered();
         }
     }
 }
