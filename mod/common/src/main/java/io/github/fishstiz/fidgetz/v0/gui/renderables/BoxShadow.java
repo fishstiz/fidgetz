@@ -2,8 +2,7 @@ package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.Identifier;
 
 final class BoxShadow implements RenderableRectangle {
@@ -20,7 +19,7 @@ final class BoxShadow implements RenderableRectangle {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick) {
         GuiGraphicsUtils.sprite(graphics, SHADOW_SPRITE, left - offsetX, top - offsetY, width + offsetX * 2, height + offsetY * 2);
     }
 }

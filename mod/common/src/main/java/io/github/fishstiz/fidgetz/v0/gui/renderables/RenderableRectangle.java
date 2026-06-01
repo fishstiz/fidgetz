@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.joml.Matrix3x2fStack;
@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 @FunctionalInterface
 public interface RenderableRectangle {
-    void extractRenderState(GuiGraphicsExtractor graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick);
+    void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick);
 
     default RenderableRectangle pose(Consumer<Matrix3x2fStack> transformer) {
         return ((graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {

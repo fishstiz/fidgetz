@@ -11,7 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -92,8 +92,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        extractDefaultSprite(graphics);
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderDefaultSprite(graphics);
 
         int left = getX();
         int top = getY();
@@ -116,7 +116,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             left += spacing + leftIcon.width() + leftIcon.margin().right();
         }
 
-        ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
+        ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE);
 
         if (!hideMessage) {
             GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left + spacing, top, right - spacing, getBottom());
@@ -343,7 +343,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         @Override
-        protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
 
             GuiEventListener sibling = parentContainer.getFocused();

@@ -3,7 +3,7 @@ package io.github.fishstiz.testmod.gui.screens;
 import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.util.CommonColors;
 
@@ -17,8 +17,8 @@ public class GradientScreen extends FZScreen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.render(graphics, mouseX, mouseY, a);
 
         int width = 50;
         int height = 100;

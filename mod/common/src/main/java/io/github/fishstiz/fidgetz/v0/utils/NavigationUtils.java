@@ -20,17 +20,17 @@ import java.util.stream.Stream;
 public final class NavigationUtils {
     public static boolean isUp(FocusNavigationEvent event, boolean includeTab) {
         return (includeTab && event instanceof TabNavigation(boolean forward) && !forward) ||
-               (event instanceof ArrowNavigation(ScreenDirection direction, _) && direction == ScreenDirection.UP);
+               (event instanceof ArrowNavigation(ScreenDirection direction) && direction == ScreenDirection.UP);
     }
 
     public static boolean isDown(FocusNavigationEvent event, boolean includeTab) {
         return (includeTab && event instanceof TabNavigation(boolean forward) && forward) ||
-               (event instanceof ArrowNavigation(ScreenDirection direction, _) && direction == ScreenDirection.DOWN);
+               (event instanceof ArrowNavigation(ScreenDirection direction) && direction == ScreenDirection.DOWN);
     }
 
     public static void walk(ComponentPath path, Consumer<GuiEventListener> walker) {
         walker.accept(path.component());
-        if (path instanceof ComponentPath.Path(_, ComponentPath childPath)) {
+        if (path instanceof ComponentPath.Path(ContainerEventHandler ignored, ComponentPath childPath)) {
             walk(childPath, walker);
         }
     }

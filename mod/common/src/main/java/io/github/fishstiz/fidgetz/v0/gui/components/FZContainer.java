@@ -1,6 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -111,9 +111,9 @@ public abstract class FZContainer extends AbstractContainerEventHandler implemen
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         for (Renderable renderable : renderables()) {
-            renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            renderable.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 

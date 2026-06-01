@@ -6,7 +6,7 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
 import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.TriState;
 import org.jspecify.annotations.Nullable;
 
@@ -22,7 +22,7 @@ public final class FZButton extends FZButtonBase {
     FZButton() {
     }
 
-    private void extractSprite(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    private void extractSprite(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (sprites != null) {
             sprites.get(isActive(), isHoveredOrFocused()).extractRenderState(
                     graphics,
@@ -38,7 +38,7 @@ public final class FZButton extends FZButtonBase {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         extractSprite(graphics, mouseX, mouseY, partialTick);
 
         int margin = centeredMessage ? TEXT_MARGIN : DEFAULT_SPACING;
@@ -74,10 +74,10 @@ public final class FZButton extends FZButtonBase {
         }
 
         if (centeredMessage) {
-            graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
+            graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE)
                     .acceptScrollingWithDefaultCenter(getMessage(), left, right, top, bottom);
         } else {
-            ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
+            ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE);
             GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left, top, right, bottom);
         }
 

@@ -11,7 +11,7 @@ import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -143,7 +143,7 @@ public class FZModal extends FZDialog implements FZComponent, FZContextMenu.Sour
     }
 
     @Override
-    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (backdrop != null) {
             ScreenRectangle bounds = container.getRectangle();
             backdrop.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);

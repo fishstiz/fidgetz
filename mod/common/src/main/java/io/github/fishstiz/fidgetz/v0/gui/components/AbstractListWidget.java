@@ -6,9 +6,8 @@ import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractContainerWidget;
-import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
@@ -31,45 +30,37 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     private static final RenderableRectangle INWORLD_FOOTER_SEPARATOR = Renderables.texture(Screen.INWORLD_FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private final Minecraft minecraft;
 
-    protected AbstractListWidget(Minecraft minecraft, int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        super(x, y, width, height, message, scrollbarSettings);
-        this.minecraft = minecraft;
-    }
-
     protected AbstractListWidget(Minecraft minecraft, int x, int y, int width, int height, Component message) {
-        this(minecraft, x, y, width, height, message, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
-    }
-
-    protected AbstractListWidget(int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        this(Minecraft.getInstance(), x, y, width, height, message, scrollbarSettings);
+        super(x, y, width, height, message);
+        this.minecraft = minecraft;
     }
 
     protected AbstractListWidget(int x, int y, int width, int height, Component message) {
         this(Minecraft.getInstance(), x, y, width, height, message);
     }
 
-    protected void extractBackgroundRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractBackgroundRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         RenderableRectangle background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
         background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
     }
 
-    protected void extractSeparatorsRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractSeparatorsRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         RenderableRectangle header = minecraft.level == null ? HEADER_SEPARATOR : INWORLD_HEADER_SEPARATOR;
         RenderableRectangle footer = minecraft.level == null ? FOOTER_SEPARATOR : INWORLD_FOOTER_SEPARATOR;
         header.extractRenderState(graphics, getX(), getY() - SEPARATOR_HEIGHT, getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
         footer.extractRenderState(graphics, getX(), getBottom(), getWidth(), SEPARATOR_HEIGHT, mouseX, mouseY, partialTick);
     }
 
-    protected abstract void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick);
+    protected abstract void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick);
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         extractBackgroundRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.enableScissor(getX(), getY(), getRight(), getBottom());
         extractEntriesRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.disableScissor();
         extractSeparatorsRenderState(graphics, mouseX, mouseY, partialTick);
-        extractScrollbar(graphics, mouseX, mouseY);
+        renderScrollbar(graphics, mouseX, mouseY);
     }
 
     protected int contentPaddingLeft() {
@@ -108,18 +99,16 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     }
 
     protected int scrollbarReserve() {
-        return reserveScrollbarWidth() || scrollbarVisible() ? scrollbarWidth() : 0;
+        return reserveScrollbarWidth() || scrollbarVisible() ? SCROLLBAR_WIDTH : 0;
     }
 
     @Override
     protected int scrollBarX() {
-        return Math.min(contentLeft() + contentWidth() + contentPaddingRight(), getRight() - scrollbarWidth());
+        return Math.min(contentLeft() + contentWidth() + contentPaddingRight(), getRight() - SCROLLBAR_WIDTH);
     }
 
     @Override
-    public double scrollRate() {
-        return super.scrollRate();
-    }
+    public abstract double scrollRate();
 
     @Override
     protected boolean isOverScrollbar(double x, double y) {
@@ -144,6 +133,10 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     @Override
     public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
         return addScrollEffectOnFocus(navigationEvent, super.nextFocusPath(navigationEvent));
+    }
+
+    protected boolean scrollable() {
+        return maxScrollAmount() > 0;
     }
 
     @Override

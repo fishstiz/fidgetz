@@ -16,7 +16,7 @@ public interface ScrollableContainer extends ContainerEventHandler {
     void setScrollAmount(double scrollAmount);
 
     default @Nullable ComponentPath addScrollEffectOnFocus(FocusNavigationEvent event, @Nullable ComponentPath path) {
-        if (!(path instanceof ComponentPath.Path(_, ComponentPath childPath))) {
+        if (!(path instanceof ComponentPath.Path(ContainerEventHandler ignored, ComponentPath childPath))) {
             return path;
         }
 

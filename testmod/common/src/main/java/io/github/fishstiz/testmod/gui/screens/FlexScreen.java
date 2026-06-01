@@ -5,7 +5,7 @@ import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -25,11 +25,11 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     }
 
     private static Button btn(String message) {
-        return Button.builder(Component.literal(message), btn -> IO.println(btn.getMessage())).build();
+        return Button.builder(Component.literal(message), btn -> System.out.println(btn.getMessage())).build();
     }
 
     private static Button.Builder btnBuilder(String message) {
-        return Button.builder(Component.literal(message), btn -> IO.println(btn.getMessage()));
+        return Button.builder(Component.literal(message), btn -> System.out.println(btn.getMessage()));
     }
 
     @Override
@@ -97,12 +97,12 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     public void fidgetz$updateContextEntries(double x, double y, FZContextMenu.Collector collector) {
         collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Hello World!"))
-                .onPress(() -> IO.println("Hello World!"))
+                .onPress(() -> System.out.println("Hello World!"))
                 .build());
         collector.nextSection();
         collector.addEntry(FZPopoverMenuItem.builder()
                 .message(Component.literal("Goodbye World!"))
-                .onPress(() -> IO.println("Goodbye World!"))
+                .onPress(() -> System.out.println("Goodbye World!"))
                 .build());
     }
 
@@ -118,8 +118,8 @@ public class FlexScreen extends Screen implements FZDialogContainer, FZHoverable
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         fidgetz$updateHovered(mouseX, mouseY);
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, a);
     }
 }

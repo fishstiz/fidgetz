@@ -4,8 +4,7 @@ import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -32,22 +31,13 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
     private ScreenRectangle bounds;
     private int cachedContentHeight;
 
-    protected FZAbstractListWidget(int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        super(Minecraft.getInstance(), x, y, width, height, message, scrollbarSettings);
-        this.bounds = new ScreenRectangle(getX(), getY(), getWidth(), getHeight());
-    }
-
     protected FZAbstractListWidget(int x, int y, int width, int height, Component message) {
-        super(x, y, width, height, message);
+        super(Minecraft.getInstance(), x, y, width, height, message);
         this.bounds = new ScreenRectangle(getX(), getY(), getWidth(), getHeight());
-    }
-
-    protected FZAbstractListWidget(Component message, ScrollbarSettings scrollbarSettings) {
-        this(0, 0, 0, 0, message, scrollbarSettings);
     }
 
     protected FZAbstractListWidget(Component message) {
-        this(message, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(0, 0, 0, 0, message);
     }
 
     protected FZAbstractListWidget() {
@@ -135,19 +125,19 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return null;
     }
 
-    protected void extractFocusedRenderState(GuiGraphicsExtractor graphics, E focused) {
-        graphics.outline(focused.getX(), focused.getY(), focused.getWidth(), focused.getHeight(), CommonColors.WHITE);
+    protected void extractFocusedRenderState(GuiGraphics graphics, E focused) {
+        graphics.renderOutline(focused.getX(), focused.getY(), focused.getWidth(), focused.getHeight(), CommonColors.WHITE);
     }
 
     @Override
-    protected void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ScreenRectangle bounds = getRectangle();
         for (E entry : children) {
             if (entry.getRectangle().overlaps(bounds)) {
                 if (entry.isMouseOver(mouseX, mouseY)) {
                     setHovered(entry);
                 }
-                entry.extractRenderState(graphics, mouseX, mouseY, partialTick);
+                entry.render(graphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -200,6 +190,11 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         }
 
         refreshScrollAmount();
+    }
+
+    @Override
+    public double scrollRate() {
+        return DEFAULT_SCROLL_RATE;
     }
 
     @Override

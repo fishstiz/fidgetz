@@ -6,7 +6,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.testmod.gui.components.ScreenNavigatorModal;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -71,10 +71,10 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
         return original.call(event);
     }
 
-    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("TAIL"))
-    private void renderModal(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("TAIL"))
+    private void renderModal(GuiGraphics graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         if (fidgetz$modal != null) {
-            fidgetz$modal.extractRenderState(graphics, mouseX, mouseY, a);
+            fidgetz$modal.render(graphics, mouseX, mouseY, a);
         }
     }
 

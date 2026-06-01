@@ -3,7 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
@@ -86,8 +86,8 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        widget.extractRenderState(graphics, mouseX, mouseY, a);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        widget.render(graphics, mouseX, mouseY, a);
     }
 
     @Override
@@ -316,11 +316,6 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
     @Override
     public boolean charTyped(CharacterEvent event) {
         return widget.charTyped(event);
-    }
-
-    @Override
-    public boolean preeditUpdated(@Nullable PreeditEvent event) {
-        return widget.preeditUpdated(event);
     }
 
     @Override

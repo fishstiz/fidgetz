@@ -3,7 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import com.mojang.blaze3d.platform.cursor.CursorType;
 import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -119,14 +119,14 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
         return getRectangle().containsPoint((int) x, (int) y);
     }
 
-    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         for (Renderable renderable : renderables()) {
-            renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            renderable.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 
     @Override
-    public final void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    public final void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (isOpen()) {
             if (shouldCaptureClick() || (graphics.containsPointInScissor(mouseX, mouseY) && areCoordinatesInBounds(mouseX, mouseY))) {
                 graphics.requestCursor(CursorType.DEFAULT);

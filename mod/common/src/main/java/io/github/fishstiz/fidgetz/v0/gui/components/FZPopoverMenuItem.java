@@ -357,12 +357,12 @@ public sealed interface FZPopoverMenuItem {
 
         public Builder onPress(BooleanSupplier pressHandler) {
             Objects.requireNonNull(pressHandler, "pressHandler is null");
-            return onPress(_ -> pressHandler.getAsBoolean());
+            return onPress(ignored -> pressHandler.getAsBoolean());
         }
 
         public Builder onPress(Runnable mouseAction) {
             Objects.requireNonNull(mouseAction, "mouseAction is null");
-            return onPress(_ -> {
+            return onPress(ignored -> {
                 mouseAction.run();
                 return true;
             });
@@ -383,7 +383,7 @@ public sealed interface FZPopoverMenuItem {
                             messageSupplier == null ? FunctionUtils.nullSupplier() : messageSupplier,
                             tooltipHolder == null ? new WidgetTooltipHolder() : tooltipHolder,
                             activeSupplier == null ? () -> true : activeSupplier,
-                            pressHandler == null ? _ -> true : pressHandler,
+                            pressHandler == null ? ignored -> true : pressHandler,
                             playClickSoundOnInteraction,
                             applyCursorWhenActive && pressHandler != null,
                             height,

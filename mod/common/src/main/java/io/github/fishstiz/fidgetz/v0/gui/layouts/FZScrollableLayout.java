@@ -3,9 +3,8 @@ package io.github.fishstiz.fidgetz.v0.gui.layouts;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractContainerWidget;
-import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
@@ -37,15 +36,15 @@ public final class FZScrollableLayout extends ComposedLayout {
     private int minHeight;
     private int maxHeight;
 
-    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content, AbstractScrollArea.ScrollbarSettings scrollbarSettings) {
+    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content) {
         super(content);
         this.screenArea = screenArea;
-        this.container = new FZScrollableLayout.Container(0, 0, scrollbarSettings);
-        this.scrollRate = scrollbarSettings.scrollRate();
+        this.container = new FZScrollableLayout.Container(0, 0);
+        this.scrollRate = DEFAULT_SCROLL_RATE;
     }
 
     public static FZScrollableLayout from(Supplier<ScreenRectangle> maxScrollArea, Layout content) {
-        return new FZScrollableLayout(maxScrollArea, content, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        return new FZScrollableLayout(maxScrollArea, content);
     }
 
 
@@ -193,8 +192,8 @@ public final class FZScrollableLayout extends ComposedLayout {
         private final List<AbstractWidget> children = new ArrayList<>();
         private ScreenRectangle bounds;
 
-        public Container(int width, int height, AbstractScrollArea.ScrollbarSettings scrollbarSettings) {
-            super(0, 0, width, height, CommonComponents.EMPTY, scrollbarSettings);
+        public Container(int width, int height) {
+            super(0, 0, width, height, CommonComponents.EMPTY);
             bounds = super.getRectangle();
         }
 
@@ -204,17 +203,20 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         @Override
-        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
             graphics.enableScissor(getX(), getY(), getRight(), getBottom());
 
             for (AbstractWidget child : children) {
-                child.extractRenderState(graphics, mouseX, mouseY, a);
+                child.render(graphics, mouseX, mouseY, a);
             }
 
             graphics.disableScissor();
-            extractScrollbar(graphics, mouseX, mouseY);
+            renderScrollbar(graphics, mouseX, mouseY);
         }
 
+        private boolean scrollable() {
+            return maxScrollAmount() > 0;
+        }
 
         @Override
         public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
@@ -244,6 +246,9 @@ public final class FZScrollableLayout extends ComposedLayout {
         @Override
         public void setFocused(boolean focused) {
             super.setFocused(focused);
+            if (!focused) {
+                setFocused(null);
+            }
         }
 
         @Override
@@ -291,10 +296,11 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         private int scrollbarReserve() {
-            return scrollbarSpacing + scrollbarWidth();
+            return scrollbarSpacing + SCROLLBAR_WIDTH;
         }
 
-        private boolean scrollbarVisible() {
+        @Override
+        protected boolean scrollbarVisible() {
             return contentHeight() > MathUtils.optionalMin(screenArea.get().height(), maxHeight);
         }
 

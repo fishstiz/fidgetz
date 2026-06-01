@@ -5,7 +5,7 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.Undefinable;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.TriState;
@@ -22,7 +22,7 @@ public final class FZIconButton extends FZButtonBase {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (background != null) {
             background.get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);

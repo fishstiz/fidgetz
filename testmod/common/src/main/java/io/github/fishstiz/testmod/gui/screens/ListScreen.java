@@ -98,33 +98,33 @@ public class ListScreen extends FZScreen {
                         layout.child(FZFlexLayout.horizontal()).also(btns -> {
                             btns.spacing(4).justifyContents(Justification.SPACE_BETWEEN);
 
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
                                     .size(20, 20)
                                     .build()).active = false;
 
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/unseen_notification"), 16, 16)
                                     .size(20, 20)
                                     .build());
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/accessibility"), 16, 16)
                                     .size(20, 20)
                                     .build());
-                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, _ -> {
+                            btns.child(SpriteIconButton.builder(CommonComponents.EMPTY, ignored -> {
                                     }, false)
                                     .sprite(Identifier.withDefaultNamespace("icon/language"), 16, 16)
                                     .size(20, 20)

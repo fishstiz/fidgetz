@@ -3,7 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZKeyed;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -24,7 +24,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
             Identifier.withDefaultNamespace("widget/button_disabled"),
             Identifier.withDefaultNamespace("widget/button_highlighted")
     ));
-    protected static final OnPress NOP = _ -> {
+    protected static final OnPress NOP = ignored -> {
     };
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private Consumer<PressEvent> pressHandler = FunctionUtils.nopConsumer();
@@ -45,7 +45,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     }
 
     @Override
-    protected void handleCursor(GuiGraphicsExtractor graphics) {
+    protected void handleCursor(GuiGraphics graphics) {
         if (allowCursorChanges) {
             super.handleCursor(graphics);
         }
@@ -63,12 +63,12 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractContents(graphics, mouseX, mouseY, a);
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.renderContents(graphics, mouseX, mouseY, a);
         extractOverlay(graphics, mouseX, mouseY, a);
     }
 
-    protected void extractOverlay(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void extractOverlay(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }
@@ -176,7 +176,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
 
         public T onPress(Runnable clickAction) {
             Objects.requireNonNull(clickAction, "clickAction cannot be null");
-            this.pressHandler = FZKeyed.selfKey(_ -> clickAction.run());
+            this.pressHandler = FZKeyed.selfKey(ignored -> clickAction.run());
             return self();
         }
 
@@ -187,7 +187,7 @@ public class FZButtonBase extends Button.Plain implements FZComponent, FZContext
 
         public T onPress(Object key, Runnable clickAction) {
             Objects.requireNonNull(clickAction, "clickAction cannot be null");
-            this.pressHandler = new FZKeyed<>(key, _ -> clickAction.run());
+            this.pressHandler = new FZKeyed<>(key, ignored -> clickAction.run());
             return self();
         }
 

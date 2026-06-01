@@ -36,18 +36,18 @@ public class FZTestScreen extends FZScreen {
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(header::getRectangle));
             });
             root.child(FZFlexLayout.vertical().spacing(8), root.flexChildSettings()).also(body -> {
-                body.child(Button.builder(Component.literal("Top Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Top Align"), btn -> System.out.println(btn.getMessage())).build());
                 body.spacer(body.newChildSettings().flexMain());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
-                body.child(Button.builder(Component.literal("Center Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Center Align"), btn -> System.out.println(btn.getMessage())).build());
                 body.spacer(body.newChildSettings().flexMain());
-                body.child(Button.builder(Component.literal("Bot Align"), btn -> IO.println(btn.getMessage())).build());
+                body.child(Button.builder(Component.literal("Bot Align"), btn -> System.out.println(btn.getMessage())).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(body::getRectangle));
             });
             root.child(FZFlexLayout.horizontal(), root.flexChildHorizontalSettings()).also(footer -> {
                 footer.justifyContents(Justification.CENTER);
-                footer.child(Button.builder(Component.literal("Close"), _ -> onClose()).build());
+                footer.child(Button.builder(Component.literal("Close"), ignored -> onClose()).build());
                 collector.renderableOnly(Renderables.outline(CommonColors.RED).toPopover(footer::getRectangle));
             });
 

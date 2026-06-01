@@ -10,7 +10,7 @@ import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import io.github.fishstiz.fidgetz.v0.utils.NavigationUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -352,13 +352,13 @@ public class FZPopoverMenu extends FZDialog {
     }
 
     @Override
-    protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (background != null) {
             background.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
         }
         super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
         if (child != null) {
-            child.menu.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            child.menu.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 
@@ -440,8 +440,8 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
-        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-            entry.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            entry.render(graphics, mouseX, mouseY, partialTick);
             boolean hovered = isHovered();
             if (hovered && !lastHovered) {
                 updateChild();
@@ -554,6 +554,14 @@ public class FZPopoverMenu extends FZDialog {
                 if (focused == entry) {
                     focused.setFocused(true);
                 }
+            }
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            if (!focused) {
+                setFocused(null);
             }
         }
 

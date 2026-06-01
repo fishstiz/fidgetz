@@ -13,7 +13,7 @@ import io.github.fishstiz.fidgetz.v0.gui.text.TextStyleMatcher;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.KeyEvent;
@@ -42,7 +42,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private Consumer<ChangeEvent> changeHandler = FunctionUtils.nopConsumer();
     private Function<ConfirmEvent, @Nullable Boolean> confirmHandler = FunctionUtils.nullFunction();
     private ScreenRectangle bounds;
-    private Predicate<String> filter = _ -> true;
+    private Predicate<String> filter = ignored -> true;
     private boolean allowSectionSign;
     private int disableResponderCount = 0;
     private String previousValue = "";
@@ -214,8 +214,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.renderWidget(graphics, mouseX, mouseY, a);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, a);
         }

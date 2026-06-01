@@ -9,7 +9,7 @@ import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetTooltipHolder;
@@ -83,7 +83,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (applyCursorWhenActive && context.isActive() && context.isHovered()) {
             graphics.requestCursor(CursorTypes.POINTING_HAND);
         }
@@ -124,7 +124,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
             int chevronHeight = font.lineHeight;
             int chevronColor = activeSupplier.getAsBoolean() ? DEFAULT_TEXT_COLOR : DEFAULT_INACTIVE_TEXT_COLOR;
             int chevronY = top + (height - chevronHeight) / 2;
-            graphics.text(font, CHEVRON_RIGHT, chevronX, chevronY + 1, chevronColor);
+            graphics.drawString(font, CHEVRON_RIGHT, chevronX, chevronY + 1, chevronColor);
         }
 
         Component text = messageSupplier.get();
@@ -245,7 +245,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             ScreenRectangle bounds = context.getRectangle();
             rectangle.extractRenderState(graphics, bounds.left(), bounds.top(), bounds.width(), bounds.height(), mouseX, mouseY, partialTick);
         }
@@ -289,7 +289,7 @@ final class FZPopoverMenuEntryImpl implements FZPopoverMenuItem.Entry {
         }
 
         @Override
-        public void refreshTooltipForNextRenderPass(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovered, boolean isFocused, ScreenRectangle screenRectangle) {
+        public void refreshTooltipForNextRenderPass(GuiGraphics graphics, int mouseX, int mouseY, boolean isHovered, boolean isFocused, ScreenRectangle screenRectangle) {
             if (tooltipSupplier != null) delegate.set(tooltipSupplier.get());
             delegate.refreshTooltipForNextRenderPass(graphics, mouseX, mouseY, isHovered, isFocused, screenRectangle);
         }

@@ -5,8 +5,7 @@ import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
@@ -39,18 +38,17 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     private int contentPaddingLeft;
     private int contentPaddingRight;
     private boolean reserveScrollbarWidth;
-    private int scrollRate;
+    private int scrollRate = DEFAULT_SCROLL_RATE;
     private ScreenRectangle bounds;
 
-    protected FZLayoutList(int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        super(0, 0, width, height, message, scrollbarSettings);
-        scrollRate = scrollbarSettings.scrollRate();
+    protected FZLayoutList(int width, int height, Component message) {
+        super(0, 0, width, height, message);
         layout = FZFlexLayout.vertical();
         bounds = super.getRectangle();
     }
 
     protected FZLayoutList() {
-        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY);
     }
 
     protected void collectEntries(RefreshEvent event) {
@@ -140,7 +138,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
 
     @Override
     protected int scrollBarX() {
-        return Math.min(layout.getX() + layout.getWidth() + contentPaddingRight(), getRight() - scrollbarWidth());
+        return Math.min(layout.getX() + layout.getWidth() + contentPaddingRight(), getRight() - SCROLLBAR_WIDTH);
     }
 
     @Override
@@ -168,18 +166,18 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    protected void extractEntriesRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ScreenRectangle bounds = getRectangle();
         for (Renderable renderable : renderables) {
             if (!(renderable instanceof LayoutElement element) || element.getRectangle().overlaps(bounds)) {
-                renderable.extractRenderState(graphics, mouseX, mouseY, partialTick);
+                renderable.render(graphics, mouseX, mouseY, partialTick);
             }
         }
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTick);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
         }
@@ -477,7 +475,6 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
-        private ScrollbarSettings settings = AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
         private @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler;
         private @Nullable Integer maxContentWidth;
         private @Nullable Integer contentPaddingLeft;
@@ -488,21 +485,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         private Builder() {
         }
 
-        public Builder scrollbarSettings(ScrollbarSettings settings) {
-            this.settings = Objects.requireNonNull(settings, "settings cannot be null");
-            return this;
-        }
-
         public Builder scrollRate(int scrollRate) {
-            this.settings = new ScrollbarSettings(
-                    this.settings.scrollerSprite(),
-                    this.settings.disabledScrollerSprite(),
-                    this.settings.backgroundSprite(),
-                    this.settings.scrollbarWidth(),
-                    this.settings.scrollbarMinHeight(),
-                    scrollRate,
-                    this.settings.resizingScrollbar()
-            );
             this.scrollRate = scrollRate;
             return this;
         }
@@ -559,7 +542,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         }
 
         public FZLayoutList build() {
-            FZLayoutList list = new FZLayoutList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY), settings);
+            FZLayoutList list = new FZLayoutList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY));
             list.applyProps(toProps());
             list.refreshEntries();
             return list;
