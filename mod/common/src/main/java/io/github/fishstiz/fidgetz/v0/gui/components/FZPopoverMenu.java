@@ -35,8 +35,8 @@ public class FZPopoverMenu extends FZDialog {
     protected static final int DEFAULT_SPACING = 1;
     private final @Nullable FZPopoverMenu parent;
     private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
-    private FZPopoverMenuItem.@Nullable Divider sectionDivider;
-    private FZPopoverMenuItem.@Nullable Divider entryDivider;
+    private FZPopoverMenuItem.@Nullable Divider sectionDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_SECTION;
+    private FZPopoverMenuItem.@Nullable Divider entryDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_ENTRY;
     private ScreenRectangle padding = DEFAULT_PADDING;
     private int rowSpacing = DEFAULT_SPACING;
     private int maxHeight = DEFAULT_MAX_HEIGHT;
@@ -525,6 +525,9 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public boolean keyPressed(KeyEvent event) {
             if (entry.keyPressed(event)) {
+                if (event.isConfirmation() && settings.closeOnInteract()) {
+                    closeMenu();
+                }
                 return true;
             }
             if (event.isLeft()) {
