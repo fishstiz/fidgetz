@@ -558,6 +558,14 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            if (!focused) {
+                setFocused(null);
+            }
+        }
+
+        @Override
         public boolean isDragging() {
             return this.dragging;
         }
