@@ -17,6 +17,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -91,6 +92,7 @@ public sealed interface FZPopoverMenuItem {
         return new Builder();
     }
 
+    @ApiStatus.NonExtendable
     interface Context {
         void closeMenu();
 
