@@ -212,6 +212,14 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
+    public void moveCursorTo(int delta, boolean select) {
+        boolean unchanged = previousValue.equals(getValue());
+        if (unchanged) disableResponder();
+        super.moveCursorTo(delta, select);
+        if (unchanged) enableResponder();
+    }
+
+    @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         super.renderWidget(graphics, mouseX, mouseY, a);
         if (propsState.overlay != null) {
