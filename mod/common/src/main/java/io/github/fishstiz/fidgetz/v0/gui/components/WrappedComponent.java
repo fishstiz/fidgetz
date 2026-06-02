@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.List;
 
 public class WrappedComponent extends AbstractWidget implements ContainerEventHandler, FZComponent, FZHoverableElement {
-    private final List<AbstractWidget> children;
-    protected AbstractWidget widget;
+    private List<AbstractWidget> children;
+    private AbstractWidget widget;
     private boolean dragging;
 
     public WrappedComponent(AbstractWidget widget) {
@@ -38,9 +38,14 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
             boolean focused = isFocused();
             ScreenRectangle rectangle = getRectangle();
             this.widget = widget;
+            this.children = List.of(widget);
             setRectangle(rectangle.width(), rectangle.height(), rectangle.left(), rectangle.top());
             setFocused(focused ? widget : null);
         }
+    }
+
+    public AbstractWidget get() {
+        return this.widget;
     }
 
     public static WrappedComponent bind(String key, FZRef<? extends AbstractWidget> ref) {
