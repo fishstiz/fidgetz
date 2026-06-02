@@ -1,8 +1,6 @@
 package io.github.fishstiz.testmod.gui.screens;
 
-import io.github.fishstiz.fidgetz.v0.gui.components.FZButton;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZText;
-import io.github.fishstiz.fidgetz.v0.gui.components.GuiComponentCollector;
+import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZMutableRef;
@@ -13,6 +11,7 @@ import org.jspecify.annotations.Nullable;
 public class Screenz extends FZScreen {
     private final FZMutableRef<@Nullable String> active = new FZMutableRef<>(null);
     private final FZMutableRef<State> state = new FZMutableRef<>(new State(0, 0));
+    private final FZMutableRef<String> text = new FZMutableRef<>("");
 
     public Screenz() {
         super(CommonComponents.EMPTY);
@@ -82,6 +81,12 @@ public class Screenz extends FZScreen {
                     .onPress(() -> state.set(State::incrementB))
                     .build());
         }
+
+        layout.child(new WrappedComponent(FZTextField.bind("text", text.map(value -> FZTextField.builder()
+                .text(value)
+                .onChange(e -> text.set(e.value()))
+                .toProps()))));
+        layout.child(FZTextField.builder().build());
 
         layout.arrangeElements();
         layout.setPosition(0, 60);
