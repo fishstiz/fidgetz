@@ -48,7 +48,6 @@ public final class FZScrollableLayout extends ComposedLayout {
         return new FZScrollableLayout(maxScrollArea, content, AbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
     }
 
-
     public static FZScrollableLayout from(LayoutElement container, Layout content) {
         return from(container::getRectangle, content);
     }
@@ -114,6 +113,12 @@ public final class FZScrollableLayout extends ComposedLayout {
 
     private int reservedWidth() {
         return reserveScrollbarArea || container.scrollbarVisible() ? container.scrollbarReserve() : 0;
+    }
+
+    @Override
+    public void removeChildren() {
+        container.children.clear();
+        super.removeChildren();
     }
 
     @Override

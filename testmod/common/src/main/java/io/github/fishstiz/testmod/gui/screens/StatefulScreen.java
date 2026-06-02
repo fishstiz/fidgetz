@@ -121,7 +121,7 @@ public class StatefulScreen extends FZScreen {
                 var contents = FZFlexLayout.vertical().spacing(8);
                 var scrollableContents = items.child(
                         FZScrollableLayout.from(this, state.bind("contents", contents, (s, c) -> {
-                            c.clear();
+                            c.removeChildren();
                             for (int i = 0; i < s.itemCount(); i++) {
                                 c.child(FZButton.builder().message(Component.literal("Item: " + i)).build(), c.flexChildHorizontalSettings());
                             }

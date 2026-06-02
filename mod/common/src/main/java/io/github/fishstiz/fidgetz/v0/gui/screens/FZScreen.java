@@ -26,7 +26,6 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
         super(title);
     }
 
-
     @Override
     protected void init() {
         GuiComponentCollector collector = new GuiComponentCollector();

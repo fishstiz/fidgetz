@@ -220,6 +220,13 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     }
 
     @Override
+    public void removeChildren() {
+        items = Collections.emptyList();
+        closeSelection();
+        selectionContainer.clearWidgets();
+    }
+
+    @Override
     public @Nullable String fidgetz$componentId() {
         return propsState.id;
     }

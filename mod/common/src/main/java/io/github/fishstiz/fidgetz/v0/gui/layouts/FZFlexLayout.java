@@ -247,7 +247,8 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         return spacer(defaultChildSettings);
     }
 
-    public void clear() {
+    @Override
+    public void removeChildren() {
         children.clear();
     }
 

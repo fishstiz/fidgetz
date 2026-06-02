@@ -44,15 +44,15 @@ public abstract class TitleScreenMixin extends Screen implements FZDialogContain
         addWidget(fidgetz$contextMenu);
 
         LinearLayout layout = LinearLayout.vertical();
-        layout.addChild(Button.builder(Component.literal("Test Screen"), _ -> minecraft.setScreen(new TestmodScreen())).build());
-        layout.addChild(Button.builder(Component.literal("Flex Screen"), _ -> minecraft.setScreen(new FlexScreen())).build());
-        layout.addChild(Button.builder(Component.literal("FZ Screen"), _ -> minecraft.setScreen(new FZTestScreen())).build());
-        layout.addChild(Button.builder(Component.literal("Wrap Screen"), _ -> minecraft.setScreen(new FlexWrapScreen())).build());
-        layout.addChild(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
-        layout.addChild(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
-        layout.addChild(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.setScreen(new AbstractListScreen())).build());
-        layout.addChild(Button.builder(Component.literal("GradientScreen"), _ -> minecraft.setScreen(new GradientScreen())).build());
-        layout.addChild(Button.builder(Component.literal("Screenz"), _ -> minecraft.setScreen(new Screenz())).build());
+        layout.addChild(Button.builder(Component.literal("Test Screen"), _ -> minecraft.gui.setScreen(new TestmodScreen())).build());
+        layout.addChild(Button.builder(Component.literal("Flex Screen"), _ -> minecraft.gui.setScreen(new FlexScreen())).build());
+        layout.addChild(Button.builder(Component.literal("FZ Screen"), _ -> minecraft.gui.setScreen(new FZTestScreen())).build());
+        layout.addChild(Button.builder(Component.literal("Wrap Screen"), _ -> minecraft.gui.setScreen(new FlexWrapScreen())).build());
+        layout.addChild(Button.builder(Component.literal("State Screen"), _ -> minecraft.gui.setScreen(new StatefulScreen())).build());
+        layout.addChild(Button.builder(Component.literal("List Screen"), _ -> minecraft.gui.setScreen(new ListScreen())).build());
+        layout.addChild(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.gui.setScreen(new AbstractListScreen())).build());
+        layout.addChild(Button.builder(Component.literal("GradientScreen"), _ -> minecraft.gui.setScreen(new GradientScreen())).build());
+        layout.addChild(Button.builder(Component.literal("Screenz"), _ -> minecraft.gui.setScreen(new Screenz())).build());
         layout.arrangeElements();
         layout.visitWidgets(this::addRenderableWidget);
     }

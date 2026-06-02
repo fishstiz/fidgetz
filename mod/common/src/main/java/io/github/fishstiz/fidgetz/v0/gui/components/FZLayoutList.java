@@ -117,6 +117,16 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         };
     }
 
+    @Override
+    public void removeChildren() {
+        entries.clear();
+        children.clear();
+        narratables.clear();
+        renderables.clear();
+        layout.removeChildren();
+        refreshScrollAmount();
+    }
+
     protected int maxContentWidth() {
         return maxContentWidth;
     }

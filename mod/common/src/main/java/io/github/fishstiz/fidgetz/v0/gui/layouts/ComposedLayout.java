@@ -83,5 +83,10 @@ abstract class ComposedLayout implements FZLayout {
     }
 
     @Override
+    public void removeChildren() {
+        composed.removeChildren();
+    }
+
+    @Override
     public abstract void arrangeElements();
 }
