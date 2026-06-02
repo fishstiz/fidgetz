@@ -432,6 +432,8 @@ public class FZPopoverMenu extends FZDialog {
             if (isActive() && entry.mouseClicked(mouseX, mouseY, button)) {
                 if (settings.closeOnInteract()) {
                     closeMenu();
+                } else if (isOpen() && entry.fidgetz$shouldTakeFocusAfterInteraction()) {
+                    setFocused(entry);
                 }
                 return true;
             }
@@ -618,7 +620,12 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public boolean fidgetz$shouldTakeFocusAfterInteraction() {
-            return isOpen() && (!(entry instanceof FZComponent component) || component.fidgetz$shouldTakeFocusAfterInteraction());
+            return isOpen() && entry.fidgetz$shouldTakeFocusAfterInteraction();
+        }
+
+        @Override
+        public boolean isFocused() {
+            return super.isFocused() || getFocused() != null;
         }
 
         // override methods to resolve mappings on fabric
@@ -626,11 +633,6 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public boolean isHovered() {
             return super.isHovered();
-        }
-
-        @Override
-        public boolean isFocused() {
-            return super.isFocused();
         }
 
         @Override

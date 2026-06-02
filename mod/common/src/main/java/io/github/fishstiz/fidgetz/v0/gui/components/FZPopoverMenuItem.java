@@ -74,7 +74,7 @@ public sealed interface FZPopoverMenuItem {
     static Widget fromWidget(AbstractWidget widget) {
         // cant use WrappedComponent because of some mapping issue on fabric where the default methods of the Entry
         // interface are used instead of the methods on the concrete WrappedComponent class
-        class Wrapped implements Entry, FZComponent, ContainerEventHandlerPatch {
+        class Wrapped implements Entry, ContainerEventHandlerPatch {
             private final Context context;
             private final AbstractWidget widget;
             private final List<AbstractWidget> children;
@@ -264,7 +264,7 @@ public sealed interface FZPopoverMenuItem {
             public boolean fidgetz$shouldTakeFocusAfterInteraction() {
                 return widget instanceof FZComponent component
                         ? component.fidgetz$shouldTakeFocusAfterInteraction()
-                        : FZComponent.super.fidgetz$shouldTakeFocusAfterInteraction();
+                        : Entry.super.fidgetz$shouldTakeFocusAfterInteraction();
             }
         }
 
@@ -294,7 +294,7 @@ public sealed interface FZPopoverMenuItem {
         }
     }
 
-    interface Entry extends LayoutElement, GuiEventListener, NarratableEntry, Renderable {
+    interface Entry extends LayoutElement, GuiEventListener, NarratableEntry, Renderable, FZComponent {
         int DEFAULT_HEIGHT = 20;
 
         Context context();
