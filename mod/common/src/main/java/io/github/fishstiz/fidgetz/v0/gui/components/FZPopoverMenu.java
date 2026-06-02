@@ -404,6 +404,7 @@ public class FZPopoverMenu extends FZDialog {
         private final FZPopoverMenuItem.Settings settings;
         private final List<FZPopoverMenuItem.Entry> singletonChild;
         private ScreenRectangle entryBounds = ScreenRectangle.empty();
+        private @Nullable GuiEventListener focused;
         private boolean lastHovered;
         private boolean dragging;
 
@@ -546,7 +547,7 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public @Nullable GuiEventListener getFocused() {
-            return entry.isFocused() ? entry : null;
+            return focused;
         }
 
         @Override
@@ -564,9 +565,10 @@ public class FZPopoverMenu extends FZDialog {
                 if (previous != null) {
                     previous.setFocused(false);
                 }
-                if (focused == entry) {
+                if (focused != null) {
                     focused.setFocused(true);
                 }
+                this.focused = focused;
             }
         }
 
