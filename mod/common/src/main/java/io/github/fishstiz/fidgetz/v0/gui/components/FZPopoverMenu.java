@@ -428,6 +428,8 @@ public class FZPopoverMenu extends FZDialog {
             if (isActive() && entry.mouseClicked(event, doubleClick)) {
                 if (settings.closeOnInteract()) {
                     closeMenu();
+                } else if (entry.shouldTakeFocusAfterInteraction()) {
+                    setFocused(entry);
                 }
                 return true;
             }
@@ -537,6 +539,11 @@ public class FZPopoverMenu extends FZDialog {
                 return handleKeyboardFocusOnOpen();
             }
             return false;
+        }
+
+        @Override
+        public boolean isFocused() {
+            return super.isFocused() || getFocused() != null;
         }
 
         @Override
