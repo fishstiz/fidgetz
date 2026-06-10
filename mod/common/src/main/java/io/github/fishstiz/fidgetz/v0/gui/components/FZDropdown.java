@@ -18,6 +18,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenAxis;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.input.KeyEvent;
@@ -383,6 +385,20 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         @Override
         public boolean isFocused() {
             return isOpen() && (focused || getFocused() != null);
+        }
+
+        @Override
+        public @Nullable ComponentPath getCurrentFocusPath() {
+            if (!isFocused()) return null;
+            return getFocused() == null ? ComponentPath.leaf(this) : super.getCurrentFocusPath();
+        }
+
+        @Override
+        public ScreenRectangle getBorderForArrowNavigation(ScreenDirection opposite) {
+            if (opposite.getAxis() == ScreenAxis.HORIZONTAL) {
+                return FZDropdown.this.getBorderForArrowNavigation(opposite);
+            }
+            return super.getBorderForArrowNavigation(opposite);
         }
 
         private boolean isPositionedUp() {
