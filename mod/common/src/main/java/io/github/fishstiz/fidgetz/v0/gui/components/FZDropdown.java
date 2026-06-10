@@ -17,6 +17,8 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenAxis;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.CommonColors;
@@ -394,6 +396,12 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         @Override
         public boolean isFocused() {
             return isOpen() && (focused || getFocused() != null);
+        }
+
+        @Override
+        public @Nullable ComponentPath getCurrentFocusPath() {
+            if (!isFocused()) return null;
+            return getFocused() == null ? ComponentPath.leaf(this) : super.getCurrentFocusPath();
         }
 
         private boolean isPositionedUp() {
