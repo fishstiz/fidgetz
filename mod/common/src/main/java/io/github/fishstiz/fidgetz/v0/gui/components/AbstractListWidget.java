@@ -20,8 +20,8 @@ abstract class AbstractListWidget extends FZAbstractContainerWidget implements S
     protected static final int DEFAULT_MAX_CONTENT_WIDTH = 270;
     protected static final int DEFAULT_SCROLL_RATE = 10;
     protected static final int SEPARATOR_HEIGHT = 2;
-    private static final RenderableRectangle BACKGROUND = Renderables.texture(ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png"), 32, 32);
-    private static final RenderableRectangle INWORLD_BACKGROUND = Renderables.texture(ResourceLocation.withDefaultNamespace("textures/gui/inworld_menu_list_background.png"), 32, 32);
+    private static final ResourceLocation BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png");
+    private static final ResourceLocation INWORLD_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/inworld_menu_list_background.png");
     private static final RenderableRectangle HEADER_SEPARATOR = Renderables.texture(Screen.HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle INWORLD_HEADER_SEPARATOR = Renderables.texture(Screen.INWORLD_HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle FOOTER_SEPARATOR = Renderables.texture(Screen.FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
@@ -46,9 +46,19 @@ abstract class AbstractListWidget extends FZAbstractContainerWidget implements S
     }
 
     protected void extractBackgroundRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        RenderableRectangle background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
+        ResourceLocation background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
         RenderSystem.enableBlend();
-        background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
+        graphics.blit(
+                background,
+                getX(),
+                getY(),
+                getRight(),
+                getBottom() + (int) scrollAmount(),
+                getWidth(),
+                getHeight(),
+                32,
+                32
+        );
         RenderSystem.disableBlend();
     }
 
