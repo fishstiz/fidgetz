@@ -144,6 +144,11 @@ public final class NavigationUtils {
         public GuiEventListener component() {
             return path.component();
         }
+
+        @Override
+        public GuiEventListener leafComponent() {
+            return path.leafComponent();
+        }
     }
 
 
