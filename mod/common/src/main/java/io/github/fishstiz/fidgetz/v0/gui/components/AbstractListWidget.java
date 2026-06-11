@@ -15,6 +15,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
@@ -23,8 +24,8 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     protected static final int DEFAULT_MAX_CONTENT_WIDTH = 270;
     protected static final int DEFAULT_SCROLL_RATE = 10;
     protected static final int SEPARATOR_HEIGHT = 2;
-    private static final RenderableRectangle BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/menu_list_background.png"), 32, 32);
-    private static final RenderableRectangle INWORLD_BACKGROUND = Renderables.texture(Identifier.withDefaultNamespace("textures/gui/inworld_menu_list_background.png"), 32, 32);
+    private static final Identifier BACKGROUND = Identifier.withDefaultNamespace("textures/gui/menu_list_background.png");
+    private static final Identifier INWORLD_BACKGROUND = Identifier.withDefaultNamespace("textures/gui/inworld_menu_list_background.png");
     private static final RenderableRectangle HEADER_SEPARATOR = Renderables.texture(Screen.HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle INWORLD_HEADER_SEPARATOR = Renderables.texture(Screen.INWORLD_HEADER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
     private static final RenderableRectangle FOOTER_SEPARATOR = Renderables.texture(Screen.FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
@@ -49,8 +50,19 @@ abstract class AbstractListWidget extends AbstractContainerWidget implements Scr
     }
 
     protected void extractBackgroundRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        RenderableRectangle background = minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
-        background.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
+        Identifier background = this.minecraft.level == null ? BACKGROUND : INWORLD_BACKGROUND;
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                background,
+                getX(),
+                getY(),
+                getRight(),
+                getBottom() + (int) scrollAmount(),
+                getWidth(),
+                getHeight(),
+                32,
+                32
+        );
     }
 
     protected void extractSeparatorsRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
