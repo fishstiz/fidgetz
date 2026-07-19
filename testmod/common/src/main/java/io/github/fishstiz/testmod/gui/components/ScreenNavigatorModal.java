@@ -4,13 +4,11 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
+import io.github.fishstiz.testmod.gui.Screens;
 import io.github.fishstiz.testmod.gui.screens.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 
 public class ScreenNavigatorModal extends FZModal {
@@ -28,16 +26,7 @@ public class ScreenNavigatorModal extends FZModal {
     @Override
     protected void onOpen() {
         contents.clear();
-        Minecraft minecraft = Minecraft.getInstance();
-        contents.child(Button.builder(Component.literal("Test Screen"), _ -> minecraft.setScreen(new TestmodScreen())).build());
-        contents.child(Button.builder(Component.literal("Flex Screen"), _ -> minecraft.setScreen(new FlexScreen())).build());
-        contents.child(Button.builder(Component.literal("FZ Screen"), _ -> minecraft.setScreen(new FZTestScreen())).build());
-        contents.child(Button.builder(Component.literal("Wrap Screen"), _ -> minecraft.setScreen(new FlexWrapScreen())).build());
-        contents.child(Button.builder(Component.literal("State Screen"), _ -> minecraft.setScreen(new StatefulScreen())).build());
-        contents.child(Button.builder(Component.literal("List Screen"), _ -> minecraft.setScreen(new ListScreen())).build());
-        contents.child(Button.builder(Component.literal("AbstractListScreen"), _ -> minecraft.setScreen(new AbstractListScreen())).build());
-        contents.child(Button.builder(Component.literal("GradientScreen"), _ -> minecraft.setScreen(new GradientScreen())).build());
-        contents.child(Button.builder(Component.literal("Screenz"), _ -> minecraft.setScreen(new Screenz())).build());
+        Screens.addScreenButtons(contents);
         layout.arrangeElements();
         super.onOpen();
     }
