@@ -4,12 +4,10 @@ import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
+import io.github.fishstiz.testmod.gui.Screens;
 import io.github.fishstiz.testmod.gui.screens.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.network.chat.Component;
 
 public class ScreenNavigatorModal extends FZModal {
     private final FZFlexLayout contents;
@@ -26,15 +24,7 @@ public class ScreenNavigatorModal extends FZModal {
     @Override
     protected void onOpen() {
         contents.clear();
-        Minecraft minecraft = Minecraft.getInstance();
-        contents.child(Button.builder(Component.literal("Test Screen"), ignored -> minecraft.setScreen(new TestmodScreen())).build());
-        contents.child(Button.builder(Component.literal("Flex Screen"), ignored -> minecraft.setScreen(new FlexScreen())).build());
-        contents.child(Button.builder(Component.literal("FZ Screen"), ignored -> minecraft.setScreen(new FZTestScreen())).build());
-        contents.child(Button.builder(Component.literal("Wrap Screen"), ignored -> minecraft.setScreen(new FlexWrapScreen())).build());
-        contents.child(Button.builder(Component.literal("State Screen"), ignored -> minecraft.setScreen(new StatefulScreen())).build());
-        contents.child(Button.builder(Component.literal("List Screen"), ignored -> minecraft.setScreen(new ListScreen())).build());
-        contents.child(Button.builder(Component.literal("AbstractListScreen"), ignored -> minecraft.setScreen(new AbstractListScreen())).build());
-        contents.child(Button.builder(Component.literal("Screenz"), ignored -> minecraft.setScreen(new Screenz())).build());
+        Screens.addScreenButtons(contents);
         layout.arrangeElements();
         super.onOpen();
     }
