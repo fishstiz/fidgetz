@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;

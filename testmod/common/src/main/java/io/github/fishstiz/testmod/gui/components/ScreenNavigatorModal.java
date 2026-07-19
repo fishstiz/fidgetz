@@ -1,5 +1,6 @@
 package io.github.fishstiz.testmod.gui.components;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZModal;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
@@ -63,7 +64,7 @@ public class ScreenNavigatorModal extends FZModal {
             return true;
         }
 
-        if (!isDragging() && event.button() == 0) {
+        if (!isDragging() && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             drag(dx, dy);
             return true;
         }
