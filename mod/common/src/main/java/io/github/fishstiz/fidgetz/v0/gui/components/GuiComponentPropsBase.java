@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
@@ -55,6 +56,10 @@ public class GuiComponentPropsBase implements GuiComponentProps {
 
     protected static OptionalInt wrapBoxedInt(@Nullable Integer value) {
         return value == null ? OptionalInt.empty() : OptionalInt.of(value);
+    }
+
+    protected static OptionalDouble wrapBoxedDouble(@Nullable Double value) {
+        return value == null ? OptionalDouble.empty() : OptionalDouble.of(value);
     }
 
     @Override
