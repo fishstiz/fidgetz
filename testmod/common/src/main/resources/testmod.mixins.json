@@ -3,6 +3,7 @@
   "package": "io.github.fishstiz.testmod.mixins",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "MinecraftMixin",
     "ScreenMixin",
     "TitleScreenMixin"
   ],
