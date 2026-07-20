@@ -6,12 +6,14 @@ import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
 import io.github.fishstiz.fidgetz.v0.utils.TriState;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -22,13 +24,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class FZLayoutList extends AbstractListWidget implements Layout, FZComponent, FZContextMenu.Source {
+public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> implements Layout, FZComponent, FZContextMenu.Source {
     protected static final int DEFAULT_WIDTH = 300;
     protected static final int DEFAULT_HEIGHT = 150;
     protected static final int DEFAULT_SCROLL_RATE = 10;
-    private final List<Entry> entries = new ArrayList<>();
-    private final List<GuiEventListener> children = new ArrayList<>();
-    private final List<NarratableEntry> narratables = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private FZFlexLayout layout;
@@ -37,18 +36,17 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     private int contentPaddingLeft;
     private int contentPaddingRight;
     private boolean reserveScrollbarWidth;
-    private int scrollRate;
     private ScreenRectangle bounds;
 
-    protected FZLayoutList(int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        super(0, 0, width, height, message, scrollbarSettings);
-        scrollRate = scrollbarSettings.scrollRate();
+    protected FZLayoutList(int width, int height, Component message) {
+        super(0, 0, width, height, message);
+        setScrollRate(DEFAULT_SCROLL_RATE);
         layout = FZFlexLayout.vertical();
         bounds = super.getRectangle();
     }
 
     protected FZLayoutList() {
-        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT, CommonComponents.EMPTY);
     }
 
     protected void collectEntries(RefreshEvent event) {
@@ -59,7 +57,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         GuiEventListener lastFocused = getFocused();
         String lastFocusedId = null;
 
-        for (Iterator<Entry> it = entries.listIterator(); it.hasNext(); ) {
+        for (Iterator<Entry> it = children().listIterator(); it.hasNext(); ) {
             Entry entry = it.next();
             it.remove();
             if (lastFocused != null && entry.widget == lastFocused) {
@@ -67,8 +65,6 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
             }
         }
 
-        children.clear();
-        narratables.clear();
         renderables.clear();
 
         FZFlexLayout newLayout = FZFlexLayout.vertical().maxWidth(contentWidth()).maxHeight(0);
@@ -102,13 +98,12 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
                 if (id == null)
                     id = "FZList@%s-element-%s-%s".formatted(hashCode, count.intValue(), widget.getClass().getName());
 
-                entries.add(new Entry(id, widget));
-                children.add(widget);
-                narratables.add(widget);
+                Entry entry = new Entry(id, widget);
+                addEntry(entry);
                 count.increment();
 
                 if (widget == lastFocused || (Objects.equals(id, lastFocusedId) && focusUnresolved.booleanValue())) {
-                    setFocused(widget);
+                    setFocused(entry);
                     focusUnresolved.setValue(false);
                 }
             }
@@ -142,11 +137,6 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    public double scrollRate() {
-        return scrollRate;
-    }
-
-    @Override
     public void arrangeElements() {
         int contentWidth = contentWidth();
         int contentLeft = contentLeft();
@@ -176,16 +166,11 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     @Override
-    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
         }
-    }
-
-    @Override
-    public List<? extends GuiEventListener> children() {
-        return children;
     }
 
     @Override
@@ -254,7 +239,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     private @Nullable Entry getEntryAt(double x, double y) {
-        for (Entry entry : entries) {
+        for (Entry entry : children()) {
             if (entry.widget.isMouseOver(x, y)) {
                 return entry;
             }
@@ -263,7 +248,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     private @Nullable Entry resolveEntry(Entry unknownEntry) {
-        for (Entry entry : entries) {
+        for (Entry entry : children()) {
             if (unknownEntry == entry ||
                 unknownEntry.widget == entry.widget ||
                 unknownEntry.id.equals(entry.id)) {
@@ -284,7 +269,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
             // the new button instance with the same id as the clicked button cannot be refocused
             Entry clickedEntry = resolveEntry(entry);
             if (clickedEntry != null) {
-                setFocused(clickedEntry.widget);
+                setFocused(clickedEntry);
                 if (isValidClickButton(button)) {
                     setDragging(true);
                 }
@@ -306,7 +291,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
             this.reserveScrollbarWidth = props.reserveScrollbarWidth().toBoolean(false);
         }
 
-        props.scrollRate().ifPresent(scrollRate -> this.scrollRate = scrollRate);
+        props.scrollRate().ifPresent(this::setScrollRate);
 
         props.refreshHandler().ifPresent(initializer -> {
             FZKeyed<Consumer<RefreshEvent>> previousEntryInitializer = this.entryInitializer;
@@ -329,7 +314,117 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         return new Builder();
     }
 
-    private record Entry(String id, GuiEventListener widget) {
+    static final class Entry extends AbstractListWidget.Entry<Entry> implements FZComponent {
+        private final String id;
+        private final GuiEventListener widget;
+        private final List<GuiEventListener> children;
+
+        private Entry(String id, GuiEventListener widget) {
+            this.id = id;
+            this.widget = widget;
+            this.children = List.of(widget);
+        }
+
+        @Override
+        public List<? extends GuiEventListener> children() {
+            return children;
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            widget.setFocused(focused);
+        }
+
+        @Override
+        public boolean isFocused() {
+            return widget.isFocused();
+        }
+
+        @Override
+        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
+            return widget.nextFocusPath(navigationEvent);
+        }
+
+        @Override
+        public ScreenRectangle getRectangle() {
+            return widget.getRectangle();
+        }
+
+        @Override
+        public void mouseMoved(double mouseX, double mouseY) {
+            widget.mouseMoved(mouseX, mouseY);
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            return widget.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            return widget.mouseReleased(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            return widget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
+
+        @Override
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+            return widget.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            return widget.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+            return widget.keyReleased(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            return widget.charTyped(codePoint, modifiers);
+        }
+
+        @Override
+        public @Nullable GuiEventListener getFocused() {
+            return widget.isFocused() ? widget : null;
+        }
+
+        @Override
+        public void setFocused(@Nullable GuiEventListener focused) {
+            if (focused == null) {
+                widget.setFocused(false);
+            } else if (focused == widget) {
+                widget.setFocused(true);
+            }
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return widget.isMouseOver(mouseX, mouseY);
+        }
+
+        @Override
+        public @Nullable ComponentPath getCurrentFocusPath() {
+            return widget.getCurrentFocusPath();
+        }
+
+        @Override
+        public int getTabOrderGroup() {
+            return widget.getTabOrderGroup();
+        }
+
+        @Override
+        public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+            return widget instanceof FZComponent component
+                    ? component.fidgetz$shouldTakeFocusAfterInteraction()
+                    : FZComponent.super.fidgetz$shouldTakeFocusAfterInteraction();
+        }
     }
 
     public final class RefreshEvent {
@@ -470,7 +565,6 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
-        private ScrollbarSettings settings = FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE);
         private @Nullable FZKeyed<Consumer<RefreshEvent>> refreshHandler;
         private @Nullable Integer maxContentWidth;
         private @Nullable Integer contentPaddingLeft;
@@ -481,21 +575,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         private Builder() {
         }
 
-        public Builder scrollbarSettings(ScrollbarSettings settings) {
-            this.settings = Objects.requireNonNull(settings, "settings cannot be null");
-            return this;
-        }
-
         public Builder scrollRate(int scrollRate) {
-            this.settings = new ScrollbarSettings(
-                    this.settings.scrollerSprite(),
-                    this.settings.disabledScrollerSprite(),
-                    this.settings.backgroundSprite(),
-                    this.settings.scrollbarWidth(),
-                    this.settings.scrollbarMinHeight(),
-                    scrollRate,
-                    this.settings.resizingScrollbar()
-            );
             this.scrollRate = scrollRate;
             return this;
         }
@@ -552,7 +632,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         }
 
         public FZLayoutList build() {
-            FZLayoutList list = new FZLayoutList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY), settings);
+            FZLayoutList list = new FZLayoutList(DEFAULT_WIDTH, DEFAULT_HEIGHT, props.message().orElse(CommonComponents.EMPTY));
             list.applyProps(toProps());
             list.refreshEntries();
             return list;

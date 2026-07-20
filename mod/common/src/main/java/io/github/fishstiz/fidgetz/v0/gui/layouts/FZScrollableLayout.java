@@ -1,7 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.layouts;
 
-import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractContainerWidget;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZAbstractScrollArea;
+import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.gui.ComponentPath;
@@ -26,7 +25,6 @@ public final class FZScrollableLayout extends ComposedLayout {
     private static final int DEFAULT_SCROLLBAR_SPACING = 4;
     private final Supplier<ScreenRectangle> screenArea;
     private final FZScrollableLayout.Container container;
-    private double scrollRate;
     private boolean reserveScrollbarArea;
     private int scrollbarSpacing = DEFAULT_SCROLLBAR_SPACING;
     private int minWidth;
@@ -34,15 +32,15 @@ public final class FZScrollableLayout extends ComposedLayout {
     private int minHeight;
     private int maxHeight;
 
-    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content, FZAbstractScrollArea.ScrollbarSettings scrollbarSettings) {
+    FZScrollableLayout(Supplier<ScreenRectangle> screenArea, Layout content) {
         super(content);
         this.screenArea = screenArea;
-        this.container = new FZScrollableLayout.Container(0, 0, scrollbarSettings);
-        this.scrollRate = scrollbarSettings.scrollRate();
+        this.container = new FZScrollableLayout.Container(0, 0);
+        this.container.setScrollRate(DEFAULT_SCROLL_RATE);
     }
 
     public static FZScrollableLayout from(Supplier<ScreenRectangle> maxScrollArea, Layout content) {
-        return new FZScrollableLayout(maxScrollArea, content, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        return new FZScrollableLayout(maxScrollArea, content);
     }
 
 
@@ -91,7 +89,7 @@ public final class FZScrollableLayout extends ComposedLayout {
     }
 
     public FZScrollableLayout scrollRate(double scrollRate) {
-        this.scrollRate = scrollRate;
+        container.setScrollRate(scrollRate);
         return this;
     }
 
@@ -116,8 +114,8 @@ public final class FZScrollableLayout extends ComposedLayout {
     @Override
     public void arrangeElements() {
         composed.arrangeElements();
-        container.children.clear();
-        composed.visitWidgets(container.children::add);
+        container.clearChildren();
+        composed.visitWidgets(container::addChild);
         int contentWidth = composed.getWidth();
         ScreenRectangle containerBounds = screenArea.get();
         container.setWidth(MathUtils.clampOptionalMax(Math.max(contentWidth, minWidth) + reservedWidth(), 0, containerBounds.width()));
@@ -186,32 +184,41 @@ public final class FZScrollableLayout extends ComposedLayout {
         return container.getRectangle();
     }
 
-    private final class Container extends FZAbstractContainerWidget implements ScrollableContainer {
-        private final List<AbstractWidget> children = new ArrayList<>();
+    private final class Container extends AbstractListWidget<Container.Entry> implements ScrollableContainer {
         private ScreenRectangle bounds;
 
-        public Container(int width, int height, ScrollbarSettings scrollbarSettings) {
-            super(0, 0, width, height, CommonComponents.EMPTY, scrollbarSettings);
+        Container(int width, int height) {
+            super(0, 0, width, height, CommonComponents.EMPTY);
             bounds = super.getRectangle();
+        }
+
+        private void addChild(AbstractWidget child) {
+            addEntry(new Entry(child));
+        }
+
+        private void clearChildren() {
+            clearEntries();
+        }
+
+        @Override
+        protected void extractBackgroundRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        }
+
+        @Override
+        protected void extractSeparatorsRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        }
+
+        @Override
+        protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            for (Entry child : children()) {
+                child.widget.render(graphics, mouseX, mouseY, partialTick);
+            }
         }
 
         @Override
         protected int contentHeight() {
             return composed.getHeight();
         }
-
-        @Override
-        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            graphics.enableScissor(getX(), getY(), getRight(), getBottom());
-
-            for (AbstractWidget child : children) {
-                child.render(graphics, mouseX, mouseY, partialTick);
-            }
-
-            graphics.disableScissor();
-            extractScrollbar(graphics, mouseX, mouseY);
-        }
-
 
         @Override
         public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
@@ -279,17 +286,14 @@ public final class FZScrollableLayout extends ComposedLayout {
             return super.isOverScrollbar(x, y) && isHovered();
         }
 
-        private int scrollbarReserve() {
+        @Override
+        protected int scrollbarReserve() {
             return scrollbarSpacing + scrollbarWidth();
         }
 
-        private boolean scrollbarVisible() {
-            return contentHeight() > MathUtils.optionalMin(screenArea.get().height(), maxHeight);
-        }
-
         @Override
-        public double scrollRate() {
-            return scrollRate;
+        protected boolean scrollbarVisible() {
+            return contentHeight() > MathUtils.optionalMin(screenArea.get().height(), maxHeight);
         }
 
         @Override
@@ -299,13 +303,119 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         @Override
-        public List<? extends GuiEventListener> children() {
-            return children;
-        }
-
-        @Override
         public ScreenRectangle getRectangle() {
             return bounds;
+        }
+
+        static final class Entry extends AbstractListWidget.Entry<Entry> implements FZComponent {
+            private final AbstractWidget widget;
+            private final List<AbstractWidget> children;
+
+            private Entry(AbstractWidget widget) {
+                this.widget = widget;
+                this.children = List.of(widget);
+            }
+
+            @Override
+            public List<? extends GuiEventListener> children() {
+                return children;
+            }
+
+            @Override
+            public void setFocused(boolean focused) {
+                widget.setFocused(focused);
+            }
+
+            @Override
+            public boolean isFocused() {
+                return widget.isFocused();
+            }
+
+            @Override
+            public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
+                return widget.nextFocusPath(navigationEvent);
+            }
+
+            @Override
+            public ScreenRectangle getRectangle() {
+                return widget.getRectangle();
+            }
+
+            @Override
+            public void mouseMoved(double mouseX, double mouseY) {
+                widget.mouseMoved(mouseX, mouseY);
+            }
+
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                return widget.mouseClicked(mouseX, mouseY, button);
+            }
+
+            @Override
+            public boolean mouseReleased(double mouseX, double mouseY, int button) {
+                return widget.mouseReleased(mouseX, mouseY, button);
+            }
+
+            @Override
+            public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+                return widget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            }
+
+            @Override
+            public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+                return widget.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            }
+
+            @Override
+            public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+                return widget.keyPressed(keyCode, scanCode, modifiers);
+            }
+
+            @Override
+            public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+                return widget.keyReleased(keyCode, scanCode, modifiers);
+            }
+
+            @Override
+            public boolean charTyped(char codePoint, int modifiers) {
+                return widget.charTyped(codePoint, modifiers);
+            }
+
+            @Override
+            public @Nullable GuiEventListener getFocused() {
+                return widget.isFocused() ? widget : null;
+            }
+
+            @Override
+            public void setFocused(@Nullable GuiEventListener focused) {
+                if (focused == null) {
+                    widget.setFocused(false);
+                } else if (focused == widget) {
+                    widget.setFocused(true);
+                }
+            }
+
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return widget.isMouseOver(mouseX, mouseY);
+            }
+
+            @Override
+            public @Nullable ComponentPath getCurrentFocusPath() {
+                return widget.getCurrentFocusPath();
+            }
+
+            @Override
+            public int getTabOrderGroup() {
+                return widget.getTabOrderGroup();
+            }
+
+            @Override
+            public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+                return widget instanceof FZComponent component
+                        ? component.fidgetz$shouldTakeFocusAfterInteraction()
+                        : FZComponent.super.fidgetz$shouldTakeFocusAfterInteraction();
+            }
         }
     }
 }

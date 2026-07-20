@@ -5,10 +5,12 @@
   "client": [
     "AbstractContainerEventHandlerMixin",
     "AbstractSelectionListEntryMixin",
+    "AbstractSelectionListMixin",
     "AbstractWidgetMixin",
     "ContainerEventHandlerMixin",
     "GuiEventListenerMixin",
     "ScreenMixin",
+    "access.AbstractSelectionListAccess",
     "access.EditBoxAccess"
   ],
   "injectors": {

@@ -14,6 +14,8 @@ import java.util.List;
 
 public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entry> {
     public AbstractListTest() {
+        setScrollRate(20);
+
         for (int i = 0; i < 20; i++) {
             addEntry(new Entry(i));
         }
@@ -40,12 +42,7 @@ public class AbstractListTest extends FZAbstractListWidget<AbstractListTest.Entr
         return 8;
     }
 
-    @Override
-    public double scrollRate() {
-        return 20;
-    }
-
-    class Entry extends FZAbstractListWidget.Entry {
+    class Entry extends FZAbstractListWidget.Entry<Entry> {
         private final FZFlexLayout layout = FZFlexLayout.horizontal();
         private final List<AbstractWidget> children = new ArrayList<>();
 

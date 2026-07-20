@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -19,47 +18,40 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
 
-public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry> extends AbstractListWidget {
+public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<E>> extends AbstractListWidget<E> {
     protected static final int DEFAULT_SCROLL_RATE = 10;
-    private final List<E> children = new ArrayList<>();
     private @Nullable E hovered;
     private ScreenRectangle bounds;
     private int cachedContentHeight;
-
-    protected FZAbstractListWidget(int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
-        super(Minecraft.getInstance(), x, y, width, height, message, scrollbarSettings);
-        this.bounds = new ScreenRectangle(getX(), getY(), getWidth(), getHeight());
-    }
+    private double previousScrollAmount;
 
     protected FZAbstractListWidget(int x, int y, int width, int height, Component message) {
-        super(x, y, width, height, message);
+        super(Minecraft.getInstance(), x, y, width, height, message);
         this.bounds = new ScreenRectangle(getX(), getY(), getWidth(), getHeight());
-    }
-
-    protected FZAbstractListWidget(Component message, ScrollbarSettings scrollbarSettings) {
-        this(0, 0, 0, 0, message, scrollbarSettings);
+        setScrollRate(DEFAULT_SCROLL_RATE);
     }
 
     protected FZAbstractListWidget(Component message) {
-        this(message, FZAbstractScrollArea.defaultSettings(DEFAULT_SCROLL_RATE));
+        this(0, 0, 0, 0, message);
     }
 
     protected FZAbstractListWidget() {
         this(CommonComponents.EMPTY);
     }
 
-    protected void addEntry(E entry) {
-        entry.index = children.size();
-        children.add(entry);
+    @Override
+    protected int addEntry(E entry) {
+        entry.index = children().size();
+        super.addEntry(entry);
+        return entry.getIndex();
     }
 
-    protected void removeEntry(E entry) {
-        if (children.remove(entry)) {
+    @Override
+    protected boolean removeEntry(E entry) {
+        if (super.removeEntry(entry)) {
             entry.index = -1;
             if (entry == getFocused()) {
                 setFocused(null);
@@ -67,11 +59,14 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
             if (entry == getHovered()) {
                 setHovered(null);
             }
+
+            return true;
         }
+        return false;
     }
 
     protected void clearEntries() {
-        for (Iterator<E> iterator = children.iterator(); iterator.hasNext(); ) {
+        for (Iterator<E> iterator = children().iterator(); iterator.hasNext(); ) {
             E entry = iterator.next();
             entry.index = -1;
             iterator.remove();
@@ -95,9 +90,8 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public @Nullable E getFocused() {
-        return (E) super.getFocused();
+        return super.getFocused();
     }
 
     protected void setHovered(@Nullable E hovered) {
@@ -141,7 +135,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
     @Override
     protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         ScreenRectangle bounds = getRectangle();
-        for (E entry : children) {
+        for (E entry : children()) {
             if (entry.getRectangle().overlaps(bounds)) {
                 if (entry.isMouseOver(mouseX, mouseY)) {
                     setHovered(entry);
@@ -165,14 +159,14 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return 0;
     }
 
-    protected void repositionEntries() {
+    private void refreshBounds() {
         int childX = contentLeft();
         int childY = getY() - (int) scrollAmount();
         int childWidth = contentWidth();
         int totalheight = 0;
 
-        for (int i = 0; i < children.size(); i++) {
-            E child = children.get(i);
+        for (int i = 0; i < children().size(); i++) {
+            E child = children().get(i);
             child.index = i;
 
             int height = child.getHeight();
@@ -180,7 +174,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
             int marginBottom = child.getMarginBottom();
 
             child.setBounds(childX, childY + marginTop, childWidth, height);
-            int occupiedHeight = height + marginTop + marginBottom + (i + 1 < children.size() ? rowSpacing() : 0);
+            int occupiedHeight = height + marginTop + marginBottom + (i + 1 < children().size() ? rowSpacing() : 0);
 
             childY += occupiedHeight;
             totalheight += occupiedHeight;
@@ -192,21 +186,28 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
             int newChildX = contentLeft();
             int newChildWidth = contentWidth();
             if (newChildWidth != childWidth || newChildX != childX) {
-                for (E child : children) {
+                for (E child : children()) {
                     child.setBounds(newChildX, child.getY(), newChildWidth, child.getHeight());
                 }
             }
         }
+    }
 
+    protected void repositionEntries() {
+        refreshBounds();
         refreshScrollAmount();
     }
 
     @Override
     public void setScrollAmount(double scrollAmount) {
-        double previousScrollAmount = scrollAmount();
         super.setScrollAmount(scrollAmount);
-        if (previousScrollAmount != scrollAmount()) {
-            repositionEntries();
+        double currentScrollAmount = scrollAmount();
+        if (this.previousScrollAmount != currentScrollAmount) {
+            // SmoothScrolling is directly modifying the scroll amount field before using the setter to redraw only,
+            // so can't check diff with just another local variable as scroll amount is already updated when this is called.
+            // https://github.com/SmajloSlovakian/Minecraft-Smooth-Scrolling/blob/54b2fcb0c3a9494781961f571a1426bafb24958f/src/client/java/io/github/smajloslovakian/smoothscroll/mixin/client/Widgets/AbstractScrollAreaMixin.java#L41-L47
+            this.previousScrollAmount = currentScrollAmount;
+            refreshBounds();
         }
     }
 
@@ -223,7 +224,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
 
     protected void centerScrollOn(E entry) {
         int y = 0;
-        for (E child : this.children) {
+        for (E child : this.children()) {
             if (child == entry) {
                 y += child.getHeight() / 2;
                 break;
@@ -268,7 +269,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         updateBounds();
         if (previousWidth != getWidth()) {
             int childWidth = contentWidth();
-            for (E child : children) {
+            for (E child : children()) {
                 child.setWidth(childWidth);
             }
         }
@@ -300,12 +301,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return bounds;
     }
 
-    @Override
-    public List<E> children() {
-        return children;
-    }
-
-    protected abstract static class Entry extends AbstractContainerEventHandler implements
+    protected abstract static class Entry<E extends Entry<E>> extends AbstractListWidget.Entry<E> implements
             LayoutElement,
             Renderable,
             NarratableEntry,
