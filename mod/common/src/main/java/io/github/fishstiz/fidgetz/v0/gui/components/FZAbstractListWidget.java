@@ -169,7 +169,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return 0;
     }
 
-    private void refreshEntries() {
+    private void refreshBounds() {
         int childX = contentLeft();
         int childY = getY() - (int) scrollAmount();
         int childWidth = contentWidth();
@@ -204,7 +204,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
     }
 
     protected void repositionEntries() {
-        refreshEntries();
+        refreshBounds();
         refreshScrollAmount();
     }
 
@@ -217,7 +217,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
             // so can't check diff with just another local variable as scroll amount is already updated when this is called.
             // https://github.com/SmajloSlovakian/Minecraft-Smooth-Scrolling/blob/54b2fcb0c3a9494781961f571a1426bafb24958f/src/client/java/io/github/smajloslovakian/smoothscroll/mixin/client/Widgets/AbstractScrollAreaMixin.java#L41-L47
             this.previousScrollAmount = currentScrollAmount;
-            refreshEntries();
+            refreshBounds();
         }
     }
 
@@ -291,7 +291,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         super.setHeight(height);
         updateBounds();
         if (previousHeight != getHeight()) {
-            refreshScrollAmount();
+            setScrollAmount(scrollAmount());
         }
     }
 
@@ -302,7 +302,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         super.setSize(width, height);
         updateBounds();
         if (previousWidth != getWidth() || previousHeight != getHeight()) {
-            repositionEntries();
+            setScrollAmount(scrollAmount());
         }
     }
 
