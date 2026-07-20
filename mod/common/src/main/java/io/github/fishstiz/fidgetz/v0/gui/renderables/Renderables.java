@@ -2,7 +2,9 @@ package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.CommonColors;
 
+import java.awt.*;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -18,12 +20,17 @@ public final class Renderables {
         return new Outline(color);
     }
 
+    public static RenderableRectangle text(String text) {
+        return text(Component.literal(Objects.requireNonNull(text, "text cannot be null")));
+    }
+
     public static RenderableRectangle text(Component text) {
+        Objects.requireNonNull(text, "text cannot be null");
         return new TextRectangle(() -> text);
     }
 
     public static RenderableRectangle text(Supplier<Component> text) {
-        return new TextRectangle(text);
+        return new TextRectangle(Objects.requireNonNull(text, "text cannot be null"));
     }
 
     public static RenderableRectangle boxShadow(float scale) {
@@ -34,8 +41,12 @@ public final class Renderables {
         return new BoxShadow(scale, xOffset, yOffset);
     }
 
+    public static RenderableRectangle sprite(Identifier sprite, int color) {
+        return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite cannot be null"), color);
+    }
+
     public static RenderableRectangle sprite(Identifier sprite) {
-        return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite is null"));
+        return sprite(sprite, CommonColors.WHITE);
     }
 
     public static RenderableRectangle texture(
@@ -47,7 +58,7 @@ public final class Renderables {
             int uWidth,
             int vHeight
     ) {
-        return new RenderableTexture(Objects.requireNonNull(texture, "texture is null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
+        return new RenderableTexture(Objects.requireNonNull(texture, "texture cannot be null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
     }
 
     public static RenderableRectangle texture(Identifier texture, int textureWidth, int textureHeight, int width, int height) {
