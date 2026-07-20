@@ -31,6 +31,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
     private @Nullable E hovered;
     private ScreenRectangle bounds;
     private int cachedContentHeight;
+    private double previousScrollAmount;
 
     protected FZAbstractListWidget(int x, int y, int width, int height, Component message, ScrollbarSettings scrollbarSettings) {
         super(Minecraft.getInstance(), x, y, width, height, message, scrollbarSettings);
@@ -166,7 +167,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
         return 0;
     }
 
-    protected void repositionEntries() {
+    private void refreshBounds() {
         int childX = contentLeft();
         int childY = getY() - (int) scrollAmount();
         int childWidth = contentWidth();
@@ -198,16 +199,23 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
                 }
             }
         }
+    }
 
+    protected void repositionEntries() {
+        refreshBounds();
         refreshScrollAmount();
     }
 
     @Override
     public void setScrollAmount(double scrollAmount) {
-        double previousScrollAmount = scrollAmount();
         super.setScrollAmount(scrollAmount);
-        if (previousScrollAmount != scrollAmount()) {
-            repositionEntries();
+        double currentScrollAmount = scrollAmount();
+        if (this.previousScrollAmount != currentScrollAmount) {
+            // SmoothScrolling is directly modifying the scroll amount field before using the setter to redraw only,
+            // so can't check diff with just another local variable as scroll amount is already updated when this is called.
+            // https://github.com/SmajloSlovakian/Minecraft-Smooth-Scrolling/blob/54b2fcb0c3a9494781961f571a1426bafb24958f/src/client/java/io/github/smajloslovakian/smoothscroll/mixin/client/Widgets/AbstractScrollAreaMixin.java#L41-L47
+            this.previousScrollAmount = currentScrollAmount;
+            refreshBounds();
         }
     }
 
