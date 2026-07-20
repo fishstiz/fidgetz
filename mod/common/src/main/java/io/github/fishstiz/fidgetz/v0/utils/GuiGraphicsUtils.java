@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import org.joml.Matrix3x2f;
@@ -23,8 +24,12 @@ import java.util.ServiceLoader;
 public final class GuiGraphicsUtils {
     private static final Service GUI_GRAPHICS_SERVICE = ServiceLoader.load(Service.class).findFirst().orElseThrow();
 
+    public static void sprite(GuiGraphicsExtractor graphics, Identifier sprite, int x, int y, int width, int height, int color) {
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height, color);
+    }
+
     public static void sprite(GuiGraphicsExtractor graphics, Identifier sprite, int x, int y, int width, int height) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height);
+        sprite(graphics, sprite, x, y, width, height, CommonColors.WHITE);
     }
 
     public static void texture(
