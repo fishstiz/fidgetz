@@ -18,12 +18,17 @@ public final class Renderables {
         return new Outline(color);
     }
 
+    public static RenderableRectangle text(String text) {
+        return text(Component.literal(Objects.requireNonNull(text, "text cannot be null")));
+    }
+
     public static RenderableRectangle text(Component text) {
+        Objects.requireNonNull(text, "text cannot be null");
         return new TextRectangle(() -> text);
     }
 
     public static RenderableRectangle text(Supplier<Component> text) {
-        return new TextRectangle(text);
+        return new TextRectangle(Objects.requireNonNull(text, "text cannot be null"));
     }
 
     public static RenderableRectangle boxShadow(float scale) {
@@ -35,7 +40,7 @@ public final class Renderables {
     }
 
     public static RenderableRectangle sprite(ResourceLocation sprite) {
-        return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite is null"));
+        return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite cannot be null"));
     }
 
     public static RenderableRectangle texture(
@@ -47,7 +52,7 @@ public final class Renderables {
             int uWidth,
             int vHeight
     ) {
-        return new RenderableTexture(Objects.requireNonNull(texture, "texture is null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
+        return new RenderableTexture(Objects.requireNonNull(texture, "texture cannot be null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
     }
 
     public static RenderableRectangle texture(ResourceLocation texture, int textureWidth, int textureHeight, int width, int height) {

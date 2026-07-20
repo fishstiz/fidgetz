@@ -3,6 +3,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.state.FZRef;
+import io.github.fishstiz.fidgetz.v0.gui.text.TextComponentUtils;
 import io.github.fishstiz.fidgetz.v0.utils.*;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
@@ -33,8 +34,8 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
     private static final int DEFAULT_ELEMENT_SPACING = 8;
     private static final int ENTRY_SPACING = 4;
     private static final int DEFAULT_SELECTION_HEIGHT = 200;
-    private static final Component BLACK_RIGHT_POINTING_TRIANGLE = Component.literal("▶");
-    private static final Component BLACK_DOWN_POINTING_TRIANGLE = Component.literal("▼");
+    private static final Component BLACK_RIGHT_POINTING_TRIANGLE = TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
+    private static final Component BLACK_DOWN_POINTING_TRIANGLE = TextComponentUtils.BLACK_DOWN_POINTING_TRIANGLE;
     private final GuiComponentPropsState propsState = new GuiComponentPropsState();
     private final SelectionContainer selectionContainer;
     private final ContainerEventHandler parentContainer;
