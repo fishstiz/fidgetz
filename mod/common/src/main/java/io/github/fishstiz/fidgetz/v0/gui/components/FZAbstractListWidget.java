@@ -137,6 +137,8 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry>
             if (entry.getRectangle().overlaps(bounds)) {
                 if (entry.isMouseOver(mouseX, mouseY)) {
                     setHovered(entry);
+                } else if (getHovered() == entry) {
+                    setHovered(null);
                 }
                 entry.render(graphics, mouseX, mouseY, partialTick);
             }
