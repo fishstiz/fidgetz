@@ -70,7 +70,7 @@ public sealed interface FZPopoverMenuItem {
         return new Divider(ctx -> new FZPopoverMenuEntryImpl.Divider(ctx, Renderables.sprite(sprite), height));
     }
 
-    static Widget fromWidget(AbstractWidget widget) {
+    static Widget fromWidget(AbstractWidget widget, Settings settings) {
         class Wrapped extends WrappedComponent implements Entry {
             private final Context context;
 
@@ -85,7 +85,11 @@ public sealed interface FZPopoverMenuItem {
             }
         }
 
-        return new Widget(ctx -> new Wrapped(ctx, widget));
+        return new Widget(ctx -> new Wrapped(ctx, widget), settings);
+    }
+
+    static Widget fromWidget(AbstractWidget widget) {
+        return fromWidget(widget, Settings.defaults());
     }
 
     static Builder builder() {
