@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class FZMutableRef<T> implements FZRef<T> {
@@ -16,6 +17,12 @@ public class FZMutableRef<T> implements FZRef<T> {
 
     public FZMutableRef(T initialValue) {
         this.state = initialValue;
+    }
+
+    public static <T> FZMutableRef<T> wrap(Consumer<T> setter, Supplier<T> getter) {
+        FZMutableRef<T> ref = new FZMutableRef<>(getter.get());
+        ref.subscribe("FZMutableRef#wrap@" + setter.hashCode(), setter);
+        return ref;
     }
 
     public void notifySubscribers() {
