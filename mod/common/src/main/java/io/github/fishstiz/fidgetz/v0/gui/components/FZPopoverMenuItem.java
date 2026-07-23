@@ -73,7 +73,7 @@ public sealed interface FZPopoverMenuItem {
         return new Divider(ctx -> new FZPopoverMenuEntryImpl.Divider(ctx, Renderables.sprite(sprite), height));
     }
 
-    static Widget fromWidget(AbstractWidget widget) {
+    static Widget fromWidget(AbstractWidget widget, Settings settings) {
         // cant use WrappedComponent because of some mapping issue on fabric where the default methods of the Entry
         // interface are used instead of the methods on the concrete WrappedComponent class
         class Wrapped implements Entry, FZComponent, ContainerEventHandler {
@@ -278,7 +278,11 @@ public sealed interface FZPopoverMenuItem {
             }
         }
 
-        return new Widget(ctx -> new Wrapped(ctx, widget));
+        return new Widget(ctx -> new Wrapped(ctx, widget), settings);
+    }
+
+    static Widget fromWidget(AbstractWidget widget) {
+        return fromWidget(widget, Settings.defaults());
     }
 
     static Builder builder() {
