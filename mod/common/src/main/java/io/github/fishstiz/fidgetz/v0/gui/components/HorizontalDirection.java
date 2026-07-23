@@ -32,7 +32,7 @@ public enum HorizontalDirection {
 
         @Override
         int clamp(ScreenRectangle container, int width, int anchor) {
-            return Math.max(0, anchor + width > container.width() ? container.width() - width : anchor);
+            return Math.max(container.left(), anchor + width > container.right() ? container.width() - width : anchor);
         }
 
         @Override
