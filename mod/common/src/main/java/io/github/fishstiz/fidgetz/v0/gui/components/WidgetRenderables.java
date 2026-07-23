@@ -23,6 +23,30 @@ public record WidgetRenderables(
         this(enabled, disabled, focused, disabled);
     }
 
+    public WidgetRenderables withEnabled(RenderableRectangle enabled) {
+        return new WidgetRenderables(enabled, disabled, enabled, disabledFocused);
+    }
+
+    public WidgetRenderables withDisabled(RenderableRectangle disabled) {
+        return new WidgetRenderables(enabled, disabled, enabledFocused, disabled);
+    }
+
+    public WidgetRenderables withEnabledFocused(RenderableRectangle enabledFocused) {
+        return new WidgetRenderables(enabled, disabled, enabledFocused, enabled);
+    }
+
+    public WidgetRenderables withDisabledFocused(RenderableRectangle disabledFocused) {
+        return new WidgetRenderables(enabled, disabled, enabledFocused, disabledFocused);
+    }
+
+    public RenderableRectangle get(boolean enabled, boolean focused) {
+        if (enabled) {
+            return focused ? this.enabledFocused : this.enabled;
+        } else {
+            return focused ? this.disabledFocused : this.disabled;
+        }
+    }
+
     public static WidgetRenderables noFocus(RenderableRectangle enabled, RenderableRectangle disabled) {
         return new WidgetRenderables(enabled, disabled, enabled, disabled);
     }
@@ -40,13 +64,5 @@ public record WidgetRenderables(
                 Renderables.sprite(sprites.enabledFocused()),
                 Renderables.sprite(sprites.disabledFocused())
         );
-    }
-
-    public RenderableRectangle get(boolean enabled, boolean focused) {
-        if (enabled) {
-            return focused ? this.enabledFocused : this.enabled;
-        } else {
-            return focused ? this.disabledFocused : this.disabled;
-        }
     }
 }

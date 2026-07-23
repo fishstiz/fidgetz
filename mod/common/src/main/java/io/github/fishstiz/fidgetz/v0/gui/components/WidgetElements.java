@@ -35,6 +35,38 @@ public record WidgetElements(WidgetRenderables elements, int width, int height, 
         return new WidgetElements(WidgetRenderables.noFocus(enabled, disabled), width, height);
     }
 
+    public WidgetElements withEnabled(RenderableRectangle enabled) {
+        return new WidgetElements(elements.withEnabled(enabled), width, height, margin);
+    }
+
+    public WidgetElements withEnabled(ResourceLocation enabled) {
+        return withEnabled(Renderables.sprite(enabled));
+    }
+
+    public WidgetElements withDisabled(RenderableRectangle disabled) {
+        return new WidgetElements(elements.withDisabled(disabled), width, height, margin);
+    }
+
+    public WidgetElements withDisabled(ResourceLocation disabled) {
+        return withDisabled(Renderables.sprite(disabled));
+    }
+
+    public WidgetElements withEnabledFocused(RenderableRectangle enabledFocused) {
+        return new WidgetElements(elements.withEnabledFocused(enabledFocused), width, height, margin);
+    }
+
+    public WidgetElements withEnabledFocused(ResourceLocation enabledFocused) {
+        return withEnabledFocused(Renderables.sprite(enabledFocused));
+    }
+
+    public WidgetElements withDisabledFocused(RenderableRectangle disabledFocused) {
+        return new WidgetElements(elements.withDisabledFocused(disabledFocused), width, height, margin);
+    }
+
+    public WidgetElements withDisabledFocused(ResourceLocation disabledFocused) {
+        return withDisabledFocused(Renderables.sprite(disabledFocused));
+    }
+
     public WidgetElements margin(int margin) {
         return new WidgetElements(elements, width, height, ScreenRectangleUtils.insets(margin));
     }
