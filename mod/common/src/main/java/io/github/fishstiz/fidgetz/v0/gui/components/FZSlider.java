@@ -24,8 +24,9 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
     private ScreenRectangle bounds;
     private Consumer<ChangeEvent> changeHandler = FunctionUtils.nopConsumer();
     private Consumer<FormatEvent> formatHandler = FunctionUtils.nopConsumer();
-    private Consumer<ReleaseEvent> releaseHandler = FunctionUtils.nopConsumer();
+    private Consumer<ClickEvent> clickHandler = FunctionUtils.nopConsumer();
     private Consumer<DragEvent> dragHandler = FunctionUtils.nopConsumer();
+    private Consumer<ReleaseEvent> releaseHandler = FunctionUtils.nopConsumer();
     private @Nullable Component label = null;
     private double min = 0;
     private double max = 1;
@@ -49,6 +50,12 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
         if (propsState.overlay != null) {
             propsState.overlay.extractRenderState(graphics, getX(), getY(), getWidth(), getHeight(), mouseX, mouseY, partialTick);
         }
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        super.onClick(mouseX, mouseY);
+        clickHandler.accept(new ClickEvent(this));
     }
 
     @Override
@@ -166,6 +173,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
         propsState.apply(this, props);
         props.changeHandler().ifPresent(changeHandler -> this.changeHandler = changeHandler.value());
         props.formatHandler().ifPresent(formatHandler -> this.formatHandler = formatHandler.value());
+        props.clickHandler().ifPresent(clickHandler -> this.clickHandler = clickHandler.value());
         props.dragHandler().ifPresent(dragHandler -> this.dragHandler = dragHandler.value());
         props.releaseHandler().ifPresent(releaseHandler -> this.releaseHandler = releaseHandler.value());
         props.label().ifPresent(label -> this.label = label);
@@ -215,6 +223,9 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
     public record ChangeEvent(FZSlider target, double value) {
     }
 
+    public record ClickEvent(FZSlider target) {
+    }
+
     public record DragEvent(FZSlider target) {
     }
 
@@ -250,6 +261,10 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
             return Optional.empty();
         }
 
+        default Optional<FZKeyed<Consumer<ClickEvent>>> clickHandler() {
+            return Optional.empty();
+        }
+
         default Optional<FZKeyed<Consumer<DragEvent>>> dragHandler() {
             return Optional.empty();
         }
@@ -262,6 +277,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
     private static final class PropsImpl extends GuiComponentPropsBase implements Props {
         private final @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
         private final @Nullable FZKeyed<Consumer<FormatEvent>> formatHandler;
+        private final @Nullable FZKeyed<Consumer<ClickEvent>> clickHandler;
         private final @Nullable FZKeyed<Consumer<DragEvent>> dragHandler;
         private final @Nullable FZKeyed<Consumer<ReleaseEvent>> releaseHandler;
         private final @Nullable Component label;
@@ -274,6 +290,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
                 GuiComponentProps props,
                 @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler,
                 @Nullable FZKeyed<Consumer<FormatEvent>> formatHandler,
+                @Nullable FZKeyed<Consumer<ClickEvent>> clickHandler,
                 @Nullable FZKeyed<Consumer<DragEvent>> dragHandler,
                 @Nullable FZKeyed<Consumer<ReleaseEvent>> releaseHandler,
                 @Nullable Component label,
@@ -285,6 +302,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
             super(props);
             this.changeHandler = changeHandler;
             this.formatHandler = formatHandler;
+            this.clickHandler = clickHandler;
             this.dragHandler = dragHandler;
             this.releaseHandler = releaseHandler;
             this.label = label;
@@ -330,6 +348,11 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
         }
 
         @Override
+        public Optional<FZKeyed<Consumer<ClickEvent>>> clickHandler() {
+            return Optional.ofNullable(clickHandler);
+        }
+
+        @Override
         public Optional<FZKeyed<Consumer<DragEvent>>> dragHandler() {
             return Optional.ofNullable(dragHandler);
         }
@@ -346,6 +369,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
             return super.equals(o) &&
                    Objects.equals(changeHandler(), other.changeHandler()) &&
                    Objects.equals(formatHandler(), other.formatHandler()) &&
+                   Objects.equals(clickHandler(), other.clickHandler()) &&
                    Objects.equals(dragHandler(), other.dragHandler()) &&
                    Objects.equals(releaseHandler(), other.releaseHandler()) &&
                    Objects.equals(label(), other.label()) &&
@@ -361,6 +385,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
                     super.hashCode(),
                     changeHandler,
                     formatHandler,
+                    clickHandler,
                     dragHandler,
                     releaseHandler,
                     label,
@@ -375,6 +400,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
         private @Nullable FZKeyed<Consumer<FormatEvent>> formatHandler;
+        private @Nullable FZKeyed<Consumer<ClickEvent>> clickHandler;
         private @Nullable FZKeyed<Consumer<DragEvent>> dragHandler;
         private @Nullable FZKeyed<Consumer<ReleaseEvent>> releaseHandler;
         private @Nullable Component label = null;
@@ -431,6 +457,16 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
             return this;
         }
 
+        public Builder onClick(Consumer<ClickEvent> clickHandler) {
+            this.clickHandler = FZKeyed.selfKey(Objects.requireNonNull(clickHandler, "clickHandler cannot be null"));
+            return this;
+        }
+
+        public Builder onClick(Object key, Consumer<ClickEvent> clickHandler) {
+            this.clickHandler = new FZKeyed<>(key, Objects.requireNonNull(clickHandler, "clickHandler cannot be null"));
+            return this;
+        }
+
         public Builder onDrag(Consumer<DragEvent> dragHandler) {
             this.dragHandler = FZKeyed.selfKey(Objects.requireNonNull(dragHandler, "dragHandler cannot be null"));
             return this;
@@ -452,7 +488,19 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
         }
 
         public Props toProps() {
-            return new PropsImpl(props, changeHandler, formatHandler, dragHandler, releaseHandler, label, min, max, step, value);
+            return new PropsImpl(
+                    props,
+                    changeHandler,
+                    formatHandler,
+                    clickHandler,
+                    dragHandler,
+                    releaseHandler,
+                    label,
+                    min,
+                    max,
+                    step,
+                    value
+            );
         }
 
         public FZSlider build() {
