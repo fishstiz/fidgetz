@@ -17,12 +17,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 // extend AbstractSelectionList for smooth scrolling compat even though we deprecate a lot of methods and would prefer
 // AbstractScrollWidget or custom impl. Avoid on 1.21.1 if possible
-@ApiStatus.Internal
 public abstract class AbstractListWidget<T extends AbstractListWidget.Entry<T>> extends AbstractSelectionList<T> implements ScrollableContainer, ContainerEventHandlerPatch {
     protected static final int DEFAULT_MAX_CONTENT_WIDTH = 270;
     protected static final int DEFAULT_SCROLL_RATE = 10;
@@ -35,7 +33,7 @@ public abstract class AbstractListWidget<T extends AbstractListWidget.Entry<T>> 
     private static final RenderableRectangle INWORLD_FOOTER_SEPARATOR = Renderables.texture(Screen.INWORLD_FOOTER_SEPARATOR, 32, SEPARATOR_HEIGHT, 32, SEPARATOR_HEIGHT);
 
     protected AbstractListWidget(Minecraft minecraft, int x, int y, int width, int height, Component message) {
-        super(minecraft, width, height, y, DEFAULT_SCROLL_RATE);
+        super(minecraft, width, height, y, DEFAULT_SCROLL_RATE * 2);
         setMessage(message);
     }
 

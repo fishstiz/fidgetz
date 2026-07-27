@@ -16,6 +16,6 @@ abstract class AbstractSelectionListMixin implements ScrollableSelectionList {
 
     @Override
     public void fidgetz$setScrollRate(double scrollRate) {
-        this.itemHeight = (int) scrollRate;
+        this.itemHeight = (int) scrollRate * 2;
     }
 }
