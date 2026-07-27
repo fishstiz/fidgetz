@@ -360,8 +360,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         protected void extractDialogRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
 
-            GuiEventListener sibling = parentContainer.getFocused();
-            if ((sibling != this && sibling != FZDropdown.this) || !FZDropdown.this.isActive()) {
+            if ((!isFocused() && !FZDropdown.this.isFocused()) || !FZDropdown.this.isActive()) {
                 closeSelection();
             }
         }
