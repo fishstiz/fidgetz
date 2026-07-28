@@ -29,7 +29,7 @@ public final class GuiGraphicsUtils {
     }
 
     public static void sprite(GuiGraphics graphics, Identifier sprite, int x, int y, int width, int height) {
-        sprite(graphics, sprite, x, y, width, height);
+        sprite(graphics, sprite, x, y, width, height, CommonColors.WHITE);
     }
 
     public static void texture(
