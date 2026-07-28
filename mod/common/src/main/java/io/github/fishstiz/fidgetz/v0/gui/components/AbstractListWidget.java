@@ -203,7 +203,7 @@ public abstract class AbstractListWidget<T extends AbstractListWidget.Entry<T>> 
 
     @Override
     public final double scrollRate() {
-        return itemHeight;
+        return (double) itemHeight / 2;
     }
 
     protected boolean isOverScrollbar(double x, double y) {
