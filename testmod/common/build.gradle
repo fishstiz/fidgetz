@@ -1,13 +1,26 @@
 plugins {
     id 'multiloader-common-provider'
-    id 'net.neoforged.moddev'
+    id 'net.fabricmc.fabric-loom'
 }
 
-neoForge {
-    neoFormVersion = neo_form_version
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Fabric'
+                url = uri('https://maven.fabricmc.net')
+            }
+        }
+        filter {
+            includeGroup('net.fabricmc')
+            includeGroup('fabric-loom')
+        }
+    }
 }
 
 dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+
     compileOnly "org.spongepowered:mixin:$mixin_version"
     compileOnly "io.github.llamalad7:mixinextras-common:$mixinextras_version"
     annotationProcessor "io.github.llamalad7:mixinextras-common:$mixinextras_version"
