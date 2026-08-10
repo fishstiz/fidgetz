@@ -92,6 +92,22 @@ public abstract class AbstractListWidget<T extends AbstractListWidget.Entry<T>> 
     protected final void renderDecorations(GuiGraphics graphics, int mouseX, int mouseY) {
     }
 
+    // workaround for smooth scrolling which directly modifies scrollAmount instead of calling the setter.
+    // it assumes that calls to setScrollAmount should snap
+    // https://github.com/SmajloSlovakian/Minecraft-Smooth-Scrolling/blob/1.21.1/src/main/java/smsk/smoothscroll/mixin/EntryListWidgetMixin.java
+    void onChangeScrollAmount(double scrollAmount) {
+    }
+
+    @Override
+    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        double lastScrollAmount = scrollAmount();
+        super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
+        double newScrollAmount = scrollAmount();
+        if (lastScrollAmount != newScrollAmount) {
+            onChangeScrollAmount(newScrollAmount);
+        }
+    }
+
     protected int contentPaddingLeft() {
         return 0;
     }

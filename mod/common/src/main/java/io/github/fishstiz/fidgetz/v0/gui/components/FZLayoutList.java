@@ -206,7 +206,12 @@ public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> impleme
     @Override
     public void setScrollAmount(double scrollAmount) {
         super.setScrollAmount(scrollAmount);
-        layout.setY(getY() - (int) scrollAmount());
+        onChangeScrollAmount(scrollAmount());
+    }
+
+    @Override
+    final void onChangeScrollAmount(double scrollAmount) {
+        layout.setY(getY() - (int) scrollAmount);
     }
 
     @Override

@@ -208,9 +208,14 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<
             // SmoothScrolling is directly modifying the scroll amount field before using the setter to redraw only,
             // so can't check diff with just another local variable as scroll amount is already updated when this is called.
             // https://github.com/SmajloSlovakian/Minecraft-Smooth-Scrolling/blob/54b2fcb0c3a9494781961f571a1426bafb24958f/src/client/java/io/github/smajloslovakian/smoothscroll/mixin/client/Widgets/AbstractScrollAreaMixin.java#L41-L47
-            this.previousScrollAmount = currentScrollAmount;
-            refreshEntries();
+            onChangeScrollAmount(currentScrollAmount);
         }
+    }
+
+    @Override
+    final void onChangeScrollAmount(double scrollAmount) {
+        this.previousScrollAmount = scrollAmount;
+        refreshEntries();
     }
 
     protected void scrollToEntry(E entry) {
