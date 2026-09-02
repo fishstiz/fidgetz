@@ -20,9 +20,7 @@ public class FZMutableRef<T> implements FZRef<T> {
     }
 
     public static <T> FZMutableRef<T> wrap(Consumer<T> setter, Supplier<T> getter) {
-        FZMutableRef<T> ref = new FZMutableRef<>(getter.get());
-        ref.subscribe("FZMutableRef#wrap@" + setter.hashCode(), setter);
-        return ref;
+        return new Wrapped<>(setter, getter);
     }
 
     public void notifySubscribers() {
@@ -103,6 +101,28 @@ public class FZMutableRef<T> implements FZRef<T> {
 
         void cancel() {
             active = false;
+        }
+    }
+
+    private static final class Wrapped<T> extends FZMutableRef<T> {
+        private final Consumer<T> setter;
+        private final Supplier<T> getter;
+
+        private Wrapped(Consumer<T> setter, Supplier<T> getter) {
+            super(getter.get());
+            this.setter = setter;
+            this.getter = getter;
+        }
+
+        @Override
+        public void set(T newState) {
+            setter.accept(newState);
+            super.set(getter.get());
+        }
+
+        @Override
+        public T value() {
+            return getter.get();
         }
     }
 }
