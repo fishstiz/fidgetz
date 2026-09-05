@@ -121,7 +121,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         ActiveTextCollector textRenderer = graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE);
 
         if (!hideMessage) {
-            GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left + spacing, top, right - spacing, getBottom());
+            GuiGraphicsUtils.scrollingText(textRenderer, getMessage(), left, top, right - spacing, getBottom());
         }
 
         int symbolX = MathUtils.clampOrAverage(right, getX() + spacing, right);
@@ -310,7 +310,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             ScreenRectangle buttonBounds = FZDropdown.this.getRectangle();
             ScreenRectangle selectionBounds = getRectangle();
 
-            int selectionWidth = Math.max(buttonBounds.width(), minWidth);
+            int selectionWidth = Math.max(Math.max(buttonBounds.width(), minWidth), selectionBounds.width());
             int selectionHeight = MathUtils.optionalMin(selectionBounds.height(), maxHeight);
 
             int spaceBelow = parentBounds.bottom() - buttonBounds.bottom();
