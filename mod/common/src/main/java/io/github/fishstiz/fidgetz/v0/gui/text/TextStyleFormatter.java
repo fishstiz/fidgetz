@@ -34,6 +34,20 @@ public final class TextStyleFormatter implements BiFunction<String, Integer, For
         this(matchers, fullText, Util.backgroundExecutor());
     }
 
+    // prevents flashing unformatted styles when rebuilt
+    public void initializeStyles(TextStyleFormatter formatter) {
+        StyledSequence prevSeq = formatter.currentSequence;
+        String prevText = prevSeq.text;
+        if (prevText.isEmpty()) return;
+
+        readSequence.text = prevText;
+        readSequence.charStyles.size(prevSeq.charStyles.size());
+        for (int i = 0; i < prevSeq.charStyles.size(); i++) {
+            readSequence.charStyles.set(i, prevSeq.charStyles.get(i));
+        }
+        currentSequence = readSequence;
+    }
+
     @Override
     public @Nullable FormattedCharSequence apply(String displayText, Integer displayPos) {
         String currentText = fullText.get();
@@ -83,8 +97,7 @@ public final class TextStyleFormatter implements BiFunction<String, Integer, For
         public boolean accept(FormattedCharSink sink) {
             String currentText = text;
             int start = Math.max(0, displayPos);
-            @SuppressWarnings("MathClampMigration") // charStyles.size() may change on background thread
-            int end = Math.min(Math.min(currentText.length(), displayEnd), Math.max(charStyles.size(), currentText.length()));
+            int end = Math.min(currentText.length(), displayEnd);
 
             for (int i = start; i < end; i++) {
                 Style style = i < charStyles.size() ? charStyles.get(i) : null;

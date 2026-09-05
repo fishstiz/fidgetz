@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private final Consumer<String> responder;
     private final boolean bound;
     private Consumer<ChangeEvent> changeHandler = FunctionUtils.nopConsumer();
-    private Function<ConfirmEvent, @Nullable Boolean> confirmHandler = FunctionUtils.nullFunction();
+    private Consumer<ConfirmEvent> confirmHandler = FunctionUtils.nopConsumer();
+    private Consumer<BlurEvent> blurHandler = FunctionUtils.nopConsumer();
     private ScreenRectangle bounds;
     private Predicate<String> filter = ignored -> true;
     private boolean allowSectionSign;
@@ -51,7 +51,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     private boolean valueBound;
     private int pendingCursorPos;
     private int pendingHighlightPos;
-    private String pendingValue = "";
+    private @Nullable String pendingValue;
 
     // for allowing section sign
     private IntArrayList sectionSignPositions = IntArrayList.of();
@@ -112,6 +112,25 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         return stringBuilder.toString();
     }
 
+    @Override
+    public void setValue(String value) {
+        int cursorPos = getCursorPosition();
+        int highlightPos = getHighlightPosition();
+
+        disableResponder();
+        super.setValue(value);
+        enableResponder();
+
+        if (value.equalsIgnoreCase(getValue())) {
+            setCursorPosition(cursorPos);
+            setHighlightPos(highlightPos);
+        }
+
+        this.previousValue = value;
+        this.previousCursorPos = getCursorPosition();
+        this.previousHighlightPos = getHighlightPosition();
+    }
+
     private void handleChange(String originalValue) {
         String value = replacePlaceholders(originalValue);
         boolean valid = filter.test(value);
@@ -123,7 +142,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         int highlightPos = getHighlightPosition();
 
         if (!valid || isBound) {
-            setValue(previousValue);
+            super.setValue(previousValue);
             setCursorPosition(previousCursorPos);
             setHighlightPos(previousHighlightPos);
 
@@ -134,8 +153,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 changeHandler.accept(new ChangeEvent(this, value));
             }
         } else {
-            if (!value.equals(originalValue)) {
-                setValue(value);
+            if (!value.equalsIgnoreCase(originalValue)) {
+                super.setValue(value);
                 setCursorPosition(cursorPos);
                 setHighlightPos(highlightPos);
             }
@@ -150,20 +169,22 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     private void setBoundValue(String value) {
-        valueBound = true;
+        this.valueBound = true;
         disableResponder();
 
-        setValue(value);
-        if (value.equals(pendingValue)) {
+        super.setValue(value);
+        if (pendingValue != null && pendingValue.equalsIgnoreCase(value)) {
             setCursorPosition(pendingCursorPos);
             setHighlightPos(pendingHighlightPos);
         } else {
             moveCursorToEnd(false);
             setHighlightPos(getCursorPosition());
         }
-        previousValue = value;
-        previousHighlightPos = getHighlightPosition();
-        previousCursorPos = getCursorPosition();
+
+        this.previousValue = value;
+        this.previousHighlightPos = getHighlightPosition();
+        this.previousCursorPos = getCursorPosition();
+        this.pendingValue = null;
 
         enableResponder();
     }
@@ -196,9 +217,24 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
+    public void deleteCharsToPos(int pos) {
+        String previousValue = getValue();
+        int previousCursorPos = getCursorPosition();
+        int previousHighlightPos = getHighlightPosition();
+
+        super.deleteCharsToPos(pos);
+
+        String newValue = getValue();
+        if (newValue.equalsIgnoreCase(previousValue) || newValue.length() == previousValue.length()) {
+            setCursorPosition(previousCursorPos);
+            setHighlightPos(previousHighlightPos);
+        }
+    }
+
+    @Override
     public void setHighlightPos(int pos) {
         super.setHighlightPos(pos);
-        if (disableResponderCount <= 0 && previousValue.equals(getValue())) {
+        if (disableResponderCount <= 0 && previousValue.equalsIgnoreCase(getValue())) {
             previousHighlightPos = getHighlightPosition();
         }
     }
@@ -206,7 +242,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     @Override
     public void setCursorPosition(int pos) {
         super.setCursorPosition(pos);
-        if (disableResponderCount <= 0 && previousValue.equals(getValue())) {
+        if (disableResponderCount <= 0 && previousValue.equalsIgnoreCase(getValue())) {
             previousCursorPos = getCursorPosition();
         }
     }
@@ -228,6 +264,15 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
+    public void setFocused(boolean focused) {
+        boolean previousFocused = isFocused();
+        super.setFocused(focused);
+        if (previousFocused && !isFocused()) {
+            blurHandler.accept(new BlurEvent(this));
+        }
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (getValue().isEmpty() && (keyCode == InputConstants.KEY_LEFT || keyCode == InputConstants.KEY_RIGHT)) {
             return false;
@@ -236,7 +281,9 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return true;
         }
         if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
-            return Boolean.TRUE.equals(confirmHandler.apply(new ConfirmEvent(this)));
+            ConfirmEvent confirmEvent = new ConfirmEvent(this, keyCode, scanCode, modifiers);
+            confirmHandler.accept(confirmEvent);
+            return confirmEvent.confirmed;
         }
         return false;
     }
@@ -283,6 +330,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         props.maxLength().ifPresent(this::setMaxLength);
         props.hint().ifPresent(this::setHint);
         props.suggestion().ifDefined(this::setSuggestion);
+        props.textColor().ifPresent(this::setTextColor);
+
+        props.changeHandler().ifPresent(changeHandler -> this.changeHandler = changeHandler.value());
+        props.confirmHandler().ifPresent(confirmHandler -> this.confirmHandler = confirmHandler.value());
+        props.blurHandler().ifPresent(blurHandler -> this.blurHandler = blurHandler.value());
+
         props.text().ifPresentOrElse(this::setBoundValue, () -> valueBound = false);
 
         if (props.styleMatchers().isPresent() && props.formatters().isPresent()) {
@@ -292,16 +345,29 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     .map(FZKeyed::value)
                     .collect(Collectors.toCollection(ArrayList::new));
 
-            formatters.add(new TextStyleFormatter(props.styleMatchers().get(), this::getValue));
+            TextStyleFormatter styleMatchers = new TextStyleFormatter(props.styleMatchers().get(), this::getValue);
+            for (BiFunction<String, Integer, FormattedCharSequence> previousFormatter : formatter.formatters) {
+                if (previousFormatter instanceof TextStyleFormatter previousStyleMatchers) {
+                    // just initialize the first one, this is just to prevent flashing unformatted styles when props change.
+                    // will fix itself anyway if styleMatchers have genuinely changed
+                    styleMatchers.initializeStyles(previousStyleMatchers);
+                    break;
+                }
+            }
+            formatters.add(styleMatchers);
             formatter.formatters = formatters;
         } else if (props.styleMatchers().isPresent()) {
-            formatter.formatters = List.of(new TextStyleFormatter(props.styleMatchers().get(), this::getValue));
+            TextStyleFormatter styleMatchers = new TextStyleFormatter(props.styleMatchers().get(), this::getValue);
+            for (BiFunction<String, Integer, FormattedCharSequence> previousFormatter : formatter.formatters) {
+                if (previousFormatter instanceof TextStyleFormatter previousStyleMatchers) {
+                    styleMatchers.initializeStyles(previousStyleMatchers);
+                    break;
+                }
+            }
+            formatter.formatters = List.of(styleMatchers);
         } else if (props.formatters().isPresent()) {
             formatter.formatters = props.formatters().get().stream().map(FZKeyed::value).toList();
         }
-
-        props.changeHandler().ifPresent(changeHandler -> this.changeHandler = changeHandler.value());
-        props.confirmHandler().ifPresent(confirmHandler -> this.confirmHandler = confirmHandler.value());
     }
 
     public static FZTextField bind(String key, FZRef<Props> ref) {
@@ -331,12 +397,51 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     public record ChangeEvent(FZTextField target, String value) {
     }
 
-    public record ConfirmEvent(FZTextField target) {
+    public static final class ConfirmEvent {
+        private final FZTextField target;
+        private final int keyCode;
+        private final int scanCode;
+        private final int modifiers;
+        private boolean confirmed;
+
+        public ConfirmEvent(FZTextField target, int keyCode, int scanCode, int modifiers) {
+            this.target = target;
+            this.keyCode = keyCode;
+            this.scanCode = scanCode;
+            this.modifiers = modifiers;
+        }
+
+        public FZTextField target() {
+            return target;
+        }
+
+        public int keyCode() {
+            return keyCode;
+        }
+
+        public int scanCode() {
+            return scanCode;
+        }
+
+        public int modifiers() {
+            return modifiers;
+        }
+
+        public void confirm() {
+            this.confirmed = true;
+        }
+    }
+
+    public record BlurEvent(FZTextField target) {
     }
 
     public interface Props extends GuiComponentProps {
         default Optional<String> text() {
             return Optional.empty();
+        }
+
+        default OptionalInt textColor() {
+            return OptionalInt.empty();
         }
 
         default TriState editable() {
@@ -375,13 +480,18 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return Optional.empty();
         }
 
-        default Optional<FZKeyed<Function<ConfirmEvent, Boolean>>> confirmHandler() {
+        default Optional<FZKeyed<Consumer<ConfirmEvent>>> confirmHandler() {
+            return Optional.empty();
+        }
+
+        default Optional<FZKeyed<Consumer<BlurEvent>>> blurHandler() {
             return Optional.empty();
         }
     }
 
     private static final class PropsImpl extends GuiComponentPropsBase implements Props {
         private final @Nullable String text;
+        private final @Nullable Integer textColor;
         private final TriState editable;
         private final @Nullable Component hint;
         private final Undefinable<@Nullable String> suggestion;
@@ -391,11 +501,13 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private final @Nullable List<TextStyleMatcher> styleMatchers;
         private final @Nullable FZKeyed<Predicate<String>> filter;
         private final @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
-        private final @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler;
+        private final @Nullable FZKeyed<Consumer<ConfirmEvent>> confirmHandler;
+        private final @Nullable FZKeyed<Consumer<BlurEvent>> blurHandler;
 
         private PropsImpl(
                 GuiComponentProps props,
                 @Nullable String text,
+                @Nullable Integer textColor,
                 TriState editable,
                 @Nullable Component hint,
                 Undefinable<@Nullable String> suggestion,
@@ -405,10 +517,12 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                 @Nullable List<TextStyleMatcher> styleMatchers,
                 @Nullable FZKeyed<Predicate<String>> filter,
                 @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler,
-                @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler
+                @Nullable FZKeyed<Consumer<ConfirmEvent>> confirmHandler,
+                @Nullable FZKeyed<Consumer<BlurEvent>> blurHandler
         ) {
             super(props);
             this.text = text;
+            this.textColor = textColor;
             this.editable = editable;
             this.hint = hint;
             this.suggestion = suggestion;
@@ -419,11 +533,17 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             this.filter = filter;
             this.changeHandler = changeHandler;
             this.confirmHandler = confirmHandler;
+            this.blurHandler = blurHandler;
         }
 
         @Override
         public Optional<String> text() {
             return Optional.ofNullable(text);
+        }
+
+        @Override
+        public OptionalInt textColor() {
+            return wrapBoxedInt(textColor);
         }
 
         @Override
@@ -472,8 +592,13 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         }
 
         @Override
-        public Optional<FZKeyed<Function<ConfirmEvent, Boolean>>> confirmHandler() {
+        public Optional<FZKeyed<Consumer<ConfirmEvent>>> confirmHandler() {
             return Optional.ofNullable(confirmHandler);
+        }
+
+        @Override
+        public Optional<FZKeyed<Consumer<BlurEvent>>> blurHandler() {
+            return Optional.ofNullable(blurHandler);
         }
 
         @Override
@@ -482,6 +607,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             if (!(o instanceof Props other)) return false;
             return super.equals(o) &&
                    Objects.equals(text(), other.text()) &&
+                   Objects.equals(textColor(), other.textColor()) &&
                    editable == other.editable() &&
                    Objects.equals(hint(), other.hint()) &&
                    Objects.equals(suggestion(), other.suggestion()) &&
@@ -491,7 +617,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                    Objects.equals(styleMatchers(), other.styleMatchers()) &&
                    Objects.equals(filter(), other.filter()) &&
                    Objects.equals(changeHandler(), other.changeHandler()) &&
-                   Objects.equals(confirmHandler(), other.confirmHandler());
+                   Objects.equals(confirmHandler(), other.confirmHandler()) &&
+                   Objects.equals(blurHandler(), other.blurHandler());
         }
 
         @Override
@@ -499,6 +626,7 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return Objects.hash(
                     super.hashCode(),
                     text,
+                    textColor,
                     editable,
                     hint,
                     suggestion,
@@ -508,13 +636,15 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     styleMatchers,
                     filter,
                     changeHandler,
-                    confirmHandler
+                    confirmHandler,
+                    blurHandler
             );
         }
     }
 
     public static final class Builder extends GuiComponentPropsBuilder<Builder> {
         private @Nullable String text;
+        private @Nullable Integer textColor;
         private TriState editable = TriState.DEFAULT;
         private @Nullable Component hint;
         private Undefinable<@Nullable String> suggestion = Undefinable.undefined();
@@ -523,7 +653,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
         private @Nullable List<FZKeyed<BiFunction<String, Integer, FormattedCharSequence>>> formatters;
         private @Nullable FZKeyed<Predicate<String>> filter;
         private @Nullable FZKeyed<Consumer<ChangeEvent>> changeHandler;
-        private @Nullable FZKeyed<Function<ConfirmEvent, Boolean>> confirmHandler;
+        private @Nullable FZKeyed<Consumer<ConfirmEvent>> confirmHandler;
+        private @Nullable FZKeyed<Consumer<BlurEvent>> blurHandler;
         private @Nullable List<TextStyleMatcher> styleMatchers;
 
         private Builder() {
@@ -531,6 +662,11 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
 
         public Builder text(String text) {
             this.text = text;
+            return this;
+        }
+
+        public Builder textColor(int color) {
+            this.textColor = color;
             return this;
         }
 
@@ -621,19 +757,29 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
             return onChange(changeHandler, changeHandler);
         }
 
-        public Builder onConfirm(Object key, Function<ConfirmEvent, Boolean> confirmHandler) {
+        public Builder onConfirm(Object key, Consumer<ConfirmEvent> confirmHandler) {
             this.confirmHandler = new FZKeyed<>(key, Objects.requireNonNull(confirmHandler, "confirmHandler cannot be null"));
             return this;
         }
 
-        public Builder onConfirm(Function<ConfirmEvent, Boolean> confirmHandler) {
+        public Builder onConfirm(Consumer<ConfirmEvent> confirmHandler) {
             return onConfirm(confirmHandler, confirmHandler);
+        }
+
+        public Builder onBlur(Object key, Consumer<BlurEvent> blurHandler) {
+            this.blurHandler = new FZKeyed<>(key, Objects.requireNonNull(blurHandler, "blurHandler cannot be null"));
+            return this;
+        }
+
+        public Builder onBlur(Consumer<BlurEvent> blurHandler) {
+            return onBlur(blurHandler, blurHandler);
         }
 
         public Props toProps() {
             return new PropsImpl(
                     props,
                     text,
+                    textColor,
                     editable,
                     hint,
                     suggestion,
@@ -643,7 +789,8 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
                     styleMatchers,
                     filter,
                     changeHandler,
-                    confirmHandler
+                    confirmHandler,
+                    blurHandler
             );
         }
 
