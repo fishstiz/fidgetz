@@ -162,7 +162,7 @@ public class FZPopoverMenu extends FZDialog {
         layout.maxHeight(maxHeight);
         layout.arrangeElements();
         if (layout.getWidth() < this.minWidth || layout.getWidth() > this.maxWidth) {
-            layout.fidgetz$setWidth(MathUtils.optionalMin(this.minWidth, this.maxWidth));
+            layout.fidgetz$setWidth(MathUtils.clampOptionalMax(layout.getWidth(), this.minWidth, this.maxWidth));
         }
 
         clearWidgets();
@@ -435,6 +435,10 @@ public class FZPopoverMenu extends FZDialog {
                     closeMenu();
                 } else if (isOpen() && entry.fidgetz$shouldTakeFocusAfterInteraction()) {
                     setFocused(entry);
+
+                    if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+                        setDragging(true);
+                    }
                 }
                 return true;
             }
@@ -551,14 +555,6 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
-        public void setFocused(boolean focused) {
-            super.setFocused(focused);
-            if (!focused) {
-                setFocused(null);
-            }
-        }
-
-        @Override
         public void setFocused(@Nullable GuiEventListener focused) {
             GuiEventListener previous = getFocused();
             if (previous != focused) {
@@ -569,6 +565,14 @@ public class FZPopoverMenu extends FZDialog {
                     focused.setFocused(true);
                 }
                 this.focused = focused;
+            }
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            if (!focused) {
+                setFocused(null);
             }
         }
 
@@ -618,6 +622,18 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public ScreenRectangle getRectangle() {
             return entryBounds;
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            super.mouseReleased(mouseX, mouseY, button);
+            return ContainerEventHandlerPatch.super.mouseReleased(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, final double dx, final double dy) {
+            super.mouseDragged(mouseX, mouseY, button, dx, dy);
+            return ContainerEventHandlerPatch.super.mouseDragged(mouseX, mouseY, button, dx, dy);
         }
 
         @Override
