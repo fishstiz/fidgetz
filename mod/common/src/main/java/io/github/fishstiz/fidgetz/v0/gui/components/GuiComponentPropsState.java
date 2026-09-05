@@ -12,6 +12,8 @@ public class GuiComponentPropsState {
     public boolean focusOnInteraction = true;
     public @Nullable RenderableRectangle overlay = null;
     public Consumer<FZContextMenu.Collector> contextEntries = FunctionUtils.nopConsumer();
+    private int boundWidth;
+    private int boundHeight;
 
     public GuiComponentPropsState() {
     }
@@ -24,8 +26,22 @@ public class GuiComponentPropsState {
     }
 
     public void apply(AbstractWidget widget, GuiComponentProps props) {
-        props.width().ifPresent(widget::setWidth);
-        props.height().ifPresent(widget::setHeight);
+        props.width().ifPresent(width -> {
+            // workaround to allow setting an initial width for bound widgets without locking it into that initial width
+            // if the width is static. for flex layout
+            if (widget.getWidth() != this.boundWidth && this.boundWidth == width) {
+                return;
+            }
+            this.boundWidth = width;
+            widget.setWidth(width);
+        });
+        props.height().ifPresent(height -> {
+            if (widget.getHeight() != this.boundHeight && this.boundHeight == height) {
+                return;
+            }
+            this.boundHeight = height;
+            widget.setHeight(height);
+        });
         GuiComponentPropsBase.ifNonDefault(props.active(), a -> widget.active = a.toBoolean(true));
         GuiComponentPropsBase.ifNonDefault(props.visible(), a -> widget.visible = a.toBoolean(true));
         props.tooltip().ifDefined(widget::setTooltip);
