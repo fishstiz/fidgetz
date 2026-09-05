@@ -158,10 +158,10 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         propsState.contextEntries.accept(collector);
     }
 
-//    @Override
-//    public boolean shouldTakeFocusAfterInteraction() {
-//        return propsState.focusOnInteraction;
-//    }
+    @Override
+    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
+        return propsState.focusOnInteraction;
+    }
 
     @Override
     public void setFocused(boolean focused) {
@@ -231,11 +231,6 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
     @Override
     public @Nullable String fidgetz$componentId() {
         return propsState.id;
-    }
-
-    @Override
-    public boolean fidgetz$shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
     }
 
     void applyProps(Props props) {
@@ -322,7 +317,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
             ScreenRectangle buttonBounds = FZDropdown.this.getRectangle();
             ScreenRectangle selectionBounds = getRectangle();
 
-            int selectionWidth = Math.max(buttonBounds.width(), minWidth);
+            int selectionWidth = Math.max(Math.max(buttonBounds.width(), minWidth), selectionBounds.width());
             int selectionHeight = MathUtils.optionalMin(selectionBounds.height(), maxHeight);
 
             int spaceBelow = parentBounds.bottom() - buttonBounds.bottom();
