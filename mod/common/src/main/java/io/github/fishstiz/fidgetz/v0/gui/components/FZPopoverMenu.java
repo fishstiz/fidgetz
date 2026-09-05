@@ -1,5 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
@@ -158,7 +159,7 @@ public class FZPopoverMenu extends FZDialog {
         layout.maxHeight(maxHeight);
         layout.arrangeElements();
         if (layout.getWidth() < this.minWidth || layout.getWidth() > this.maxWidth) {
-            layout.fidgetz$setWidth(MathUtils.optionalMin(this.minWidth, this.maxWidth));
+            layout.fidgetz$setWidth(MathUtils.clampOptionalMax(layout.getWidth(), this.minWidth, this.maxWidth));
         }
 
         clearWidgets();
@@ -431,6 +432,10 @@ public class FZPopoverMenu extends FZDialog {
                     closeMenu();
                 } else if (isOpen() && entry.shouldTakeFocusAfterInteraction()) {
                     setFocused(entry);
+
+                    if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+                        setDragging(true);
+                    }
                 }
                 return true;
             }
@@ -615,6 +620,18 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public ScreenRectangle getRectangle() {
             return entryBounds;
+        }
+
+        @Override
+        public boolean mouseReleased(final MouseButtonEvent event) {
+            super.mouseReleased(event);
+            return ContainerEventHandler.super.mouseReleased(event);
+        }
+
+        @Override
+        public boolean mouseDragged(final MouseButtonEvent event, final double dx, final double dy) {
+            super.mouseDragged(event, dx, dy);
+            return ContainerEventHandler.super.mouseDragged(event, dx, dy);
         }
 
         @Override

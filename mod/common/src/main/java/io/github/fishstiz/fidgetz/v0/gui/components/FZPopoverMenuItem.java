@@ -45,6 +45,14 @@ public sealed interface FZPopoverMenuItem {
         public static Settings defaults() {
             return DEFAULT_SETTINGS;
         }
+
+        public Settings withCloseOnInteract(boolean closeOnInteract) {
+            return new Settings(closeOnInteract, autoDividerAfter);
+        }
+
+        public Settings withAutoDividerAfter(boolean autoDividerAfter) {
+            return new Settings(closeOnInteract, autoDividerAfter);
+        }
     }
 
     record Widget(Factory factory, Settings settings) implements FZPopoverMenuItem {
@@ -279,6 +287,10 @@ public sealed interface FZPopoverMenuItem {
         }
 
         return new Widget(ctx -> new Wrapped(ctx, widget), settings);
+    }
+
+    static Widget fromWidget(AbstractWidget widget, UnaryOperator<Settings> settingsBuilder) {
+        return fromWidget(widget, settingsBuilder.apply(Settings.defaults()));
     }
 
     static Widget fromWidget(AbstractWidget widget) {
