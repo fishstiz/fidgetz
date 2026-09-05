@@ -99,9 +99,9 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
         this.previousMappedValue = this.mappedValue;
 
         if (this.pendingRawValue >= 0 && mapValue(this.pendingRawValue) == this.mappedValue) {
-            this.value = pendingRawValue;
+            this.value = this.pendingRawValue;
         } else if (mapValue(this.previousRawValue) == this.mappedValue) {
-            this.value = previousMappedValue;
+            this.value = this.previousRawValue;
         } else {
             if (this.mappedValue == this.min) {
                 this.value = 0;
