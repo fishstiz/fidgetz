@@ -12,6 +12,7 @@ import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -30,6 +31,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class FZDropdown extends Button.Plain implements FZComponent, FZContextMenu.Source, FZPopoverContainer, Layout {
@@ -248,6 +250,9 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             selectionContainer.minWidth = minContainerWidth.leftInt();
             selectionContainer.rootDirection = minContainerWidth.right();
         });
+        if (props.stretchContainerWidthToContents() != TriState.DEFAULT) {
+            selectionContainer.stretchToContents = props.stretchContainerWidthToContents().toBoolean(true);
+        }
         props.entryDivider().ifDefined(selectionContainer::setEntryDivider);
         props.sectionDivider().ifDefined(selectionContainer::setSectionDivider);
 
@@ -275,6 +280,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private HorizontalDirection rootDirection = HorizontalDirection.RIGHT;
         private int maxHeight = DEFAULT_SELECTION_HEIGHT;
         private int minWidth;
+        private boolean stretchToContents = true;
         private boolean focused;
 
         SelectionContainer(ContainerEventHandler container) {
@@ -315,7 +321,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             ScreenRectangle buttonBounds = FZDropdown.this.getRectangle();
             ScreenRectangle selectionBounds = getRectangle();
 
-            int selectionWidth = Math.max(Math.max(buttonBounds.width(), minWidth), selectionBounds.width());
+            int selectionWidth = Math.max(buttonBounds.width(), minWidth);
+            if (stretchToContents) {
+                selectionWidth = Math.max(selectionWidth, selectionBounds.width());
+            }
+
             int selectionHeight = MathUtils.optionalMin(selectionBounds.height(), maxHeight);
 
             int spaceBelow = parentBounds.bottom() - buttonBounds.bottom();
@@ -474,6 +484,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             return Optional.empty();
         }
 
+        default TriState stretchContainerWidthToContents() {
+            return TriState.DEFAULT;
+        }
+
         default Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider() {
             return Undefinable.undefined();
         }
@@ -492,6 +506,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private final @Nullable RenderableRectangle containerBackground;
         private final @Nullable Integer maxContainerHeight;
         private final @Nullable IntObjectPair<HorizontalDirection> minContainerWidth;
+        private final TriState stretchContainerWidthToContents;
         private final Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider;
         private final Undefinable<FZPopoverMenuItem.@Nullable Divider> sectionDivider;
 
@@ -504,6 +519,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                 @Nullable RenderableRectangle containerBackground,
                 @Nullable Integer maxContainerHeight,
                 @Nullable IntObjectPair<HorizontalDirection> minContainerWidth,
+                TriState stretchContainerWidthToContents,
                 Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider,
                 Undefinable<FZPopoverMenuItem.@Nullable Divider> sectionDivider,
                 GuiComponentProps props
@@ -517,6 +533,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             this.containerBackground = containerBackground;
             this.maxContainerHeight = maxContainerHeight;
             this.minContainerWidth = minContainerWidth;
+            this.stretchContainerWidthToContents = stretchContainerWidthToContents;
             this.entryDivider = entryDivider;
             this.sectionDivider = sectionDivider;
         }
@@ -562,6 +579,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         @Override
+        public TriState stretchContainerWidthToContents() {
+            return stretchContainerWidthToContents;
+        }
+
+        @Override
         public Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider() {
             return entryDivider;
         }
@@ -583,6 +605,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                    Objects.equals(leftIcon, other.leftIcon()) &&
                    Objects.equals(containerBackground(), other.containerBackground()) &&
                    Objects.equals(maxContainerHeight(), other.maxContainerHeight()) &&
+                   Objects.equals(minContainerWidth(), other.minContainerWidth()) &&
+                   stretchContainerWidthToContents == other.stretchContainerWidthToContents() &&
                    Objects.equals(entryDivider(), other.entryDivider()) &&
                    Objects.equals(sectionDivider(), other.sectionDivider());
         }
@@ -598,6 +622,8 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                     leftIcon,
                     containerBackground,
                     maxContainerHeight,
+                    minContainerWidth,
+                    stretchContainerWidthToContents,
                     entryDivider
             );
         }
@@ -617,6 +643,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private @Nullable RenderableRectangle containerBackground;
         private @Nullable Integer maxContainerHeight;
         private @Nullable IntObjectPair<HorizontalDirection> minContainerWidth;
+        private TriState stretchContainerWidthToContents = TriState.DEFAULT;
         private Undefinable<FZPopoverMenuItem.@Nullable Divider> entryDivider = Undefinable.undefined();
         private Undefinable<FZPopoverMenuItem.@Nullable Divider> sectionDivider = Undefinable.undefined();
 
@@ -670,6 +697,15 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             return this;
         }
 
+        public Builder stretchContainerWidthToContents(boolean stretch) {
+            this.stretchContainerWidthToContents = TriState.from(stretch);
+            return this;
+        }
+
+        public Builder stretchContainerWidthToContents() {
+            return stretchContainerWidthToContents(true);
+        }
+
         private FZButton.Builder defaultButtonBuilder() {
             return FZButton.builder()
                     .height(DEFAULT_HEIGHT)
@@ -690,6 +726,42 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         public Builder entry(FZPopoverMenuItem entry) {
             this.entries.add(entry);
+            return this;
+        }
+
+        public Builder entryWidget(AbstractWidget widget) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widget));
+            return this;
+        }
+
+        public Builder entryWidget(AbstractWidget widget, FZPopoverMenuItem.Settings settings) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widget, settings));
+            return this;
+        }
+
+        public Builder entryWidget(AbstractWidget widget, UnaryOperator<FZPopoverMenuItem.Settings> settingsBuilder) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widget, settingsBuilder));
+            return this;
+        }
+
+        public Builder entryWidget(Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widgetFactory));
+            return this;
+        }
+
+        public Builder entryWidget(
+                Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory,
+                FZPopoverMenuItem.Settings settings
+        ) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widgetFactory, settings));
+            return this;
+        }
+
+        public Builder entryWidget(
+                Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory,
+                UnaryOperator<FZPopoverMenuItem.Settings> settingsBuilder
+        ) {
+            this.entries.add(FZPopoverMenuItem.fromWidget(widgetFactory, settingsBuilder));
             return this;
         }
 
@@ -718,6 +790,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                     containerBackground,
                     maxContainerHeight,
                     minContainerWidth,
+                    stretchContainerWidthToContents,
                     entryDivider,
                     sectionDivider,
                     props
