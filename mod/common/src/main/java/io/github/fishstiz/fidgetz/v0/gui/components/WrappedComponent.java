@@ -330,7 +330,7 @@ public class WrappedComponent extends AbstractWidget implements ContainerEventHa
 
     @Override
     public @Nullable ComponentPath getCurrentFocusPath() {
-        return widget.getCurrentFocusPath();
+        return ComponentPath.path(this, widget.getCurrentFocusPath());
     }
 
     @Override
