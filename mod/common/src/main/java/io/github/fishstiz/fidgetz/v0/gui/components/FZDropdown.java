@@ -43,6 +43,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     private List<FZPopoverMenuItem> items = Collections.emptyList();
     private boolean hideMessage;
     private @Nullable WidgetElements leftIcon;
+    private boolean closeOnBlur = true;
     private Component interactSymbol = TextComponentUtils.BLACK_RIGHT_POINTING_TRIANGLE;
     private Component inactiveInteractSymbol = defaultInactiveMessage(interactSymbol);
     private int interactIconWidth;
@@ -236,6 +237,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         if (props.hideMessage() != TriState.DEFAULT) {
             hideMessage = props.hideMessage().toBoolean(false);
         }
+        if (props.closeOnBlur() != TriState.DEFAULT) {
+            closeOnBlur = props.closeOnBlur().toBoolean(true);
+        }
+
         props.leftIcon().ifDefined(leftIcon -> this.leftIcon = leftIcon);
         props.containerBackground().ifPresent(selectionContainer::setBackground);
         props.maxContainerHeight().ifPresent(maxHeight -> selectionContainer.maxHeight = maxHeight);
@@ -348,7 +353,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         protected void extractDialogRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             super.extractDialogRenderState(graphics, mouseX, mouseY, partialTick);
 
-            if ((!isFocused() && !FZDropdown.this.isFocused()) || !FZDropdown.this.isActive()) {
+            if ((FZDropdown.this.closeOnBlur && !isFocused() && !FZDropdown.this.isFocused()) || !FZDropdown.this.isActive()) {
                 closeSelection();
             }
         }
@@ -449,6 +454,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             return TriState.DEFAULT;
         }
 
+        default TriState closeOnBlur() {
+            return TriState.DEFAULT;
+        }
+
         default Undefinable<@Nullable WidgetElements> leftIcon() {
             return Undefinable.undefined();
         }
@@ -478,6 +487,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private final ContainerEventHandler parentContainer;
         private final List<FZPopoverMenuItem> entries;
         private final TriState hideMessage;
+        private final TriState closeOnBlur;
         private final Undefinable<@Nullable WidgetElements> leftIcon;
         private final @Nullable RenderableRectangle containerBackground;
         private final @Nullable Integer maxContainerHeight;
@@ -489,6 +499,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                 ContainerEventHandler parentContainer,
                 List<FZPopoverMenuItem> entries,
                 TriState hideMessage,
+                TriState closeOnBlur,
                 Undefinable<@Nullable WidgetElements> leftIcon,
                 @Nullable RenderableRectangle containerBackground,
                 @Nullable Integer maxContainerHeight,
@@ -501,6 +512,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             this.parentContainer = parentContainer;
             this.entries = entries;
             this.hideMessage = hideMessage;
+            this.closeOnBlur = closeOnBlur;
             this.leftIcon = leftIcon;
             this.containerBackground = containerBackground;
             this.maxContainerHeight = maxContainerHeight;
@@ -522,6 +534,11 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         @Override
         public TriState hideMessage() {
             return hideMessage;
+        }
+
+        @Override
+        public TriState closeOnBlur() {
+            return closeOnBlur;
         }
 
         @Override
@@ -562,6 +579,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                    Objects.equals(parentContainer, other.parentContainer()) &&
                    Objects.equals(entries, other.entries()) &&
                    hideMessage == other.hideMessage() &&
+                   closeOnBlur == other.closeOnBlur() &&
                    Objects.equals(leftIcon, other.leftIcon()) &&
                    Objects.equals(containerBackground(), other.containerBackground()) &&
                    Objects.equals(maxContainerHeight(), other.maxContainerHeight()) &&
@@ -576,6 +594,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                     parentContainer,
                     entries,
                     hideMessage,
+                    closeOnBlur,
                     leftIcon,
                     containerBackground,
                     maxContainerHeight,
@@ -593,6 +612,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         private final ContainerEventHandler container;
         private final List<FZPopoverMenuItem> entries = new ArrayList<>();
         private TriState hideMessage = TriState.DEFAULT;
+        private TriState closeOnBlur = TriState.DEFAULT;
         private Undefinable<@Nullable WidgetElements> leftIcon = Undefinable.undefined();
         private @Nullable RenderableRectangle containerBackground;
         private @Nullable Integer maxContainerHeight;
@@ -611,6 +631,15 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         public Builder hideMessage() {
             return hideMessage(true);
+        }
+
+        public Builder closeOnBlur(boolean closeOnBlur) {
+            this.closeOnBlur = TriState.from(closeOnBlur);
+            return this;
+        }
+
+        public Builder closeOnBlur() {
+            return closeOnBlur(true);
         }
 
         public Builder leftIcon(@Nullable WidgetElements leftIcon) {
@@ -684,6 +713,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
                     container,
                     List.copyOf(entries),
                     hideMessage,
+                    closeOnBlur,
                     leftIcon,
                     containerBackground,
                     maxContainerHeight,
