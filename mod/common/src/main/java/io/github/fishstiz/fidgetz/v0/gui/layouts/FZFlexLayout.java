@@ -286,13 +286,42 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         };
     }
 
+    private int getEffectiveMax(ChildContainer container) {
+        return container.getMaxLength(axis);
+    }
+
+    private int getClampedPreferred(ChildContainer container) {
+        return MathUtils.clampOptionalMax(
+                container.getPreferredLength(axis), container.getMinLength(axis), getEffectiveMax(container));
+    }
+
+    private static int remainderShare(int index, int remainder) {
+        return index < Math.abs(remainder) ? Integer.signum(remainder) : 0;
+    }
+
+    private int sumPreferredOrMinLengths(List<ChildContainer> flexChildren) {
+        int sum = 0;
+        for (ChildContainer container : flexChildren) {
+            int preferred = container.getPreferredLength(axis);
+            int min = container.getMinLength(axis);
+            sum += preferred > 0 ? preferred : min;
+        }
+        return sum;
+    }
+
     private int[] distributeMainAxisFlexLengths(List<ChildContainer> flexChildren, int availableSpace) {
         List<ChildContainer> remaining = new ArrayList<>(flexChildren);
         int[] lengths = new int[flexChildren.size()];
 
         while (!remaining.isEmpty()) {
-            int flexLength = Math.max(0, availableSpace / remaining.size());
-            int remainder = availableSpace % remaining.size();
+            int sumPreferred = 0;
+            for (ChildContainer container : remaining) {
+                sumPreferred += getClampedPreferred(container);
+            }
+
+            int extraSpace = availableSpace - sumPreferred;
+            int share = extraSpace / remaining.size();
+            int remainder = extraSpace % remaining.size();
             List<ChildContainer> nextRemaining = new ArrayList<>();
             boolean anyFrozen = false;
 
@@ -300,9 +329,12 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
                 ChildContainer container = remaining.get(i);
                 int idx = flexChildren.indexOf(container);
                 int minFlexMain = container.getMinLength(axis);
-                int maxFlexMain = container.getMaxLength(axis);
-                int clampedLength = MathUtils.clampOptionalMax(flexLength + (i < remainder ? 1 : 0), minFlexMain, maxFlexMain);
-                if (clampedLength != flexLength && clampedLength == minFlexMain) {
+                int maxFlexMain = getEffectiveMax(container);
+                int preferred = getClampedPreferred(container);
+                int desiredLength = preferred + share + remainderShare(i, remainder);
+                int clampedLength = MathUtils.clampOptionalMax(desiredLength, minFlexMain, maxFlexMain);
+
+                if (clampedLength != desiredLength && clampedLength == minFlexMain) {
                     lengths[idx] = clampedLength;
                     availableSpace -= clampedLength;
                     anyFrozen = true;
@@ -320,8 +352,10 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
                     ChildContainer container = remaining.get(i);
                     int idx = flexChildren.indexOf(container);
                     int minFlexMain = container.getMinLength(axis);
-                    int maxFlexMain = container.getMaxLength(axis);
-                    lengths[idx] = MathUtils.clampOptionalMax(flexLength + (i < remainder ? 1 : 0), minFlexMain, maxFlexMain);
+                    int maxFlexMain = getEffectiveMax(container);
+                    int preferred = getClampedPreferred(container);
+                    lengths[idx] = MathUtils.clampOptionalMax(
+                            preferred + share + remainderShare(i, remainder), minFlexMain, maxFlexMain);
                 }
                 break;
             }
@@ -396,9 +430,10 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         }
 
         int totalSpacing = mainSpacing * Math.max(0, visibleCount - 1);
-
         if (!flexMain.isEmpty()) {
-            int availableSpace = maxMain - occupiedMain - totalSpacing;
+            int availableSpace = maxMain <= 0
+                    ? sumPreferredOrMinLengths(flexMain)
+                    : maxMain - occupiedMain - totalSpacing;
             int[] lengths = distributeMainAxisFlexLengths(flexMain, availableSpace);
             occupiedMain += applyFlexLengths(flexMain, lengths, occupiedCross);
         }
@@ -582,6 +617,8 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         private int minHeight;
         private int maxWidth;
         private int maxHeight;
+        private int preferredWidth;
+        private int preferredHeight;
         private TriState visible = TriState.DEFAULT;
 
         Settings(LayoutSettings layoutSettings) {
@@ -644,6 +681,20 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         public Settings maxFlexHeight(int maxHeight) {
             this.maxHeight = maxHeight;
             return this;
+        }
+
+        public Settings preferredFlexWidth(int preferredWidth) {
+            this.preferredWidth = preferredWidth;
+            return this;
+        }
+
+        public Settings preferredFlexHeight(int preferredHeight) {
+            this.preferredHeight = preferredHeight;
+            return this;
+        }
+
+        public Settings preferredFlexSize(int preferredWidth, int preferredHeight) {
+            return preferredFlexWidth(preferredWidth).preferredFlexHeight(preferredHeight);
         }
 
         public Settings visible(boolean visible) {
@@ -774,16 +825,23 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
 
         @Override
         public Settings copy() {
-            Settings copy = new Settings(layoutSettings.copy());
-            copy.flexMain = flexMain;
-            copy.flexCross = flexCross;
-            return copy;
+            return copyFields(new Settings(layoutSettings.copy()));
         }
 
         private Settings copyWithLayoutSettings(LayoutSettings layoutSettings) {
-            Settings copy = new Settings(layoutSettings.copy());
+            return copyFields(new Settings(layoutSettings.copy()));
+        }
+
+        private Settings copyFields(Settings copy) {
             copy.flexMain = flexMain;
             copy.flexCross = flexCross;
+            copy.minWidth = minWidth;
+            copy.minHeight = minHeight;
+            copy.maxWidth = maxWidth;
+            copy.maxHeight = maxHeight;
+            copy.preferredWidth = preferredWidth;
+            copy.preferredHeight = preferredHeight;
+            copy.visible = visible;
             return copy;
         }
 
@@ -821,6 +879,10 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
                 case HORIZONTAL -> getWidth();
                 case VERTICAL -> getHeight();
             };
+        }
+
+        int getPreferredLength(ScreenAxis axis) {
+            return 0;
         }
 
         int getMaxLength(ScreenAxis axis) {
@@ -903,6 +965,11 @@ public final class FZFlexLayout extends AbstractLayout implements FZLayout {
         @Override
         int getMinLength(ScreenAxis axis) {
             return getAxisValue(axis, flexSettings.minWidth, flexSettings.minHeight);
+        }
+
+        @Override
+        int getPreferredLength(ScreenAxis axis) {
+            return getAxisValue(axis, flexSettings.preferredWidth, flexSettings.preferredHeight);
         }
     }
 }
