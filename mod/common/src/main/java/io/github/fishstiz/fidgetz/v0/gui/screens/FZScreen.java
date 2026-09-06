@@ -5,6 +5,7 @@ import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -86,7 +88,7 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
 
     protected boolean canOpenContextMenu(double mouseX, double mouseY, int button) {
         return button == InputConstants.MOUSE_BUTTON_RIGHT &&
-               dialogManager.get(GLOBAL_CONTEXT_MENU_ID).map(menu -> !menu.isMouseOver(mouseX, mouseY)).orElse(true);
+               dialogManager.get(GLOBAL_CONTEXT_MENU_ID).filter(menu -> menu.isMouseOver(mouseX, mouseY)).isEmpty();
     }
 
     protected boolean shouldUpdateHovered() {
@@ -101,6 +103,18 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
     @Deprecated
     public final boolean shouldCloseOnEsc() {
         return false;
+    }
+
+    @Override
+    @ApiStatus.Internal
+    protected void changeFocus(ComponentPath componentPath) {
+        ComponentPath currentPath = getCurrentFocusPath();
+        // avoid clearing and reapplying focus
+        if (currentPath != null && currentPath.equals(componentPath)) {
+            componentPath.applyFocus(true);
+        } else {
+            super.changeFocus(componentPath);
+        }
     }
 
     @Override

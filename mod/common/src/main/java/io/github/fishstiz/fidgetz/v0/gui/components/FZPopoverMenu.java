@@ -477,6 +477,11 @@ public class FZPopoverMenu extends FZDialog {
         }
 
         @Override
+        public @Nullable ComponentPath getCurrentFocusPath() {
+            return ComponentPath.path(this, entry.getCurrentFocusPath());
+        }
+
+        @Override
         public boolean isActive() {
             return entry.isActive();
         }

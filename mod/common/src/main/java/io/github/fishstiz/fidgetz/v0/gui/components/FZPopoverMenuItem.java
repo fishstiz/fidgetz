@@ -161,7 +161,7 @@ public sealed interface FZPopoverMenuItem {
 
             @Override
             public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-                return widget.nextFocusPath(navigationEvent);
+                return ComponentPath.path(this, widget.nextFocusPath(navigationEvent));
             }
 
             @Override
@@ -250,7 +250,7 @@ public sealed interface FZPopoverMenuItem {
 
             @Override
             public @Nullable ComponentPath getCurrentFocusPath() {
-                return widget.getCurrentFocusPath();
+                return ComponentPath.path(this, widget.getCurrentFocusPath());
             }
 
             @Override
