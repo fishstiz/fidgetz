@@ -2,6 +2,7 @@ package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.jetbrains.annotations.Nullable;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class FZContextMenu extends FZPopoverMenu {
@@ -42,6 +44,36 @@ public final class FZContextMenu extends FZPopoverMenu {
 
         default void addEntry(UnaryOperator<FZPopoverMenuItem.Builder> configurator) {
             addEntry(configurator.apply(FZPopoverMenuItem.builder()).build());
+        }
+
+        default void addWidget(AbstractWidget widget) {
+            addEntry(FZPopoverMenuItem.fromWidget(widget));
+        }
+
+        default void addWidget(AbstractWidget widget, FZPopoverMenuItem.Settings settings) {
+            addEntry(FZPopoverMenuItem.fromWidget(widget, settings));
+        }
+
+        default void addWidget(AbstractWidget widget, UnaryOperator<FZPopoverMenuItem.Settings> settingsBuilder) {
+            addEntry(FZPopoverMenuItem.fromWidget(widget, settingsBuilder));
+        }
+
+        default void addWidget(Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory) {
+            addEntry(FZPopoverMenuItem.fromWidget(widgetFactory));
+        }
+
+        default void addWidget(
+                Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory,
+                FZPopoverMenuItem.Settings settings
+        ) {
+            addEntry(FZPopoverMenuItem.fromWidget(widgetFactory, settings));
+        }
+
+        default void addWidget(
+                Function<FZPopoverMenuItem.Context, AbstractWidget> widgetFactory,
+                UnaryOperator<FZPopoverMenuItem.Settings> settingsBuilder
+        ) {
+            addEntry(FZPopoverMenuItem.fromWidget(widgetFactory, settingsBuilder));
         }
 
         default Collector nextSection() {

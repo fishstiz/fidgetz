@@ -488,7 +488,8 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
-            return super.isMouseOver(mouseX, mouseY) && (child == null || !child.menu().isMouseOver(mouseX, mouseY));
+            return (super.isMouseOver(mouseX, mouseY) || (isActive() && entry.isMouseOver(mouseX, mouseY)))
+                   && (child == null || !child.menu().isMouseOver(mouseX, mouseY));
         }
 
         @Override
@@ -591,11 +592,17 @@ public class FZPopoverMenu extends FZDialog {
             this.dragging = dragging;
         }
 
+        private void updateEntryX() {
+            int availableSpace = getWidth() - entry.getWidth();
+            int alignedX = getX() + Math.round(availableSpace * Math.clamp(settings.xAlignment(), 0.0f, 1.0f));
+            entry.setX(alignedX);
+        }
+
         @Override
         public void setX(int x) {
             super.setX(x);
             entryBounds = super.getRectangle();
-            entry.setX(x);
+            updateEntryX();
         }
 
         @Override
@@ -615,7 +622,10 @@ public class FZPopoverMenu extends FZDialog {
         public void setWidth(int width) {
             super.setWidth(width);
             entryBounds = super.getRectangle();
-            entry.setWidth(width);
+            if (settings.stretch() || width <= entry.getWidth()) {
+                entry.setWidth(width);
+            }
+            updateEntryX();
         }
 
         @Override
