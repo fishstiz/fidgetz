@@ -36,19 +36,44 @@ public sealed interface FZPopoverMenuItem {
         Entry create(Context context);
     }
 
-    record Settings(boolean closeOnInteract, boolean autoDividerAfter) {
-        private static final Settings DEFAULT_SETTINGS = new Settings(true, true);
+    record Settings(
+            boolean closeOnInteract,
+            boolean autoDividerAfter,
+            boolean stretch,
+            float xAlignment
+    ) {
+        private static final Settings DEFAULT_SETTINGS = new Settings(true, true, true, 0.0f);
 
         public static Settings defaults() {
             return DEFAULT_SETTINGS;
         }
 
         public Settings withCloseOnInteract(boolean closeOnInteract) {
-            return new Settings(closeOnInteract, autoDividerAfter);
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, xAlignment);
         }
 
         public Settings withAutoDividerAfter(boolean autoDividerAfter) {
-            return new Settings(closeOnInteract, autoDividerAfter);
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, xAlignment);
+        }
+
+        public Settings withStretch(boolean stretch) {
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, xAlignment);
+        }
+
+        public Settings withXAlign(float xAlignment) {
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, xAlignment);
+        }
+
+        public Settings withLeftXAlign() {
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, 0.0f);
+        }
+
+        public Settings withCenterXAlign() {
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, 0.5f);
+        }
+
+        public Settings withRightXAlign() {
+            return new Settings(closeOnInteract, autoDividerAfter, stretch, 1.0f);
         }
     }
 
@@ -59,7 +84,7 @@ public sealed interface FZPopoverMenuItem {
     }
 
     record Divider(@Nullable Factory factory, Settings settings) implements FZPopoverMenuItem {
-        private static final Settings DEFAULT_SETTINGS = new Settings(false, false);
+        private static final Settings DEFAULT_SETTINGS = new Settings(false, false, true, 0.0f);
 
         public Divider(@Nullable Factory factory) {
             this(factory, DEFAULT_SETTINGS);
@@ -78,12 +103,12 @@ public sealed interface FZPopoverMenuItem {
         return new Divider(ctx -> new FZPopoverMenuEntryImpl.Divider(ctx, Renderables.sprite(sprite), height));
     }
 
-    static Widget fromWidget(AbstractWidget widget, Settings settings) {
+    static Widget fromWidget(Function<Context, AbstractWidget> widgetFactory, Settings settings) {
         class Wrapped extends WrappedComponent implements Entry {
             private final Context context;
 
-            public Wrapped(Context context, AbstractWidget widget) {
-                super(widget);
+            public Wrapped(Context context) {
+                super(widgetFactory.apply(context));
                 this.context = context;
             }
 
@@ -93,11 +118,23 @@ public sealed interface FZPopoverMenuItem {
             }
         }
 
-        return new Widget(ctx -> new Wrapped(ctx, widget), settings);
+        return new Widget(Wrapped::new, settings);
+    }
+
+    static Widget fromWidget(Function<Context, AbstractWidget> widgetFactory, UnaryOperator<Settings> settingsBuilder) {
+        return fromWidget(widgetFactory, settingsBuilder.apply(Settings.defaults()));
+    }
+
+    static Widget fromWidget(AbstractWidget widget, Settings settings) {
+        return fromWidget(_ -> widget, settings);
     }
 
     static Widget fromWidget(AbstractWidget widget, UnaryOperator<Settings> settingsBuilder) {
         return fromWidget(widget, settingsBuilder.apply(Settings.defaults()));
+    }
+
+    static Widget fromWidget(Function<Context, AbstractWidget> widgetFactory) {
+        return fromWidget(widgetFactory, Settings.defaults());
     }
 
     static Widget fromWidget(AbstractWidget widget) {
@@ -407,7 +444,7 @@ public sealed interface FZPopoverMenuItem {
                             height,
                             minWidth
                     ),
-                    new Settings(closeOnInteraction, allowDivideAfterEntry)
+                    new Settings(closeOnInteraction, allowDivideAfterEntry, true, 0.0f)
             );
         }
     }
