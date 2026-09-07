@@ -8,6 +8,7 @@ import io.github.fishstiz.testmod.gui.Screens;
 import io.github.fishstiz.testmod.gui.screens.*;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.screens.Screen;
 
 public class ScreenNavigatorModal extends FZModal {
     private final FZFlexLayout contents;
@@ -29,8 +30,8 @@ public class ScreenNavigatorModal extends FZModal {
         super.onOpen();
     }
 
-    public static ScreenNavigatorModal create(FZDialogContainer screen) {
-        FZFlexLayout contents = FZFlexLayout.vertical().spacing(2);
+    public static <T extends Screen & FZDialogContainer> ScreenNavigatorModal create(T screen) {
+        FZFlexLayout contents = FZFlexLayout.vertical(screen).spacing(2).wrap();
         Layout container = FZComposedLayout.contain(screen, contents)
                 .scrollable()
                 .padding(8)
