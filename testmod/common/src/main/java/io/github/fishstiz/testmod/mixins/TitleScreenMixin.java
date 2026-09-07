@@ -45,7 +45,7 @@ public abstract class TitleScreenMixin extends Screen implements FZDialogContain
     private void beforeInit(CallbackInfo ci) {
         addWidget(fidgetz$contextMenu);
 
-        FZFlexLayout layout = FZFlexLayout.vertical();
+        FZFlexLayout layout = FZFlexLayout.vertical(this).wrap();
         Screens.addScreenButtons(layout);
         layout.arrangeElements();
         layout.visitWidgets(this::addRenderableWidget);

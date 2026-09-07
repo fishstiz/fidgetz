@@ -39,7 +39,7 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
 
     @Inject(method = "init(II)V", at = @At("TAIL"))
     private void onInit(int width, int height, CallbackInfo ci) {
-        fidgetz$modal = ScreenNavigatorModal.create(this);
+        fidgetz$modal = ScreenNavigatorModal.create((Screen & FZDialogContainer) (Object) this);
     }
 
     @Inject(method = "clearWidgets", at = @At("TAIL"))
