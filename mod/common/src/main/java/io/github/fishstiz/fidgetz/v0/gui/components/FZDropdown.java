@@ -782,7 +782,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
             return this;
         }
 
-        public Builder entries(List<FZPopoverMenuItem> entries) {
+        public Builder entries(List<? extends FZPopoverMenuItem> entries) {
             this.entries.addAll(entries);
             return this;
         }

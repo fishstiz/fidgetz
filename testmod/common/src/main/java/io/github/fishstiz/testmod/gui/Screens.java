@@ -19,5 +19,6 @@ public class Screens {
         layout.child(Button.builder(Component.literal("GradientScreen"), ignored -> minecraft.setScreen(new GradientScreen())).build());
         layout.child(Button.builder(Component.literal("Screenz"), ignored -> minecraft.setScreen(new Screenz())).build());
         layout.child(Button.builder(Component.literal("SliderTest"), ignored -> minecraft.setScreen(new SliderTest())).build());
+        layout.child(Button.builder(Component.literal("GridLayout"), ignored -> minecraft.setScreen(new GridScreen())).build());
     }
 }
