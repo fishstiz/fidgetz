@@ -189,6 +189,11 @@ public final class FZScrollableLayout extends ComposedLayout {
         return container.getRectangle();
     }
 
+    @Override
+    public void removeChildren() {
+        container.children.clear();
+    }
+
     private final class Container extends AbstractContainerWidget implements ScrollableContainer {
         private final List<AbstractWidget> children = new ArrayList<>();
         private ScreenRectangle bounds;
