@@ -20,7 +20,7 @@ public enum Justification {
             }
             case SPACE_BETWEEN -> {
                 int gaps = Math.max(1, count - 1);
-                yield new Results(startPos, count < 1 ? spacing : spacing + freeSpace / (count - 1), freeSpace % gaps);
+                yield new Results(startPos, count <= 1 ? spacing : spacing + freeSpace / (count - 1), freeSpace % gaps);
             }
             case SPACE_AROUND -> {
                 int gap = freeSpace / count;
