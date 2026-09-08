@@ -16,6 +16,7 @@ public class Screens {
         layout.child(Button.builder(Component.literal("State Screen"), ignored -> minecraft.setScreen(new StatefulScreen())).build());
         layout.child(Button.builder(Component.literal("List Screen"), ignored -> minecraft.setScreen(new ListScreen())).build());
         layout.child(Button.builder(Component.literal("AbstractListScreen"), ignored -> minecraft.setScreen(new AbstractListScreen())).build());
+        layout.child(Button.builder(Component.literal("GradientScreen"), ignored -> minecraft.setScreen(new GradientScreen())).build());
         layout.child(Button.builder(Component.literal("Screenz"), ignored -> minecraft.setScreen(new Screenz())).build());
         layout.child(Button.builder(Component.literal("SliderTest"), ignored -> minecraft.setScreen(new SliderTest())).build());
     }

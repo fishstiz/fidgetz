@@ -1,12 +1,15 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.joml.Matrix4f;
 
 public final class GuiGraphicsUtils {
     public static void sprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
@@ -94,6 +97,24 @@ public final class GuiGraphicsUtils {
 
     public static void texture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int textureWidth, int textureHeight) {
         texture(graphics, texture, x, y, textureWidth, textureHeight, textureWidth, textureHeight);
+    }
+
+    public static void fillFloat(GuiGraphics graphics, float left, float top, float right, float bottom, int color) {
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        vertexConsumer.addVertex(matrix4f, left, top, 0).setColor(color);
+        vertexConsumer.addVertex(matrix4f, left, bottom, 0).setColor(color);
+        vertexConsumer.addVertex(matrix4f, right, bottom, 0).setColor(color);
+        vertexConsumer.addVertex(matrix4f, right, top, 0).setColor(color);
+    }
+
+    public static void fillHorizontal(GuiGraphics graphics, int left, int top, int right, int bottom, int colorFrom, int colorTo) {
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        vertexConsumer.addVertex(matrix4f, left, top, 0).setColor(colorFrom);
+        vertexConsumer.addVertex(matrix4f, left, bottom, 0).setColor(colorFrom);
+        vertexConsumer.addVertex(matrix4f, right, bottom, 0).setColor(colorTo);
+        vertexConsumer.addVertex(matrix4f, right, top, 0).setColor(colorTo);
     }
 
     public static void text(GuiGraphics graphics, Component text, int x, int y, int color) {
