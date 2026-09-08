@@ -6,6 +6,7 @@
     "AbstractContainerEventHandlerMixin",
     "AbstractSelectionListEntryMixin",
     "AbstractSelectionListMixin",
+    "AbstractSliderButtonMixin",
     "AbstractWidgetMixin",
     "ContainerEventHandlerMixin",
     "GuiEventListenerMixin",

@@ -1,5 +1,6 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -20,6 +21,22 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class NavigationUtils {
+    public static @Nullable ScreenDirection getDirection(int keyCode) {
+        if (keyCode == InputConstants.KEY_UP) {
+            return ScreenDirection.UP;
+        }
+        if (keyCode == InputConstants.KEY_DOWN) {
+            return ScreenDirection.DOWN;
+        }
+        if (keyCode == InputConstants.KEY_LEFT) {
+            return ScreenDirection.LEFT;
+        }
+        if (keyCode == InputConstants.KEY_RIGHT) {
+            return ScreenDirection.RIGHT;
+        }
+        return null;
+    }
+
     public static boolean isUp(FocusNavigationEvent event, boolean includeTab) {
         return (includeTab && event instanceof TabNavigation(boolean forward) && !forward) ||
                (event instanceof ArrowNavigation(ScreenDirection direction) && direction == ScreenDirection.UP);

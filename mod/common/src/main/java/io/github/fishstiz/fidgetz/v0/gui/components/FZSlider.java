@@ -55,7 +55,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
 
     @Override
     public void onClick(double mouseX, double mouseY) {
-        this.dragging = true;
+        this.dragging = isActive();
         super.onClick(mouseX, mouseY);
         clickHandler.accept(new ClickEvent(this));
     }
