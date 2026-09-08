@@ -1,14 +1,13 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import io.github.fishstiz.fidgetz.v0.Fidgetz;
+import io.github.fishstiz.fidgetz.v0.gui.renderables.SimpleGuiRenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.TextAlignment;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.network.chat.Component;
@@ -16,13 +15,25 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
-import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ServiceLoader;
 
 public final class GuiGraphicsUtils {
     private static final Service GUI_GRAPHICS_SERVICE = ServiceLoader.load(Service.class).findFirst().orElseThrow();
+    private static final Identifier BOX_SHADOW_SPRITE = Fidgetz.id("box_shadow");
+    private static final float BOX_SHADOW_BORDER = 48f;
+    private static final Identifier CHECKERBOARD_TEXTURE = Fidgetz.id("textures/gui/checkerboard.png");
+    private static final int CHECKERBOARD_TEXTURE_SIZE = 16;
+    private static final int CHECKERBOARD_TEXEL_SIZE = 8;
+
+    public static void addGuiElement(GuiGraphicsExtractor graphics, GuiElementRenderState blitState) {
+        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, blitState);
+    }
+
+    public static @Nullable ScreenRectangle peekScissorStack(GuiGraphicsExtractor graphics) {
+        return GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
+    }
 
     public static void sprite(GuiGraphicsExtractor graphics, Identifier sprite, int x, int y, int width, int height, int color) {
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height, color);
@@ -117,77 +128,28 @@ public final class GuiGraphicsUtils {
     }
 
     public static void fillFloat(GuiGraphicsExtractor graphics, float left, float top, float right, float bottom, int color) {
-        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
-        ScreenRectangle bounds = new ScreenRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top)).transformMaxBounds(pose);
-        ScreenRectangle intersection = scissorArea == null ? bounds : scissorArea.intersection(bounds);
+        ScreenRectangle bounds = new ScreenRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top));
 
-        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, new GuiElementRenderState() {
-            @Override
-            public void buildVertices(VertexConsumer vertexConsumer) {
-                vertexConsumer.addVertexWith2DPose(pose, left, top).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, left, bottom).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, right, bottom).setColor(color);
-                vertexConsumer.addVertexWith2DPose(pose, right, top).setColor(color);
+        addGuiElement(graphics, SimpleGuiRenderState.from(graphics, bounds, (renderState, vertexConsumer) -> {
+            ScreenRectangle intersection = renderState.bounds();
+            if (intersection != null) {
+                vertexConsumer.addVertexWith2DPose(renderState.pose(), left, top).setColor(color);
+                vertexConsumer.addVertexWith2DPose(renderState.pose(), left, bottom).setColor(color);
+                vertexConsumer.addVertexWith2DPose(renderState.pose(), right, bottom).setColor(color);
+                vertexConsumer.addVertexWith2DPose(renderState.pose(), right, top).setColor(color);
             }
-
-            @Override
-            public RenderPipeline pipeline() {
-                return RenderPipelines.GUI;
-            }
-
-            @Override
-            public TextureSetup textureSetup() {
-                return TextureSetup.noTexture();
-            }
-
-            @Override
-            public @Nullable ScreenRectangle scissorArea() {
-                return scissorArea;
-            }
-
-            @Override
-            public @Nullable ScreenRectangle bounds() {
-                return intersection;
-            }
-        });
+        }));
     }
 
     public static void fillHorizontal(GuiGraphicsExtractor graphics, int left, int top, int right, int bottom, int colorFrom, int colorTo) {
-        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        ScreenRectangle scissorArea = GUI_GRAPHICS_SERVICE.peekScissorStack(graphics);
-        ScreenRectangle bounds = new ScreenRectangle(left, top, right - left, bottom - top).transformMaxBounds(pose);
-        ScreenRectangle intersection = scissorArea == null ? bounds : scissorArea.intersection(bounds);
+        ScreenRectangle bounds = new ScreenRectangle(left, top, right - left, bottom - top);
 
-        GUI_GRAPHICS_SERVICE.addGuiElement(graphics, new GuiElementRenderState() {
-            @Override
-            public void buildVertices(VertexConsumer vertexConsumer) {
-                vertexConsumer.addVertexWith2DPose(pose, left, top).setColor(colorFrom);
-                vertexConsumer.addVertexWith2DPose(pose, left, bottom).setColor(colorFrom);
-                vertexConsumer.addVertexWith2DPose(pose, right, bottom).setColor(colorTo);
-                vertexConsumer.addVertexWith2DPose(pose, right, top).setColor(colorTo);
+        addGuiElement(graphics, SimpleGuiRenderState.from(graphics, bounds, (renderState, vertexConsumer) -> {
+            ScreenRectangle intersection = renderState.bounds();
+            if (intersection != null) {
+                renderState.addQuadWith2DPose(vertexConsumer, intersection, colorFrom, colorFrom, colorTo, colorTo);
             }
-
-            @Override
-            public RenderPipeline pipeline() {
-                return RenderPipelines.GUI;
-            }
-
-            @Override
-            public TextureSetup textureSetup() {
-                return TextureSetup.noTexture();
-            }
-
-            @Override
-            public @Nullable ScreenRectangle scissorArea() {
-                return scissorArea;
-            }
-
-            @Override
-            public @Nullable ScreenRectangle bounds() {
-                return intersection;
-            }
-        });
+        }));
     }
 
     public static void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
@@ -265,6 +227,67 @@ public final class GuiGraphicsUtils {
 
     public static void scrollingText(GuiGraphicsExtractor graphics, Component component, int left, int top, int right, int bottom, int color) {
         scrollingText(graphics, Minecraft.getInstance().font, component, left, top, right, bottom, color);
+    }
+
+    public static void boxShadow(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float shadowSize,
+            float shadowOffsetX,
+            float shadowOffsetY
+    ) {
+        float scale = shadowSize / BOX_SHADOW_BORDER;
+        int baseOffset = Math.round(BOX_SHADOW_BORDER * scale);
+        int offsetX = Math.round(baseOffset + shadowOffsetX);
+        int offsetY = Math.round(baseOffset + shadowOffsetY);
+
+        sprite(graphics, BOX_SHADOW_SPRITE, x - offsetX, y - offsetY, width + offsetX * 2, height + offsetY * 2);
+    }
+
+    public static void checkerboard(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int top,
+            int width,
+            int height,
+            int cellSize,
+            int uOffset,
+            int vOffset
+    ) {
+        float scale = (float) CHECKERBOARD_TEXEL_SIZE / cellSize;
+
+        float uTexelStart = (uOffset * scale) % CHECKERBOARD_TEXTURE_SIZE;
+        float vTexelStart = (vOffset * scale) % CHECKERBOARD_TEXTURE_SIZE;
+
+        if (uTexelStart < 0) uTexelStart += CHECKERBOARD_TEXTURE_SIZE;
+        if (vTexelStart < 0) vTexelStart += CHECKERBOARD_TEXTURE_SIZE;
+
+        float uTexelEnd = uTexelStart + (width * scale);
+        float vTexelEnd = vTexelStart + (height * scale);
+
+        float u0 = uTexelStart / CHECKERBOARD_TEXTURE_SIZE;
+        float v0 = vTexelStart / CHECKERBOARD_TEXTURE_SIZE;
+        float u1 = uTexelEnd / CHECKERBOARD_TEXTURE_SIZE;
+        float v1 = vTexelEnd / CHECKERBOARD_TEXTURE_SIZE;
+
+        graphics.blit(
+                CHECKERBOARD_TEXTURE,
+                left,
+                top,
+                left + width,
+                top + height,
+                u0,
+                u1,
+                v0,
+                v1
+        );
+    }
+
+    public static void checkerboard(GuiGraphicsExtractor graphics, int left, int top, int width, int height, int cellSize) {
+        checkerboard(graphics, left, top, width, height, cellSize, 0, 0);
     }
 
     private GuiGraphicsUtils() {
