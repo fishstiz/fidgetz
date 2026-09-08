@@ -91,34 +91,27 @@ public final class GuiComponentCollector {
     public void flushTo(WidgetVisitor widgetSink, Consumer<Renderable> renderableSink) {
         if (!popoverWidgets.isEmpty()) {
             popoverWidgets.sort(WIDGET_COMPARATOR);
-            Iterator<OrderedEntry<? extends GuiEventListener>> iterator = popoverWidgets.iterator();
-            while (iterator.hasNext()) {
-                OrderedEntry<? extends GuiEventListener> entry = iterator.next();
-                widgetSink.visitWidget(asWidget(entry.value));
-                iterator.remove();
+            for (Iterator<OrderedEntry<? extends GuiEventListener>> it = popoverWidgets.iterator(); it.hasNext(); ) {
+                widgetSink.visitWidget(asWidget(it.next().value));
+                it.remove();
             }
         }
 
-        Iterator<GuiEventListener> widgetsIterator = widgets.iterator();
-        while (widgetsIterator.hasNext()) {
-            GuiEventListener widget = widgetsIterator.next();
-            widgetSink.visitWidget(asWidget(widget));
-            widgetsIterator.remove();
+        for (Iterator<GuiEventListener> it = widgets.iterator(); it.hasNext(); ) {
+            widgetSink.visitWidget(asWidget(it.next()));
+            it.remove();
         }
 
-        Iterator<Renderable> renderablesIterator = renderables.iterator();
-        while (renderablesIterator.hasNext()) {
-            Renderable renderable = renderablesIterator.next();
-            renderableSink.accept(renderable);
-            renderablesIterator.remove();
+        for (Iterator<Renderable> it = renderables.iterator(); it.hasNext(); ) {
+            renderableSink.accept(it.next());
+            it.remove();
         }
 
         if (!popoverRenderables.isEmpty()) {
             popoverRenderables.sort(RENDERABLE_COMPARATOR);
-            Iterator<OrderedEntry<Renderable>> iterator = popoverRenderables.iterator();
-            while (iterator.hasNext()) {
-                renderableSink.accept(iterator.next().value);
-                iterator.remove();
+            for (Iterator<OrderedEntry<Renderable>> it = popoverRenderables.iterator(); it.hasNext(); ) {
+                renderableSink.accept(it.next().value);
+                it.remove();
             }
         }
     }
