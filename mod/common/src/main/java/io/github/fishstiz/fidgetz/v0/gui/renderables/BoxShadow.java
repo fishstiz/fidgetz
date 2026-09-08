@@ -22,7 +22,9 @@ final class BoxShadow implements RenderableRectangle {
     @Override
     public void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick) {
         RenderSystem.enableBlend();
+        RenderSystem.depthMask(false);
         GuiGraphicsUtils.sprite(graphics, SHADOW_SPRITE, left - offsetX, top - offsetY, width + offsetX * 2, height + offsetY * 2);
+        RenderSystem.depthMask(true);
         RenderSystem.disableBlend();
     }
 }
