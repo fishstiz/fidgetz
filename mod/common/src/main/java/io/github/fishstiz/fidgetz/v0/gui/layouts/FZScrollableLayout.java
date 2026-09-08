@@ -1,14 +1,17 @@
 package io.github.fishstiz.fidgetz.v0.gui.layouts;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.*;
+import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.utils.MathUtils;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -16,6 +19,7 @@ import net.minecraft.network.chat.CommonComponents;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -114,12 +118,27 @@ public final class FZScrollableLayout extends ComposedLayout {
     @Override
     public void arrangeElements() {
         composed.arrangeElements();
-        container.clearChildren();
-        composed.visitWidgets(container::addChild);
+        container.clearWidgets();
+
+        GuiComponentCollector collector = new GuiComponentCollector();
+        composed.visitWidgets(collector::renderableWidget);
+        collector.flushTo(container::addWidget, container.renderables::add);
+
         int contentWidth = composed.getWidth();
         ScreenRectangle containerBounds = screenArea.get();
-        container.setWidth(MathUtils.clampOptionalMax(Math.max(contentWidth, minWidth) + reservedWidth(), 0, containerBounds.width()));
-        container.setHeight(MathUtils.optionalMin(MathUtils.clampOptionalMax(composed.getHeight(), minHeight, maxHeight), containerBounds.height()));
+
+        container.setHeight(MathUtils.optionalMin(
+                MathUtils.clampOptionalMax(composed.getHeight(), minHeight, maxHeight),
+                containerBounds.height()
+        ));
+
+        int reservedWidth = reservedWidth();
+        container.setWidth(MathUtils.clampOptionalMax(
+                Math.max(contentWidth, minWidth) + reservedWidth,
+                0,
+                MathUtils.optionalMin(containerBounds.width(), maxWidth) - reservedWidth
+        ));
+
         container.refreshScrollAmount();
     }
 
@@ -184,7 +203,8 @@ public final class FZScrollableLayout extends ComposedLayout {
         return container.getRectangle();
     }
 
-    private final class Container extends AbstractListWidget<Container.Entry> implements ScrollableContainer {
+    private final class Container extends AbstractListWidget<Container.Entry> implements ScrollableContainer, FZHoverableContainer {
+        private final List<Renderable> renderables = new ArrayList<>();
         private ScreenRectangle bounds;
 
         Container(int width, int height) {
@@ -192,11 +212,25 @@ public final class FZScrollableLayout extends ComposedLayout {
             bounds = super.getRectangle();
         }
 
-        private void addChild(AbstractWidget child) {
-            addEntry(new Entry(child));
+        private <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
+            addEntry(new Entry(widget));
         }
 
-        private void clearChildren() {
+        private void clearWidgets() {
+            for (Iterator<Entry> it = children().iterator(); it.hasNext(); ) {
+                GuiEventListener widget = it.next();
+
+                if (getFocused() == widget) {
+                    setFocused(null);
+                }
+                if (fidgetz$getHovered() == widget) {
+                    fidgetz$setHovered(null);
+                }
+
+                it.remove();
+            }
+
+            renderables.clear();
             clearEntries();
         }
 
@@ -210,8 +244,10 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         protected void extractEntriesRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            for (Entry child : children()) {
-                child.widget.render(graphics, mouseX, mouseY, partialTick);
+
+
+            for (Renderable renderable : renderables) {
+                renderable.render(graphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -293,7 +329,8 @@ public final class FZScrollableLayout extends ComposedLayout {
 
         @Override
         protected boolean scrollbarVisible() {
-            return contentHeight() > MathUtils.optionalMin(screenArea.get().height(), maxHeight);
+            int max = Math.max(getHeight(), MathUtils.optionalMin(screenArea.get().height(), maxHeight));
+            return max > 0 && contentHeight() > max;
         }
 
         @Override
@@ -308,10 +345,10 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         static final class Entry extends AbstractListWidget.Entry<Entry> implements FZComponent {
-            private final AbstractWidget widget;
-            private final List<AbstractWidget> children;
+            private final GuiEventListener widget;
+            private final List<GuiEventListener> children;
 
-            private Entry(AbstractWidget widget) {
+            private Entry(GuiEventListener widget) {
                 this.widget = widget;
                 this.children = List.of(widget);
             }
