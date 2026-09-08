@@ -32,6 +32,7 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
     private double max = 1;
     private double step = 0;
     private double mappedValue = 0;
+    private boolean dragging;
 
     private boolean valueBound;
     private double previousRawValue;
@@ -54,20 +55,25 @@ public class FZSlider extends AbstractSliderButton implements FZComponent, FZCon
 
     @Override
     public void onClick(double mouseX, double mouseY) {
+        this.dragging = true;
         super.onClick(mouseX, mouseY);
         clickHandler.accept(new ClickEvent(this));
     }
 
     @Override
     protected void onDrag(double mouseX, double mouseY, double dx, double dy) {
-        super.onDrag(mouseX, mouseY, dx, dy);
-        dragHandler.accept(new DragEvent(this));
+        if (this.dragging) {
+            super.onDrag(mouseX, mouseY, dx, dy);
+            dragHandler.accept(new DragEvent(this));
+        }
     }
 
     @Override
     public void onRelease(double mouseX, double mouseY) {
-        super.onRelease(mouseX, mouseY);
-        releaseHandler.accept(new ReleaseEvent(this));
+        if (this.dragging) {
+            super.onRelease(mouseX, mouseY);
+            releaseHandler.accept(new ReleaseEvent(this));
+        }
     }
 
     private boolean isBound() {
