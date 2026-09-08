@@ -63,6 +63,13 @@ public interface RenderableRectangle {
         };
     }
 
+    default RenderableRectangle flush() {
+        return (graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {
+            extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
+            graphics.flush();
+        };
+    }
+
     default Renderable toRenderable(ScreenRectangle bounds) {
         int left = bounds.left();
         int top = bounds.top();
