@@ -102,7 +102,10 @@ abstract class AbstractWidgetMixin implements GuiEventListener, FZHoverableConta
 
     @Override
     public boolean fidgetz$updateHovered(double mouseX, double mouseY) {
-        fidgetz$setHovered(fidgetz$areCoordinatesInRectangle(mouseX, mouseY) && fidgetz$isVisible());
+        fidgetz$setHovered(
+                (isMouseOver(mouseX, mouseY) || fidgetz$areCoordinatesInRectangle(mouseX, mouseY)) && fidgetz$isVisible()
+        );
+
         boolean hovered = fidgetz$isHovered();
         if (hovered && this instanceof ContainerEventHandler container) {
             for (GuiEventListener child : container.children()) {
