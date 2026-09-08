@@ -313,7 +313,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
 
         @Override
         protected void onClose() {
-            boolean focused = NavigationUtils.inFocusPath(parentContainer, this);
+            boolean focused = isFocused() || getFocused() != null;
             super.onClose();
             if (focused) {
                 ComponentPath path = NavigationUtils.findPath(parentContainer, FZDropdown.this);
@@ -466,6 +466,11 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         @Override
         public boolean isActive() {
             return FZDropdown.this.isActive() && super.isActive();
+        }
+
+        @Override
+        public int fidgetz$popoverOrder() {
+            return 1;
         }
     }
 

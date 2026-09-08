@@ -144,6 +144,9 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!isOpen()) {
+            return false;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
