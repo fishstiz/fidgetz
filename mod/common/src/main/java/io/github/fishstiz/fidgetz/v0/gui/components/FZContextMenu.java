@@ -15,6 +15,7 @@ import java.util.function.UnaryOperator;
 
 public final class FZContextMenu extends FZPopoverMenu {
     private static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(4);
+    private static final ScreenRectangle DEFAULT_BORDER = ScreenRectangle.empty();
     private static final int DEFAULT_MAX_HEIGHT = 240;
     private static final int DEFAULT_ENTRY_WIDTH = 150;
     private static final int DEFAULT_SPACING = 1;
@@ -103,6 +104,7 @@ public final class FZContextMenu extends FZPopoverMenu {
         private final FZDialogContainer container;
         private HorizontalDirection preferredDirection = HorizontalDirection.RIGHT;
         private ScreenRectangle padding = DEFAULT_PADDING;
+        private ScreenRectangle border = DEFAULT_BORDER;
         private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
         private FZPopoverMenuItem.@Nullable Divider sectionDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_SECTION;
         private FZPopoverMenuItem.@Nullable Divider entryDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_ENTRY;
@@ -173,6 +175,15 @@ public final class FZContextMenu extends FZPopoverMenu {
             return padding(padding, padding, padding, padding);
         }
 
+        public Builder border(int left, int top, int right, int bottom) {
+            this.border = ScreenRectangleUtils.insets(left, top, right, bottom);
+            return this;
+        }
+
+        public Builder border(int border) {
+            return border(border, border, border, border);
+        }
+
         public Builder maxHeight(int maxHeight) {
             this.maxHeight = maxHeight;
             return this;
@@ -205,6 +216,7 @@ public final class FZContextMenu extends FZPopoverMenu {
             contextMenu.setSectionDivider(sectionDivider);
             contextMenu.setEntryDivider(entryDivider);
             contextMenu.setPadding(padding);
+            contextMenu.setBorder(border);
             contextMenu.setRowSpacing(rowSpacing);
             contextMenu.setMaxHeight(maxHeight);
             contextMenu.setMinWidth(minWidth);
