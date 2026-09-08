@@ -8,6 +8,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.TabNavigation;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.ArrowNavigation;
 import net.minecraft.client.gui.navigation.ScreenDirection;
+import net.minecraft.client.input.KeyEvent;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -18,6 +19,22 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class NavigationUtils {
+    public static @Nullable ScreenDirection getDirection(KeyEvent event) {
+        if (event.isUp()) {
+            return ScreenDirection.UP;
+        }
+        if (event.isDown()) {
+            return ScreenDirection.DOWN;
+        }
+        if (event.isLeft()) {
+            return ScreenDirection.LEFT;
+        }
+        if (event.isRight()) {
+            return ScreenDirection.RIGHT;
+        }
+        return null;
+    }
+
     public static boolean isUp(FocusNavigationEvent event, boolean includeTab) {
         return (includeTab && event instanceof TabNavigation(boolean forward) && !forward) ||
                (event instanceof ArrowNavigation(ScreenDirection direction, _) && direction == ScreenDirection.UP);
