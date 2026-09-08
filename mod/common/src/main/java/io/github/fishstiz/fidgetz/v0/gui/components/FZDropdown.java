@@ -12,14 +12,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenAxis;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.CommonColors;
@@ -147,7 +146,10 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         }
         if (selectionContainer.isOpen() && keyCode == InputConstants.KEY_ESCAPE) {
             closeSelection();
-            parentContainer.setFocused(this);
+            ComponentPath path = NavigationUtils.findPath(parentContainer, this);
+            if (path != null) {
+                path.applyFocus(true);
+            }
             return true;
         }
         return false;
@@ -177,7 +179,10 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         boolean down = NavigationUtils.isDown(navigationEvent, true);
 
         if ((up && selectionContainer.isPositionedUp()) || (down && selectionContainer.isPositionedDown())) {
-            return selectionContainer.nextFocusPath(navigationEvent);
+            // see reasoning in SelectionContainer#nextFocusPath
+            return parentContainer instanceof AbstractSelectionList<?>
+                    ? null
+                    : selectionContainer.nextFocusPath(navigationEvent);
         }
 
         if (up || down) {
@@ -299,9 +304,14 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
 
         @Override
         protected void onClose() {
-            boolean focused = parentContainer.getFocused() == this;
+            boolean focused = NavigationUtils.inFocusPath(parentContainer, this);
             super.onClose();
-            if (focused) parentContainer.setFocused(FZDropdown.this);
+            if (focused) {
+                ComponentPath path = NavigationUtils.findPath(parentContainer, FZDropdown.this);
+                if (path != null) {
+                    path.applyFocus(true);
+                }
+            }
             updateIcon();
         }
 
@@ -418,7 +428,13 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
             boolean down = NavigationUtils.isDown(navigationEvent, true);
 
             if ((up && isPositionedDown()) || (down && isPositionedUp())) {
-                return FZDropdown.this.nextFocusPath(navigationEvent);
+                // its supposed to resolve to dropdown focus path, but this is <1.21.6, and lists HAVE to wrap
+                // an entry (not actually, but for compat reasons), so the parent container passed here is 99% incorrect
+                // for lists so just return null. At worst the dropdown is closed because both dropdown and container is
+                // unfocused before parent#nextFocusPath correctly resolves to the dropdown.
+                return parentContainer instanceof AbstractSelectionList<?>
+                        ? null
+                        : FZDropdown.this.nextFocusPath(navigationEvent);
             }
 
             if (up || down) {

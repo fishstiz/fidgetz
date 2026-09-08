@@ -333,7 +333,7 @@ public final class FZScrollableLayout extends ComposedLayout {
 
             @Override
             public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-                return widget.nextFocusPath(navigationEvent);
+                return ComponentPath.path(this, widget.nextFocusPath(navigationEvent));
             }
 
             @Override
@@ -402,7 +402,7 @@ public final class FZScrollableLayout extends ComposedLayout {
 
             @Override
             public @Nullable ComponentPath getCurrentFocusPath() {
-                return widget.getCurrentFocusPath();
+                return ComponentPath.path(this, widget.getCurrentFocusPath());
             }
 
             @Override

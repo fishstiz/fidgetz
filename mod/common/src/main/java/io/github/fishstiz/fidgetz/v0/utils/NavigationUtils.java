@@ -12,8 +12,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -100,6 +102,26 @@ public final class NavigationUtils {
             }
         }
         return null;
+    }
+
+    public static Optional<GuiEventListener> find(@Nullable ComponentPath path, Predicate<GuiEventListener> predicate) {
+        if (path == null) {
+            return Optional.empty();
+        }
+
+        if (predicate.test(path.component())) {
+            return Optional.of(path.component());
+        }
+
+        if (path instanceof ComponentPath.Path(ContainerEventHandler ignored, ComponentPath childPath)) {
+            return find(childPath, predicate);
+        }
+
+        return Optional.empty();
+    }
+
+    public static boolean inFocusPath(ContainerEventHandler container, GuiEventListener targetChild) {
+        return find(container.getCurrentFocusPath(), component -> Objects.equals(component, targetChild)).isPresent();
     }
 
     public static ComponentPath addFocusEffects(

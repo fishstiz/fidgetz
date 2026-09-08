@@ -54,13 +54,13 @@ public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> impleme
     }
 
     public final void refreshEntries() {
-        GuiEventListener lastFocused = getFocused();
+        Entry lastFocused = getFocused();
         String lastFocusedId = null;
 
         for (Iterator<Entry> it = children().listIterator(); it.hasNext(); ) {
             Entry entry = it.next();
             it.remove();
-            if (lastFocused != null && entry.widget == lastFocused) {
+            if (lastFocused != null && entry == lastFocused) {
                 lastFocusedId = entry.id;
             }
         }
@@ -347,7 +347,7 @@ public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> impleme
 
         @Override
         public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
-            return widget.nextFocusPath(navigationEvent);
+            return ComponentPath.path(this, widget.nextFocusPath(navigationEvent));
         }
 
         @Override
@@ -416,7 +416,7 @@ public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> impleme
 
         @Override
         public @Nullable ComponentPath getCurrentFocusPath() {
-            return widget.getCurrentFocusPath();
+            return ComponentPath.path(this, widget.getCurrentFocusPath());
         }
 
         @Override

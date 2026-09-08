@@ -381,7 +381,7 @@ public class FZPopoverMenu extends FZDialog {
         if (child != null) {
             ComponentPath path = child.menu.nextFocusPath(event);
             if (path != null) {
-                return path;
+                return ComponentPath.path(this, path);
             }
         }
 
