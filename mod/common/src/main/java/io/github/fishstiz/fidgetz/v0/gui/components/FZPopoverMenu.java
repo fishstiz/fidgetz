@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZComposedLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZFlexLayout;
+import io.github.fishstiz.fidgetz.v0.gui.layouts.FZLayout;
 import io.github.fishstiz.fidgetz.v0.gui.layouts.FZScrollableLayout;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
@@ -28,26 +29,28 @@ import java.util.Objects;
 
 public class FZPopoverMenu extends FZDialog {
     protected static final ScreenRectangle DEFAULT_PADDING = ScreenRectangleUtils.insets(4);
+    private static final ScreenRectangle DEFAULT_BORDER = ScreenRectangle.empty();
     protected static final RenderableRectangle DEFAULT_BACKGROUND = Renderables
             .boxShadow(24)
             .then(Renderables.sprite(Fidgetz.id("widget/popovermenu")));
     protected static final int DEFAULT_MAX_HEIGHT = 240;
-    protected static final int DEFAULT_ENTRY_WIDTH = 150;
     protected static final int DEFAULT_SPACING = 1;
     private final @Nullable FZPopoverMenu parent;
     private @Nullable RenderableRectangle background = DEFAULT_BACKGROUND;
     private FZPopoverMenuItem.@Nullable Divider sectionDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_SECTION;
     private FZPopoverMenuItem.@Nullable Divider entryDivider = FZPopoverMenuEntryImpl.Divider.DEFAULT_ENTRY;
     private ScreenRectangle padding = DEFAULT_PADDING;
+    private ScreenRectangle border = DEFAULT_BORDER;
     private int rowSpacing = DEFAULT_SPACING;
     private int maxHeight = DEFAULT_MAX_HEIGHT;
-    private int minWidth = DEFAULT_ENTRY_WIDTH;
+    private int minWidth;
     private int maxWidth;
     private @Nullable ChildDetails child;
     private HorizontalDirection preferredDirection = HorizontalDirection.RIGHT;
     private HorizontalDirection currentDirection = HorizontalDirection.RIGHT;
     private ScreenRectangle bounds = ScreenRectangle.empty();
-    private @Nullable FZScrollableLayout layout;
+    private @Nullable FZLayout layout;
+    private @Nullable FZScrollableLayout innerLayout;
 
     private FZPopoverMenu(ContainerEventHandler container, @Nullable FZPopoverMenu parent) {
         super(container);
@@ -90,6 +93,13 @@ public class FZPopoverMenu extends FZDialog {
         this.padding = padding;
         if (child != null) {
             child.menu.setPadding(padding);
+        }
+    }
+
+    protected void setBorder(ScreenRectangle border) {
+        this.border = border;
+        if (child != null) {
+            child.menu.setBorder(border);
         }
     }
 
@@ -149,29 +159,42 @@ public class FZPopoverMenu extends FZDialog {
         return getRectangle().top();
     }
 
-    private void applyLayout(@Nullable FZScrollableLayout layout) {
-        if (layout == null) {
+    private void applyLayout(@Nullable FZScrollableLayout newScrollableLayout) {
+        if (newScrollableLayout == null) {
             this.layout = null;
+            this.innerLayout = null;
             this.bounds = ScreenRectangle.empty();
             return;
         }
 
-        layout.maxHeight(maxHeight);
-        layout.arrangeElements();
-        if (layout.getWidth() < this.minWidth || layout.getWidth() > this.maxWidth) {
-            layout.fidgetz$setWidth(MathUtils.clampOptionalMax(layout.getWidth(), this.minWidth, this.maxWidth));
+        int borderX = border.left() + border.right();
+        int borderY = border.top() + border.bottom();
+
+        newScrollableLayout.maxHeight(Math.max(0, maxHeight - borderY));
+
+        FZLayout bordered = FZComposedLayout.compose(newScrollableLayout)
+                .padding(border.left(), border.top(), border.right(), border.bottom());
+
+        bordered.arrangeElements();
+
+        if (newScrollableLayout.getWidth() + borderX < this.minWidth
+            || (this.maxWidth > 0 && newScrollableLayout.getWidth() + borderX > this.maxWidth)) {
+
+            newScrollableLayout.fidgetz$setWidth(MathUtils.clampOptionalMax(
+                    newScrollableLayout.getWidth(),
+                    this.minWidth - borderX,
+                    this.maxWidth - borderX
+            ));
         }
 
-        clearWidgets();
-        layout.visitWidgets(this::addRenderableWidget);
-
-        this.layout = layout;
-        this.bounds = layout.getRectangle();
+        this.layout = bordered;
+        this.innerLayout = newScrollableLayout;
+        this.bounds = bordered.getRectangle();
     }
 
     @Override
     public void repositionElements() {
-        applyLayout(this.layout);
+        applyLayout(this.innerLayout);
         if (child != null) {
             child.menu.repositionElements();
         }
@@ -241,15 +264,24 @@ public class FZPopoverMenu extends FZDialog {
 
         if (entryCount == 0) {
             applyLayout(null);
+            clearWidgets();
             return;
         }
 
         content.fidgetz$setWidth(maxEntryWidth);
-        applyLayout(FZComposedLayout.compose(content)
+
+        FZScrollableLayout newScrollableLayout = FZComposedLayout.compose(content)
                 .padding(padding.left(), padding.top(), padding.right(), padding.bottom())
                 .toScrollable(container)
                 .scrollbarSpacing(0)
-                .maxHeight(maxHeight));
+                .maxHeight(Math.max(0, maxHeight));
+
+        applyLayout(newScrollableLayout);
+
+        clearWidgets();
+        GuiComponentCollector collector = new GuiComponentCollector();
+        newScrollableLayout.visitWidgets(collector::renderableWidget);
+        collector.flushTo(this::addWidget, this::addRenderableOnly);
     }
 
     private void openAndPosition(int x, int y, HorizontalDirection direction, List<FZPopoverMenuItem> items) {
@@ -334,6 +366,7 @@ public class FZPopoverMenu extends FZDialog {
         menu.sectionDivider = sectionDivider;
         menu.entryDivider = entryDivider;
         menu.padding = padding;
+        menu.border = border;
         menu.preferredDirection = preferredDirection;
         menu.rowSpacing = rowSpacing;
         menu.maxHeight = maxHeight;
@@ -613,7 +646,7 @@ public class FZPopoverMenu extends FZDialog {
         @Override
         public void setSize(int width, int height) {
             setWidth(width);
-            setHeight(height);
+            setHeight(entry.getHeight());
         }
 
         @Override
@@ -628,8 +661,13 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public void setHeight(int height) {
-            super.setHeight(height);
+            super.setHeight(entry.getHeight());
             entryBounds = super.getRectangle();
+        }
+
+        @Override
+        public int getHeight() {
+            return entry.getHeight();
         }
 
         @Override
