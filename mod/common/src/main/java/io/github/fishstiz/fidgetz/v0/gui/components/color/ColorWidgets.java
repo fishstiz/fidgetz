@@ -95,8 +95,9 @@ public final class ColorWidgets {
                 .background(sliderBackground(pos, new SaturationValueGradient(HSVA.toARGB(hsva.hue(), 1.0f, 1.0f, 1.0f))))
                 .cursor(thumbWidget(pos, color::valueInt))
                 .onChange(e -> {
-                    color.key(color.key().withSV((float) e.x(), (float) e.y()));
-                    color.value(HSVA.toARGB(color.key().hue(), 1.0f, 1.0f, 1.0f));
+                    HSVA newHsva = color.key().withSV((float) e.x(), (float) e.y());
+                    color.key(newHsva);
+                    color.value(newHsva.toARGB());
                 });
     }
 
