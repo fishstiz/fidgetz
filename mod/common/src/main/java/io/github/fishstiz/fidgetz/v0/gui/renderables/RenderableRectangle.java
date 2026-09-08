@@ -12,6 +12,32 @@ import java.util.function.Supplier;
 public interface RenderableRectangle {
     void extractRenderState(GuiGraphics graphics, int left, int top, int width, int height, int mouseX, int mouseY, float partialTick);
 
+    default RenderableRectangle shrink(int inset) {
+        return (graphics, left, top, width, height, mouseX, mouseY, partialTick) ->
+                extractRenderState(
+                        graphics,
+                        left + inset,
+                        top + inset,
+                        width - (inset * 2),
+                        height - (inset * 2),
+                        mouseX,
+                        mouseY,
+                        partialTick
+                );
+    }
+
+    default RenderableRectangle expand(int outset) {
+        return shrink(-outset);
+    }
+
+    default RenderableRectangle crop(int inset) {
+        return (graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {
+            graphics.enableScissor(left + inset, top + inset, (left + width) - inset, (top + height) - inset);
+            extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
+            graphics.disableScissor();
+        };
+    }
+
     default RenderableRectangle pose(Consumer<Matrix3x2fStack> transformer) {
         return ((graphics, left, top, width, height, mouseX, mouseY, partialTick) -> {
             graphics.pose().pushMatrix();
