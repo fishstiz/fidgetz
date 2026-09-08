@@ -142,7 +142,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
         if (selectionContainer.isOpen() && event.isEscape()) {
             closeSelection();
-            parentContainer.setFocused(this);
+            ComponentPath path = NavigationUtils.findPath(parentContainer, this);
+            if (path != null) {
+                path.applyFocus(true);
+            }
             return true;
         }
         return false;
@@ -301,9 +304,14 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         @Override
         protected void onClose() {
-            boolean focused = parentContainer.getFocused() == this;
+            boolean focused = NavigationUtils.inFocusPath(parentContainer, this);
             super.onClose();
-            if (focused) parentContainer.setFocused(FZDropdown.this);
+            if (focused) {
+                ComponentPath path = NavigationUtils.findPath(parentContainer, FZDropdown.this);
+                if (path != null) {
+                    path.applyFocus(true);
+                }
+            }
             updateIcon();
         }
 
