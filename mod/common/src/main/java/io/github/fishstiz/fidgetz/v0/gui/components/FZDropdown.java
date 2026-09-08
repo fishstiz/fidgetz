@@ -122,12 +122,12 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
                     .get(isActive(), isHoveredOrFocused())
                     .extractRenderState(graphics, left, iconY, leftIcon.width(), leftIcon.height(), mouseX, mouseY, partialTick);
 
-            left += spacing + leftIcon.width() + leftIcon.margin().right();
+            left += leftIcon.width() + leftIcon.margin().right();
         }
 
         if (!hideMessage) {
-            int color = isActive() ? CommonColors.WHITE : 0xFFA0A0A0;
-            super.renderString(graphics, font, color | Mth.ceil(this.alpha * 255.0F) << 24);
+            int color = (isActive() ? CommonColors.WHITE : 0xFFA0A0A0 ) | Mth.ceil(this.alpha * 255.0F) << 24;
+            GuiGraphicsUtils.scrollingText(graphics, getMessage(), left + spacing, top, right - spacing, top + height, color);
         }
 
         int symbolX = MathUtils.clampOrAverage(right, getX() + spacing, right);
@@ -135,7 +135,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         graphics.drawString(font, getInteractSymbol(), symbolX, symbolY, CommonColors.WHITE);
 
         if (propsState.overlay != null) {
-            propsState.overlay.extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
+            propsState.overlay.extractRenderState(graphics, getX(), top, width, height, mouseX, mouseY, partialTick);
         }
     }
 
