@@ -340,6 +340,11 @@ public final class FZScrollableLayout extends ComposedLayout {
         }
 
         @Override
+        protected int maxContentWidth() {
+            return 0;
+        }
+
+        @Override
         public ScreenRectangle getRectangle() {
             return bounds;
         }
