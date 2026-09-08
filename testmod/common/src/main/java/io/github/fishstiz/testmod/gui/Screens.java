@@ -20,5 +20,6 @@ public class Screens {
         layout.child(Button.builder(Component.literal("Screenz"), _ -> minecraft.setScreen(new Screenz())).build());
         layout.child(Button.builder(Component.literal("SliderTest"), _ -> minecraft.setScreen(new SliderTest())).build());
         layout.child(Button.builder(Component.literal("GridLayout"), _ -> minecraft.setScreen(new GridScreen())).build());
+        layout.child(Button.builder(Component.literal("ColorPicker"), _ -> minecraft.setScreen(new ColorPickerScreen())).build());
     }
 }
