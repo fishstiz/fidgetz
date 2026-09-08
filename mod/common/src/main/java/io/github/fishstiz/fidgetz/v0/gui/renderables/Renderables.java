@@ -4,12 +4,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 
-import java.awt.*;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class Renderables {
+    private static final RenderableRectangle EMPTY = (_, _, _, _, _, _, _, _) -> {
+    };
+
     private Renderables() {
+    }
+
+    public static RenderableRectangle empty() {
+        return EMPTY;
     }
 
     public static RenderableRectangle fill(int color) {
