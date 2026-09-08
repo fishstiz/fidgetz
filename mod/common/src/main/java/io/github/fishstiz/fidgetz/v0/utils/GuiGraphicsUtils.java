@@ -1,6 +1,8 @@
 package io.github.fishstiz.fidgetz.v0.utils;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import io.github.fishstiz.fidgetz.v0.Fidgetz;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -12,6 +14,12 @@ import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 public final class GuiGraphicsUtils {
+    private static final ResourceLocation BOX_SHADOW_SPRITE = Fidgetz.id("box_shadow");
+    private static final float BOX_SHADOW_BORDER = 48f;
+    private static final ResourceLocation CHECKERBOARD_TEXTURE = Fidgetz.id("textures/gui/checkerboard.png");
+    private static final int CHECKERBOARD_TEXTURE_SIZE = 16;
+    private static final int CHECKERBOARD_TEXEL_SIZE = 8;
+
     public static void sprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
         graphics.blitSprite(sprite, x, y, width, height);
     }
@@ -192,6 +200,65 @@ public final class GuiGraphicsUtils {
             int i1 = Mth.clamp(centerX, left + textWidth / 2, right - textWidth / 2);
             graphics.drawCenteredString(font, component, i1, textY, color);
         }
+    }
+
+    public static void boxShadow(
+            GuiGraphics graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float shadowSize,
+            float shadowOffsetX,
+            float shadowOffsetY
+    ) {
+        float scale = shadowSize / BOX_SHADOW_BORDER;
+        int baseOffset = Math.round(BOX_SHADOW_BORDER * scale);
+        int offsetX = Math.round(baseOffset + shadowOffsetX);
+        int offsetY = Math.round(baseOffset + shadowOffsetY);
+
+        RenderSystem.enableBlend();
+        RenderSystem.depthMask(false);
+        sprite(graphics, BOX_SHADOW_SPRITE, x - offsetX, y - offsetY, width + offsetX * 2, height + offsetY * 2);
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+    }
+
+    public static void checkerboard(
+            GuiGraphics graphics,
+            int left,
+            int top,
+            int width,
+            int height,
+            int cellSize,
+            int uOffset,
+            int vOffset
+    ) {
+        float scale = (float) CHECKERBOARD_TEXEL_SIZE / cellSize;
+
+        float uTexelStart = (uOffset * scale) % CHECKERBOARD_TEXTURE_SIZE;
+        float vTexelStart = (vOffset * scale) % CHECKERBOARD_TEXTURE_SIZE;
+
+        if (uTexelStart < 0) uTexelStart += CHECKERBOARD_TEXTURE_SIZE;
+        if (vTexelStart < 0) vTexelStart += CHECKERBOARD_TEXTURE_SIZE;
+
+        graphics.blit(
+                CHECKERBOARD_TEXTURE,
+                left,
+                top,
+                width,
+                height,
+                uTexelStart,
+                vTexelStart,
+                (int) (width * scale),
+                (int) (height * scale),
+                CHECKERBOARD_TEXTURE_SIZE,
+                CHECKERBOARD_TEXTURE_SIZE
+        );
+    }
+
+    public static void checkerboard(GuiGraphics graphics, int left, int top, int width, int height, int cellSize) {
+        checkerboard(graphics, left, top, width, height, cellSize, 0, 0);
     }
 
     private GuiGraphicsUtils() {

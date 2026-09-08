@@ -7,7 +7,14 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class Renderables {
+    private static final RenderableRectangle EMPTY = (ignoredG, ignoredL, ignoredT, ignoredW, ignoredH, ignoreMX, ignoredMY, ignoredD) -> {
+    };
+
     private Renderables() {
+    }
+
+    public static RenderableRectangle empty() {
+        return EMPTY;
     }
 
     public static RenderableRectangle fill(int color) {
