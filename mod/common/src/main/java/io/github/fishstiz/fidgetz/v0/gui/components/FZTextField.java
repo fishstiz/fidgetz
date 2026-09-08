@@ -250,6 +250,18 @@ public final class FZTextField extends EditBox implements FZComponent, FZContext
     }
 
     @Override
+    public void setWidth(int width) {
+        super.setWidth(width);
+        moveCursorTo(getCursorPosition(), false);
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        super.setSize(width, height);
+        moveCursorTo(getCursorPosition(), false);
+    }
+
+    @Override
     public void moveCursorTo(int delta, boolean select) {
         boolean unchanged = previousValue.equals(getValue());
         if (unchanged) disableResponder();
