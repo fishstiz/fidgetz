@@ -33,14 +33,18 @@ public class GuiComponentPropsState {
                 return;
             }
             this.boundWidth = width;
-            widget.setWidth(width);
+            if (widget.getWidth() != width) {
+                widget.setWidth(width);
+            }
         });
         props.height().ifPresent(height -> {
             if (widget.getHeight() != this.boundHeight && this.boundHeight == height) {
                 return;
             }
             this.boundHeight = height;
-            widget.setHeight(height);
+            if (widget.getHeight() != height) {
+                widget.setHeight(height);
+            }
         });
         GuiComponentPropsBase.ifNonDefault(props.active(), a -> widget.active = a.toBoolean(true));
         GuiComponentPropsBase.ifNonDefault(props.visible(), a -> widget.visible = a.toBoolean(true));
