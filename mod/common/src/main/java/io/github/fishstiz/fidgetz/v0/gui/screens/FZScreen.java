@@ -79,9 +79,12 @@ public abstract class FZScreen extends Screen implements FZDialogContainer, FZHo
         fidgetz$setHovered(null);
     }
 
+    protected FZContextMenu.Builder buildContextMenu() {
+        return FZContextMenu.builder(this).id(GLOBAL_CONTEXT_MENU_ID);
+    }
+
     protected void openContextMenu(double x, double y, boolean focus) {
-        dialogManager.put(FZContextMenu.builder(this)
-                .id(GLOBAL_CONTEXT_MENU_ID)
+        dialogManager.put(buildContextMenu()
                 .focusOnOpen(focus)
                 .buildAndOpen(x, y, fidgetz$collectContextEntries(x, y)));
     }
