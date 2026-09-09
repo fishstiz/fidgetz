@@ -19,6 +19,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.CommonColors;
@@ -128,7 +129,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         }
 
         if (!hideMessage) {
-            int color = (isActive() ? CommonColors.WHITE : 0xFFA0A0A0 ) | Mth.ceil(this.alpha * 255.0F) << 24;
+            int color = (isActive() ? CommonColors.WHITE : 0xFFA0A0A0) | Mth.ceil(this.alpha * 255.0F) << 24;
             GuiGraphicsUtils.scrollingText(graphics, getMessage(), left + spacing, top, right - spacing, top + height, color);
         }
 
@@ -154,6 +155,29 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
             }
             return true;
         }
+
+        if (!selectionContainer.isOpen()) {
+            return false;
+        }
+
+        ScreenDirection selectionDirection = selectionContainer.isPositionedDown()
+                ? ScreenDirection.DOWN
+                : ScreenDirection.UP;
+
+        if (NavigationUtils.getDirection(keyCode) != selectionDirection) {
+            return false;
+        }
+
+        ComponentPath containerPath = NavigationUtils.findPath(parentContainer, selectionContainer);
+        ComponentPath selectionPath = selectionContainer.nextFocusPath(
+                new FocusNavigationEvent.ArrowNavigation(selectionDirection)
+        );
+
+        if (containerPath != null) {
+            NavigationUtils.appendPath(containerPath, selectionPath).applyFocus(true);
+            return true;
+        }
+
         return false;
     }
 
@@ -175,19 +199,16 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
     @Override
     public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
         ComponentPath path = super.nextFocusPath(navigationEvent);
-        if (path != null || !isFocused() || !selectionContainer.isOpen() || selectionContainer.isFocused()) return path;
-
-        boolean up = NavigationUtils.isUp(navigationEvent, true);
-        boolean down = NavigationUtils.isDown(navigationEvent, true);
-
-        if ((up && selectionContainer.isPositionedUp()) || (down && selectionContainer.isPositionedDown())) {
-            // see reasoning in SelectionContainer#nextFocusPath
-            return parentContainer instanceof AbstractSelectionList<?>
-                    ? null
-                    : selectionContainer.nextFocusPath(navigationEvent);
+        if (path != null || !isFocused() || !selectionContainer.isOpen()) {
+            return path;
         }
 
-        if (up || down) {
+        ScreenDirection selectionDirection = selectionContainer.isPositionedDown()
+                ? ScreenDirection.DOWN
+                : ScreenDirection.UP;
+
+        if ((selectionDirection == ScreenDirection.DOWN && NavigationUtils.isUp(navigationEvent, true)) ||
+            (selectionDirection == ScreenDirection.UP && NavigationUtils.isDown(navigationEvent, true))) {
             return getCurrentFocusPath();
         }
 
@@ -432,26 +453,46 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
         }
 
         @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (!isOpen()) {
+                return false;
+            }
+
+            if (super.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+
+            ScreenDirection dropdownDirection = isPositionedDown() ? ScreenDirection.UP : ScreenDirection.DOWN;
+            if (NavigationUtils.getDirection(keyCode) != dropdownDirection) {
+                return false;
+            }
+
+            FocusNavigationEvent navigationEvent = new FocusNavigationEvent.ArrowNavigation(dropdownDirection);
+            ComponentPath nextPath = nextFocusPath(navigationEvent);
+            if (nextPath != null) {
+                return false;
+            }
+
+            ComponentPath containerPath = NavigationUtils.findPath(parentContainer, FZDropdown.this);
+            ComponentPath dropdownPath = FZDropdown.this.nextFocusPath(navigationEvent);
+            if (containerPath != null) {
+                NavigationUtils.appendPath(containerPath, dropdownPath).applyFocus(true);
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
         public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
             if (!isOpen()) return null;
 
             ComponentPath path = super.nextFocusPath(navigationEvent);
-            if (path != null || !isFocused() || FZDropdown.this.isFocused()) return path;
+            if (path != null || !isFocused()) return path;
 
-            boolean up = NavigationUtils.isUp(navigationEvent, true);
-            boolean down = NavigationUtils.isDown(navigationEvent, true);
-
-            if ((up && isPositionedDown()) || (down && isPositionedUp())) {
-                // its supposed to resolve to dropdown focus path, but this is <1.21.6, and lists HAVE to wrap
-                // an entry (not actually, but for compat reasons), so the parent container passed here is 99% incorrect
-                // for lists so just return null. At worst the dropdown is closed because both dropdown and container is
-                // unfocused before parent#nextFocusPath correctly resolves to the dropdown.
-                return parentContainer instanceof AbstractSelectionList<?>
-                        ? null
-                        : FZDropdown.this.nextFocusPath(navigationEvent);
-            }
-
-            if (up || down) {
+            ScreenDirection dropdownDirection = isPositionedDown() ? ScreenDirection.UP : ScreenDirection.DOWN;
+            if ((dropdownDirection == ScreenDirection.DOWN && NavigationUtils.isUp(navigationEvent, true)) ||
+                (dropdownDirection == ScreenDirection.UP && NavigationUtils.isDown(navigationEvent, true))) {
                 return getCurrentFocusPath();
             }
 

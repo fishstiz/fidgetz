@@ -141,6 +141,18 @@ public final class NavigationUtils {
         return find(container.getCurrentFocusPath(), component -> Objects.equals(component, targetChild)).isPresent();
     }
 
+    public static ComponentPath appendPath(ComponentPath parentPath, @Nullable ComponentPath childPath) {
+        if (childPath == null) return parentPath;
+
+        if (parentPath instanceof ComponentPath.Path(ContainerEventHandler container, ComponentPath child)) {
+            return ComponentPath.path(container, appendPath(child, childPath));
+        }
+        if (parentPath.component() == childPath.component()) {
+            return childPath;
+        }
+        return parentPath;
+    }
+
     public static ComponentPath addFocusEffects(
             ComponentPath path,
             @Nullable BiConsumer<GuiEventListener, Boolean> preFocus,
