@@ -96,6 +96,7 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
     }
 
     protected void onClose() {
+        ComponentPath parentFocusPath = container.getCurrentFocusPath();
         boolean focused = NavigationUtils.inFocusPath(container, this);
 
         ComponentPath path = getCurrentFocusPath();
@@ -104,7 +105,8 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
         }
 
         if (focused) {
-            container.setFocused(null);
+            NavigationUtils.findParent(parentFocusPath, containerPath -> containerPath.childPath().component() == this)
+                    .ifPresent(parentPath -> parentPath.applyFocus(false));
         }
     }
 
