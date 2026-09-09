@@ -435,7 +435,7 @@ public final class FZDropdown extends Button implements FZComponent, FZContextMe
 
         @Override
         public boolean isFocused() {
-            return isOpen() && (focused || getFocused() != null);
+            return focused || getFocused() != null;
         }
 
         @Override

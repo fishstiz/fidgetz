@@ -137,6 +137,21 @@ public final class NavigationUtils {
         return Optional.empty();
     }
 
+    public static Optional<ComponentPath.Path> findParent(
+            @Nullable ComponentPath path,
+            Predicate<ComponentPath.Path> predicate
+    ) {
+        if (path == null) {
+            return Optional.empty();
+        }
+        if (path instanceof ComponentPath.Path parentPath) {
+            return predicate.test(parentPath)
+                    ? Optional.of(parentPath)
+                    : findParent(parentPath.childPath(), predicate);
+        }
+        return Optional.empty();
+    }
+
     public static boolean inFocusPath(ContainerEventHandler container, GuiEventListener targetChild) {
         return find(container.getCurrentFocusPath(), component -> Objects.equals(component, targetChild)).isPresent();
     }
