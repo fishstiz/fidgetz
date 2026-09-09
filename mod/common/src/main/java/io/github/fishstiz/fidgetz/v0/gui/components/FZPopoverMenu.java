@@ -420,10 +420,23 @@ public class FZPopoverMenu extends FZDialog {
 
     private static @Nullable ComponentPath menuPath(FZPopoverMenu current, @Nullable ComponentPath childPath) {
         if (childPath == null) {
-            return current.parent == null ? ComponentPath.path(current, current.container) : menuPath(current.parent, ComponentPath.leaf(current));
+            return current.parent == null
+                    ? NavigationUtils.findPath(current.container, current)
+                    : menuPath(current.parent, ComponentPath.leaf(current));
         }
-        ComponentPath path = childPath.component() == current ? childPath : ComponentPath.path(current, childPath);
-        return current.parent == null ? ComponentPath.path(current.container, path) : menuPath(current.parent, path);
+
+        ComponentPath path = childPath.component() == current
+                ? childPath
+                : ComponentPath.path(current, childPath);
+
+        if (current.parent != null) {
+            return menuPath(current.parent, path);
+        }
+
+        ComponentPath containerPath = NavigationUtils.findPath(current.container, current);
+        return containerPath == null
+                ? null
+                : NavigationUtils.appendPath(containerPath, path);
     }
 
     private record ChildDetails(EntryWidget key, FZPopoverMenu menu) {
