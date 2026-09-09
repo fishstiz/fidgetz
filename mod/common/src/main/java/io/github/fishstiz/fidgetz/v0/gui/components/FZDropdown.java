@@ -148,6 +148,29 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             }
             return true;
         }
+
+        if (!selectionContainer.isOpen()) {
+            return false;
+        }
+
+        ScreenDirection selectionDirection = selectionContainer.isPositionedDown()
+                ? ScreenDirection.DOWN
+                : ScreenDirection.UP;
+
+        if (NavigationUtils.getDirection(event) != selectionDirection) {
+            return false;
+        }
+
+        ComponentPath containerPath = NavigationUtils.findPath(parentContainer, selectionContainer);
+        ComponentPath selectionPath = selectionContainer.nextFocusPath(
+                new FocusNavigationEvent.ArrowNavigation(selectionDirection)
+        );
+
+        if (containerPath != null) {
+            NavigationUtils.appendPath(containerPath, selectionPath).applyFocus(true);
+            return true;
+        }
+
         return false;
     }
 
@@ -169,16 +192,16 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
     @Override
     public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
         ComponentPath path = super.nextFocusPath(navigationEvent);
-        if (path != null || !isFocused() || !selectionContainer.isOpen() || selectionContainer.isFocused()) return path;
-
-        boolean up = NavigationUtils.isUp(navigationEvent, true);
-        boolean down = NavigationUtils.isDown(navigationEvent, true);
-
-        if ((up && selectionContainer.isPositionedUp()) || (down && selectionContainer.isPositionedDown())) {
-            return selectionContainer.nextFocusPath(navigationEvent);
+        if (path != null || !isFocused() || !selectionContainer.isOpen()) {
+            return path;
         }
 
-        if (up || down) {
+        ScreenDirection selectionDirection = selectionContainer.isPositionedDown()
+                ? ScreenDirection.DOWN
+                : ScreenDirection.UP;
+
+        if ((selectionDirection == ScreenDirection.DOWN && NavigationUtils.isUp(navigationEvent, true)) ||
+            (selectionDirection == ScreenDirection.UP && NavigationUtils.isDown(navigationEvent, true))) {
             return getCurrentFocusPath();
         }
 
@@ -431,20 +454,46 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
         }
 
         @Override
+        public boolean keyPressed(KeyEvent event) {
+            if (!isOpen()) {
+                return false;
+            }
+
+            if (super.keyPressed(event)) {
+                return true;
+            }
+
+            ScreenDirection dropdownDirection = isPositionedDown() ? ScreenDirection.UP : ScreenDirection.DOWN;
+            if (NavigationUtils.getDirection(event) != dropdownDirection) {
+                return false;
+            }
+
+            FocusNavigationEvent navigationEvent = new FocusNavigationEvent.ArrowNavigation(dropdownDirection);
+            ComponentPath nextPath = nextFocusPath(navigationEvent);
+            if (nextPath != null) {
+                return false;
+            }
+
+            ComponentPath containerPath = NavigationUtils.findPath(parentContainer, FZDropdown.this);
+            ComponentPath dropdownPath = FZDropdown.this.nextFocusPath(navigationEvent);
+            if (containerPath != null) {
+                NavigationUtils.appendPath(containerPath, dropdownPath).applyFocus(true);
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
         public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigationEvent) {
             if (!isOpen()) return null;
 
             ComponentPath path = super.nextFocusPath(navigationEvent);
-            if (path != null || !isFocused() || FZDropdown.this.isFocused()) return path;
+            if (path != null || !isFocused()) return path;
 
-            boolean up = NavigationUtils.isUp(navigationEvent, true);
-            boolean down = NavigationUtils.isDown(navigationEvent, true);
-
-            if ((up && isPositionedDown()) || (down && isPositionedUp())) {
-                return FZDropdown.this.nextFocusPath(navigationEvent);
-            }
-
-            if (up || down) {
+            ScreenDirection dropdownDirection = isPositionedDown() ? ScreenDirection.UP : ScreenDirection.DOWN;
+            if ((dropdownDirection == ScreenDirection.DOWN && NavigationUtils.isUp(navigationEvent, true)) ||
+                (dropdownDirection == ScreenDirection.UP && NavigationUtils.isDown(navigationEvent, true))) {
                 return getCurrentFocusPath();
             }
 
