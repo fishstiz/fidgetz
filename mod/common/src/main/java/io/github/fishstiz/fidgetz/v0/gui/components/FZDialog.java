@@ -141,7 +141,9 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isOpen()) return false;
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
-        return shouldCaptureClick();
+        return shouldCaptureClick()
+               // 1.21.1 only, default mouseClicked would iterate through all children, this will stop it
+               || isMouseOver(mouseX, mouseY);
     }
 
     @Override
