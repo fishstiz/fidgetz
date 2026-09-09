@@ -1,9 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
-import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
-import io.github.fishstiz.fidgetz.v0.utils.TriState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -318,8 +316,6 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<
         int index;
         private boolean focused;
         private boolean hovered;
-        private TriState fidgetz$hovered = TriState.DEFAULT;
-        private @Nullable GuiEventListener fidgetz$hoveredElement;
 
         protected Entry(int height) {
             this.bounds = new ScreenRectangle(0, 0, 0, height);
@@ -404,7 +400,7 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<
         }
 
         public boolean isHovered() {
-            return hovered && fidgetz$hovered != TriState.FALSE;
+            return hovered && fidgetz$isHovered();
         }
 
         @Override
@@ -433,56 +429,6 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<
 
         @Override
         public void visitWidgets(Consumer<AbstractWidget> widgetVisitor) {
-        }
-
-        @Override
-        public final boolean fidgetz$isHovered() {
-            return fidgetz$hovered == TriState.TRUE || fidgetz$getHovered() != null;
-        }
-
-        @Override
-        public final void fidgetz$setHovered(boolean hovered) {
-            this.fidgetz$hovered = TriState.from(hovered);
-            if (!hovered) {
-                fidgetz$setHovered(null);
-            }
-        }
-
-        @Override
-        public final void fidgetz$setHovered(@Nullable GuiEventListener hovered) {
-            GuiEventListener previous = fidgetz$getHovered();
-            if (previous != hovered) {
-                if (previous instanceof FZHoverableElement previousElement) {
-                    previousElement.fidgetz$setHovered(false);
-                }
-                if (hovered instanceof FZHoverableElement hoverableElement) {
-                    hoverableElement.fidgetz$setHovered(true);
-                }
-                fidgetz$hoveredElement = hovered;
-            }
-        }
-
-        @Override
-        public final @Nullable GuiEventListener fidgetz$getHovered() {
-            return fidgetz$hoveredElement;
-        }
-
-        @Override
-        public final boolean fidgetz$updateHovered(double mouseX, double mouseY) {
-            fidgetz$setHovered(isMouseOver(mouseX, mouseY));
-            boolean hovered = fidgetz$isHovered();
-            if (hovered) {
-                for (GuiEventListener child : children()) {
-                    if (((FZHoverableElement) child).fidgetz$updateHovered(mouseX, mouseY)) {
-                        fidgetz$setHovered(child);
-                        return true;
-                    }
-                }
-                fidgetz$setHovered(null);
-                return true;
-            }
-            fidgetz$setHovered(null);
-            return false;
         }
     }
 }

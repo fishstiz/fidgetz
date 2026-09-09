@@ -1,6 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.ScrollableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
@@ -331,9 +332,8 @@ public abstract class AbstractListWidget<T extends AbstractListWidget.Entry<T>> 
     protected void updateWidgetNarration(NarrationElementOutput output) {
     }
 
-    protected abstract static class Entry<T extends Entry<T>> extends AbstractSelectionList.Entry<T> implements ContainerEventHandlerPatch {
-        @Nullable
-        private GuiEventListener focused;
+    protected abstract static class Entry<T extends Entry<T>> extends AbstractSelectionList.Entry<T> implements ContainerEventHandlerPatch, FZHoverableContainer {
+        private @Nullable GuiEventListener focused;
         private boolean isDragging;
 
         @Override
