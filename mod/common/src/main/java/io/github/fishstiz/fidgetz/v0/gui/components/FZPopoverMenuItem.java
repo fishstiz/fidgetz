@@ -1,6 +1,8 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.Fidgetz;
+import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
+import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.RenderableRectangle;
 import io.github.fishstiz.fidgetz.v0.gui.renderables.Renderables;
 import io.github.fishstiz.fidgetz.v0.utils.FunctionUtils;
@@ -109,11 +111,12 @@ public sealed interface FZPopoverMenuItem {
     static Widget fromWidget(Function<Context, AbstractWidget> widgetFactory, Settings settings) {
         // cant use WrappedComponent because of some mapping issue on fabric where the default methods of the Entry
         // interface are used instead of the methods on the concrete WrappedComponent class
-        class Wrapped implements Entry, FZComponent, ContainerEventHandler {
+        class Wrapped implements Entry, FZComponent, ContainerEventHandler, FZHoverableContainer {
             private final Context context;
             private final AbstractWidget widget;
             private final List<AbstractWidget> children;
             private boolean dragging;
+            private @Nullable GuiEventListener fidgetz$hoveredElement;
 
             Wrapped(Context context) {
                 this.context = context;
@@ -308,6 +311,27 @@ public sealed interface FZPopoverMenuItem {
             @Override
             public Collection<? extends NarratableEntry> getNarratables() {
                 return widget.getNarratables();
+            }
+
+            @Override
+            public @Nullable GuiEventListener fidgetz$getHovered() {
+                return fidgetz$hoveredElement;
+            }
+
+            @Override
+            public void fidgetz$setHovered(@Nullable GuiEventListener hovered) {
+                GuiEventListener previous = fidgetz$getHovered();
+                if (previous != hovered) {
+                    if (previous instanceof FZHoverableElement previousElement) {
+                        previousElement.fidgetz$setHovered(false);
+                    }
+
+                    if (hovered instanceof FZHoverableElement hoveredElement) {
+                        hoveredElement.fidgetz$setHovered(true);
+                    }
+
+                    fidgetz$hoveredElement = hovered;
+                }
             }
         }
 
