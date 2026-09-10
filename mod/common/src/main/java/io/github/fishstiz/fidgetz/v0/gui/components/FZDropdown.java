@@ -351,7 +351,10 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
             ScreenRectangle selectionBounds = getRectangle();
 
             int minWidthLength = minWidth.resolve(buttonBounds.width());
-            int maxWidthLength = Math.max(minWidthLength, maxWidth.resolve(buttonBounds.width()));
+            int maxWidthLength = maxWidth.resolve(buttonBounds.width());;
+            if (maxWidthLength > 0 && minWidthLength > maxWidthLength) {
+                maxWidthLength = minWidthLength;
+            }
 
             int selectionWidth = MathUtils.clampOptionalMax(selectionBounds.width(), minWidthLength, maxWidthLength);
             int selectionHeight = selectionBounds.height();
