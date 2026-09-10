@@ -3,11 +3,14 @@ package io.github.fishstiz.fidgetz.v0.inject.mixins;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.fishstiz.fidgetz.v0.gui.components.FZComponent;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
 import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
+import io.github.fishstiz.fidgetz.v0.gui.screens.FZScreen;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -58,6 +61,19 @@ interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContai
         }
         fidgetz$setHovered(null);
         return false;
+    }
+
+    @WrapOperation(method = "getCurrentFocusPath", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/components/events/GuiEventListener;getCurrentFocusPath()Lnet/minecraft/client/gui/ComponentPath;"
+    ))
+    private ComponentPath fixContainerCurrentFocusPath(GuiEventListener instance, Operation<ComponentPath> original) {
+        ComponentPath path = original.call(instance);
+        // ContainerEventHandler by default returns null on getCurrentFocusPath if it does not have a focused child,
+        // which is a problem if the container itself is the focused child of a parent container.
+        // this probably should be in vanilla, but only apply for fidgetz in case of compat issues
+        if (!(this instanceof FZComponent) && !(this instanceof FZScreen)) return path;
+        return path == null ? ComponentPath.leaf(instance) : path;
     }
 
     @WrapMethod(method = "nextFocusPath")
