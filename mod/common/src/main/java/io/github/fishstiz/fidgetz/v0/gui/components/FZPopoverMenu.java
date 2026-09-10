@@ -584,6 +584,9 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public boolean keyPressed(KeyEvent event) {
+            if (!isOpen()) {
+                return false;
+            }
             if (entry.keyPressed(event)) {
                 if (event.isConfirmation() && settings.closeOnInteract()) {
                     closeMenu();
