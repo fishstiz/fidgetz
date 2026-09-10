@@ -41,7 +41,7 @@ public class FZMutableRef<T> implements FZRef<T> {
     }
 
     public void set(UnaryOperator<T> function) {
-        set(function.apply(this.state));
+        set(function.apply(value()));
     }
 
     @Override
@@ -66,9 +66,9 @@ public class FZMutableRef<T> implements FZRef<T> {
     @Override
     public <R> Runnable subscribe(String key, Function<T, R> selector, Consumer<R> callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
-        MutableObject<R> last = new MutableObject<>(selector.apply(this.state));
+        MutableObject<R> last = new MutableObject<>(selector.apply(value()));
         put(key, new Subscriber(() -> {
-            R next = selector.apply(this.state);
+            R next = selector.apply(value());
             if (!Objects.equals(next, last.getValue())) {
                 last.setValue(next);
                 callback.accept(next);
@@ -80,7 +80,7 @@ public class FZMutableRef<T> implements FZRef<T> {
     @Override
     public Runnable subscribe(String key, Consumer<T> callback) {
         Objects.requireNonNull(callback, "callback cannot be null");
-        put(key, new Subscriber(() -> callback.accept(this.state)));
+        put(key, new Subscriber(() -> callback.accept(value())));
         return () -> unsubscribe(key);
     }
 
@@ -123,6 +123,16 @@ public class FZMutableRef<T> implements FZRef<T> {
         @Override
         public T value() {
             return getter.get();
+        }
+
+        @Override
+        public void notifySubscribers() {
+            T value = getter.get();
+            if (Objects.equals(super.value(), value)) {
+                super.notifySubscribers();
+            } else {
+                super.set(getter.get());
+            }
         }
     }
 }
