@@ -582,6 +582,9 @@ public class FZPopoverMenu extends FZDialog {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (!isOpen()) {
+                return false;
+            }
             if (entry.keyPressed(keyCode, scanCode, modifiers)) {
                 if ((keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) &&
                     settings.closeOnInteract()) {

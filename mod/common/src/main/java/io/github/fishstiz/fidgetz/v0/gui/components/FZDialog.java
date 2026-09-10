@@ -92,14 +92,14 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
         ComponentPath parentFocusPath = container.getCurrentFocusPath();
         boolean focused = NavigationUtils.inFocusPath(container, this);
 
-        ComponentPath path = getCurrentFocusPath();
-        if (path != null) {
-            path.applyFocus(false);
-        }
-
         if (focused) {
             NavigationUtils.findParent(parentFocusPath, containerPath -> containerPath.childPath().component() == this)
                     .ifPresent(parentPath -> parentPath.applyFocus(false));
+        }
+
+        ComponentPath path = getCurrentFocusPath();
+        if (path != null) {
+            path.applyFocus(false);
         }
     }
 

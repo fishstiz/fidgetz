@@ -153,7 +153,16 @@ public final class NavigationUtils {
     }
 
     public static boolean inFocusPath(ContainerEventHandler container, GuiEventListener targetChild) {
-        return find(container.getCurrentFocusPath(), component -> Objects.equals(component, targetChild)).isPresent();
+        // ideally should use something like getCurrentFocusPath, but there is a bug in ContainerEventHandler
+        // where getCurrentFocusPath returns null if the child component is a ContainerEventHandler with no focused child.
+        GuiEventListener focused = container.getFocused();
+        if (Objects.equals(focused, targetChild)) {
+            return true;
+        }
+        if (focused instanceof ContainerEventHandler childContainer) {
+            return inFocusPath(childContainer, targetChild);
+        }
+        return false;
     }
 
     public static ComponentPath appendPath(ComponentPath parentPath, @Nullable ComponentPath childPath) {
