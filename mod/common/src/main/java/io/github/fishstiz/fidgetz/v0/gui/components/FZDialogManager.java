@@ -1,7 +1,7 @@
 package io.github.fishstiz.fidgetz.v0.gui.components;
 
-import io.github.fishstiz.fidgetz.v0.inject.interfaces.WidgetOperator;
 import io.github.fishstiz.fidgetz.v0.utils.CollectionUtils;
+import io.github.fishstiz.fidgetz.v0.utils.GuiHooks;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.util.*;
@@ -18,16 +18,15 @@ public final class FZDialogManager {
 
     public <T extends Screen & FZDialogContainer> FZDialogManager(T container) {
         this.container = container;
-        WidgetOperator widgetOperator = (WidgetOperator) container;
         this.widgetAdder = (dialog -> {
-            widgetOperator.fidgetz$modifyWidgets(prev -> CollectionUtils.addFirst(prev, dialog));
-            widgetOperator.fidgetz$modifyNarratables(prev -> CollectionUtils.addFirst(prev, dialog));
-            widgetOperator.fidgetz$modifyRenderables(prev -> CollectionUtils.addLast(prev, dialog));
+            GuiHooks.modifyWidgets(container, prev -> CollectionUtils.addFirst(prev, dialog));
+            GuiHooks.modifyNarratables(container, prev -> CollectionUtils.addFirst(prev, dialog));
+            GuiHooks.modifyRenderables(container, prev -> CollectionUtils.addLast(prev, dialog));
         });
         this.widgetRemover = (dialog -> {
-            widgetOperator.fidgetz$modifyWidgets(prev -> CollectionUtils.remove(prev, dialog));
-            widgetOperator.fidgetz$modifyNarratables(prev -> CollectionUtils.remove(prev, dialog));
-            widgetOperator.fidgetz$modifyRenderables(prev -> CollectionUtils.remove(prev, dialog));
+            GuiHooks.modifyWidgets(container, prev -> CollectionUtils.remove(prev, dialog));
+            GuiHooks.modifyNarratables(container, prev -> CollectionUtils.remove(prev, dialog));
+            GuiHooks.modifyRenderables(container, prev -> CollectionUtils.remove(prev, dialog));
         });
     }
 
@@ -60,7 +59,14 @@ public final class FZDialogManager {
         }
 
         dialogsById.put(id, new DialogEntry(dialog, (Consumer<FZDialog>) closer));
+
+        boolean existingChild = container.children().contains(dialog);
+
         refreshDialogs();
+
+        if (!existingChild && dialog.isOpen()) {
+            dialog.onOpen();
+        }
     }
 
     public void put(FZDialog dialog) {
