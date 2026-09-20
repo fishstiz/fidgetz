@@ -282,11 +282,16 @@ public abstract class FZAbstractListWidget<E extends FZAbstractListWidget.Entry<
 
     @Override
     public void setHeight(int height) {
+        boolean prevScrollbarVisible = scrollbarVisible();
         int previousHeight = getHeight();
         super.setHeight(height);
         updateBounds();
         if (previousHeight != getHeight()) {
-            refreshScrollAmount();
+            if (prevScrollbarVisible != scrollbarVisible()) {
+                repositionEntries();
+            } else {
+                refreshScrollAmount();
+            }
         }
     }
 
