@@ -16,4 +16,22 @@ public interface WidgetOperator {
 
     default void fidgetz$modifyRenderables(UnaryOperator<List<Renderable>> modifier) {
     }
+
+    default <T extends GuiEventListener & NarratableEntry> T fidgetz$addWidget(T widget) {
+        return widget;
+    }
+
+    default <T extends Renderable> T fidgetz$addRenderableOnly(T renderable) {
+        return renderable;
+    }
+
+    default <T extends GuiEventListener & NarratableEntry & Renderable> T fidgetz$addRenderableWIdget(T widget) {
+        return widget;
+    }
+
+    default void fidgetz$removeWidget(GuiEventListener widget) {
+    }
+
+    default void fidgetz$rebuildWidgets() {
+    }
 }

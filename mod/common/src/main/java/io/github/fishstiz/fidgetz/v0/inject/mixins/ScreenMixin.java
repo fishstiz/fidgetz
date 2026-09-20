@@ -30,6 +30,21 @@ abstract class ScreenMixin implements WidgetOperator {
     @Mutable
     private List<GuiEventListener> children;
 
+    @Shadow
+    protected abstract <T extends Renderable> T addRenderableOnly(T renderable);
+
+    @Shadow
+    protected abstract <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(T widget);
+
+    @Shadow
+    protected abstract <T extends GuiEventListener & NarratableEntry> T addWidget(T widget);
+
+    @Shadow
+    protected abstract void removeWidget(GuiEventListener widget);
+
+    @Shadow
+    protected abstract void rebuildWidgets();
+
     @Override
     public void fidgetz$modifyWidgets(UnaryOperator<List<GuiEventListener>> modifier) {
         children = modifier.apply(children);
@@ -43,5 +58,30 @@ abstract class ScreenMixin implements WidgetOperator {
     @Override
     public void fidgetz$modifyRenderables(UnaryOperator<List<Renderable>> modifier) {
         renderables = modifier.apply(renderables);
+    }
+
+    @Override
+    public <T extends Renderable> T fidgetz$addRenderableOnly(T renderable) {
+        return addRenderableOnly(renderable);
+    }
+
+    @Override
+    public <T extends GuiEventListener & NarratableEntry & Renderable> T fidgetz$addRenderableWIdget(T widget) {
+        return addRenderableWidget(widget);
+    }
+
+    @Override
+    public <T extends GuiEventListener & NarratableEntry> T fidgetz$addWidget(T widget) {
+        return addWidget(widget);
+    }
+
+    @Override
+    public void fidgetz$removeWidget(GuiEventListener widget) {
+        removeWidget(widget);
+    }
+
+    @Override
+    public void fidgetz$rebuildWidgets() {
+        rebuildWidgets();
     }
 }

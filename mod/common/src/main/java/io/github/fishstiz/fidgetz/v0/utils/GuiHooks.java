@@ -26,6 +26,26 @@ public final class GuiHooks {
         ((WidgetOperator) screen).fidgetz$modifyNarratables(modifier);
     }
 
+    public static <T extends GuiEventListener & NarratableEntry> T addWidget(Screen screen, T widget) {
+        return ((WidgetOperator) screen).fidgetz$addWidget(widget);
+    }
+
+    public static <T extends Renderable> T addRenderableOnly(Screen screen, T renderable) {
+        return ((WidgetOperator) screen).fidgetz$addRenderableOnly(renderable);
+    }
+
+    public static <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(Screen screen, T widget) {
+        return ((WidgetOperator) screen).fidgetz$addRenderableWIdget(widget);
+    }
+
+    public static void removeWidget(Screen screen, GuiEventListener widget) {
+        ((WidgetOperator) screen).fidgetz$removeWidget(widget);
+    }
+
+    public static void rebuildWidgets(Screen screen) {
+        ((WidgetOperator) screen).fidgetz$rebuildWidgets();
+    }
+
     public static void supplyContextMenuEntries(AbstractWidget widget, Consumer<FZContextMenu.Collector> entrySupplier) {
         ((ContextMenuSourceConsumer) widget).fidgetz$setContextMenuSource(entrySupplier);
     }
