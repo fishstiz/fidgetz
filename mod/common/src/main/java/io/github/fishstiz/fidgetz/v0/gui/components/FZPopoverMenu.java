@@ -504,7 +504,7 @@ public class FZPopoverMenu extends FZDialog {
         private void updateChild() {
             if (FZPopoverMenu.this.getFocused() == null || !FZPopoverMenu.this.isDragging()) {
                 List<FZPopoverMenuItem> children = entry.childItems();
-                if (children.isEmpty()) {
+                if (children.isEmpty() || !entry.isActive()) {
                     closeChild();
                 } else {
                     openChild(this, children);
