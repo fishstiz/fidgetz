@@ -32,9 +32,10 @@ loom {
 
         client {
             client()
-            setConfigName('Fabric Client Test')
-            ideConfigGenerated(true)
-            runDir('run/testmod')
+            getDisplayName().set('Fabric Client Test')
+            getGenerateRunConfig().set(true)
+            getRunDirectory().set(new File('run/testmod'))
+            getJvmArguments().add('-Dfidgetz.debug')
         }
     }
 }

@@ -1,4 +1,4 @@
-package io.github.fishstiz.testmod;
+package io.github.fishstiz.fidgetz.v0.gui.debug;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import net.minecraft.client.Minecraft;
@@ -9,15 +9,17 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
-public final class Testmod {
+@ApiStatus.Internal
+public final class FZDebugOverlay {
     private static final float SCALE = 0.8f;
     private static final String FOCUS_LABEL = "Focus Path: ";
     private static final String HOVERED_LABEL = "Hovered Path: ";
 
-    public static boolean renderHovered;
-    public static boolean renderFocusPath;
+    public static boolean hovered = System.getProperty("fidgetz.debug.hovered") != null;
+    public static boolean focusPath = System.getProperty("fidgetz.debug.focusPath") != null;
 
     private static void pushScale(GuiGraphicsExtractor graphics) {
         graphics.nextStratum();
@@ -35,12 +37,12 @@ public final class Testmod {
             Font font = minecraft.font;
             boolean scaled = false;
 
-            if (renderFocusPath) {
+            if (focusPath) {
                 pushScale(graphics);
                 scaled = true;
                 y += extractFocusRenderState(graphics, font, screen, y) + font.lineHeight;
             }
-            if (renderHovered) {
+            if (hovered) {
                 if (!scaled) pushScale(graphics);
                 scaled = true;
 
@@ -86,8 +88,6 @@ public final class Testmod {
             int mouseX,
             int mouseY
     ) {
-        if (screen == null) return;
-
         FZHoverableContainer hoverable = ((FZHoverableContainer) screen);
         hoverable.fidgetz$updateHovered(mouseX, mouseY);
 
@@ -109,7 +109,7 @@ public final class Testmod {
                     graphics,
                     font,
                     (int) (mouseX / SCALE) + 16,
-                    (int) (mouseY / SCALE),
+                    clampY(graphics, font, (int) (mouseY / SCALE), 1),
                     mouseX,
                     mouseY
             );
@@ -156,7 +156,7 @@ public final class Testmod {
         int height = (int) (bounds.height() / SCALE);
 
         int labelX = clampX(graphics, font, (int) (mouseX / SCALE) + 16, label);
-        int labelY = (int) (mouseY / SCALE);
+        int labelY = clampY(graphics, font, (int) (mouseY / SCALE), 3);
 
         graphics.fill(labelX, labelY, labelX + font.width(label), labelY + font.lineHeight, 0xAF0000FF);
         graphics.outline(left, top, width, height, 0xFF0000FF);
@@ -197,11 +197,20 @@ public final class Testmod {
         return Math.max(0, x);
     }
 
+    private static int clampY(GuiGraphicsExtractor graphics, Font font, int y, int lineCount) {
+        int totalHeight = lineCount * font.lineHeight;
+        int screenHeight = (int) (graphics.guiHeight() / SCALE);
+        if (y + totalHeight > screenHeight) {
+            y = screenHeight - totalHeight - 2;
+        }
+        return Math.max(0, y);
+    }
+
     private static ScreenRectangle getBounds(@Nullable GuiEventListener element) {
         if (element instanceof LayoutElement layoutElement) return layoutElement.getRectangle();
         return element != null ? element.getRectangle() : ScreenRectangle.empty();
     }
 
-    private Testmod() {
+    private FZDebugOverlay() {
     }
 }

@@ -21,7 +21,7 @@ neoForge {
             type = "client"
             gameDirectory = project.file('run/testmod')
             ideName = "NeoForge Client Test ($project.path)"
-            jvmArgument('-XX:StackShadowPages=32')
+            jvmArguments = ['-XX:StackShadowPages=32', '-Dfidgetz.debug']
         }
     }
 }
