@@ -12,4 +12,6 @@ dependencies {
     compileOnly "org.spongepowered:mixin:$mixin_version"
     compileOnly "io.github.llamalad7:mixinextras-common:$mixinextras_version"
     annotationProcessor "io.github.llamalad7:mixinextras-common:$mixinextras_version"
+
+    compileOnly "org.ow2.asm:asm-tree:9.6";
 }
