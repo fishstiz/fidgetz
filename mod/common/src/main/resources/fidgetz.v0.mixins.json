@@ -11,6 +11,7 @@
     "ScreenMixin",
     "access.EditBoxAccess"
   ],
+  "plugin": "io.github.fishstiz.fidgetz.v0.inject.MixinConfigPlugin",
   "injectors": {
     "defaultRequire": 1
   }
