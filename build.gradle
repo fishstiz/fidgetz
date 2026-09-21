@@ -1,8 +1,30 @@
+import me.modmuss50.mpp.ReleaseType
+
 plugins {
     // https://fabricmc.net/develop/
     id 'fabric-loom' version "$loom_version" apply false
     // https://projects.neoforged.net/neoforged/moddevgradle
     id 'net.neoforged.moddev' version "$moddev_version" apply false
+    id 'me.modmuss50.mod-publish-plugin'
+}
+
+group = maven_group
+version = mod_version
+
+publishMods {
+    dryRun = Boolean.valueOf(dry_run)
+    type = ReleaseType.of(release_type)
+    changelog = file("CHANGELOG.md").text
+
+    github {
+        accessToken = findProperty("GITHUB_TOKEN") ?: ""
+        repository = "fishstiz/fidgetz"
+        commitish = "mc/26.1"
+        version = mod_version
+        tagName = "v${this.version}"
+        displayName = "v${this.version}"
+        allowEmptyFiles = true
+    }
 }
 
 group = maven_group

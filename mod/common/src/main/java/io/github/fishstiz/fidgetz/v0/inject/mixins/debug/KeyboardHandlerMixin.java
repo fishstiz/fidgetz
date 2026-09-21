@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 abstract class KeyboardHandlerMixin {
     @Inject(method = "keyPress", at = @At("HEAD"), require = 0)
     private void onKeyPress(long handle, int action, KeyEvent event, CallbackInfo ci) {
-        if (Math.abs(action) > 0) {
+        if (action != 0) {
             switch (event.key()) {
                 case InputConstants.KEY_F7 -> FZDebugOverlay.focusPath = !FZDebugOverlay.focusPath;
                 case InputConstants.KEY_F8 -> FZDebugOverlay.hovered = !FZDebugOverlay.hovered;
