@@ -1,7 +1,10 @@
+import me.modmuss50.mpp.ReleaseType
+
 plugins {
     id 'multiloader-loader'
     id 'fabric-loom'
     id 'publish-local'
+    id 'me.modmuss50.mod-publish-plugin'
 }
 
 dependencies {
@@ -29,5 +32,20 @@ loom {
     runs {
         remove client
         remove server
+    }
+}
+
+publishMods {
+    dryRun = Boolean.valueOf(dry_run)
+    type = ReleaseType.of(release_type)
+    changelog = rootProject.file("CHANGELOG.md").text
+    file = remapJar.archiveFile
+    additionalFiles.from(remapSourcesJar.archiveFile)
+    displayName = "Fabric v${this.version}"
+    modLoaders.add("neoforge")
+
+    github {
+        parent rootProject.tasks.named("publishGithub")
+        accessToken = findProperty("GITHUB_TOKEN") ?: ""
     }
 }
