@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,11 +30,8 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     @Override
     public List<String> getMixins() {
         if (System.getProperty("fidgetz.debug") != null) {
-            List<String> mixins = new ArrayList<>();
             LoggerFactory.getLogger("fidgetz").info("[fidgetz] Debug enabled");
-            mixins.add("debug.GuiMixin");
-            mixins.add("debug.KeyboardHandlerMixin");
-            return mixins;
+            return List.of("debug.GuiMixin", "debug.KeyboardHandlerMixin");
         }
 
         return null;
