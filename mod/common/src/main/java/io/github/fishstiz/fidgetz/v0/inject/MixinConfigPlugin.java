@@ -30,15 +30,15 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public List<String> getMixins() {
-        List<String> mixins = new ArrayList<>();
-
         if (System.getProperty("fidgetz.debug") != null) {
+            List<String> mixins = new ArrayList<>();
             LoggerFactory.getLogger("fidgetz").info("[fidgetz] Debug enabled");
             mixins.add("debug.GuiMixin");
             mixins.add("debug.KeyboardHandlerMixin");
+            return mixins;
         }
 
-        return mixins;
+        return null;
     }
 
     @Override
