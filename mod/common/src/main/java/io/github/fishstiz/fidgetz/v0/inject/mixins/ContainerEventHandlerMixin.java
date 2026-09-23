@@ -4,10 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZComponent;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZContextMenu;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZDialog;
-import io.github.fishstiz.fidgetz.v0.gui.components.FZDialogContainer;
+import io.github.fishstiz.fidgetz.v0.gui.components.*;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableContainer;
 import io.github.fishstiz.fidgetz.v0.gui.components.events.FZHoverableElement;
 import io.github.fishstiz.fidgetz.v0.utils.ScreenRectangleUtils;
@@ -73,7 +70,7 @@ interface ContainerEventHandlerMixin extends GuiEventListener, FZHoverableContai
         // ContainerEventHandler by default returns null on getCurrentFocusPath if it does not have a focused child,
         // which is a problem if the container itself is the focused child of a parent container.
         // this probably should be in vanilla, but only apply for fidgetz in case of compat issues
-        if (!(this instanceof FZComponent) && !(this instanceof FZScreen)) return path;
+        if (!(this instanceof FZComponent) && !(this instanceof FZScreen) && !(this instanceof ContainerEventHandlerPatch)) return path;
         return path == null ? ComponentPath.leaf(instance) : path;
     }
 

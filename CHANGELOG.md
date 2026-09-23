@@ -1,6 +1,0 @@
-- Fixed FZAbstractListWidget height propagation to entries.
-- Fixed inactive popover entries opening its children.
-- Moved debug to mod. Can be activated with the `-Dfidgetz.debug` vm arg
-  - Press `F7` for focused path
-  - Press `F8` for hovered path
-- Added more GuiHooks for adding/removing widgets to screen 
