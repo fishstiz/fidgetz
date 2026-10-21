@@ -38,7 +38,7 @@ publishMods {
     file = jar.archiveFile
     additionalFiles.from(sourcesJar.archiveFile)
     displayName = "Fabric v${this.version}"
-    modLoaders.add("neoforge")
+    modLoaders.add("fabric")
 
     github {
         parent rootProject.tasks.named("publishGithub")
