@@ -181,7 +181,7 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
     @Override
     public boolean shouldTakeFocusAfterInteraction() {
-        return propsState.focusOnInteraction;
+        return propsState.focusOnInteraction && !selectionContainer.isOpen();
     }
 
     @Override
@@ -403,11 +403,6 @@ public final class FZDropdown extends Button.Plain implements FZComponent, FZCon
 
         @Override
         public boolean shouldCaptureFocus() {
-            return false;
-        }
-
-        @Override
-        public boolean shouldFocusOnOpen() {
             return false;
         }
 
