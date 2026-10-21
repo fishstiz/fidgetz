@@ -44,4 +44,19 @@ publishMods {
         parent rootProject.tasks.named("publishGithub")
         accessToken = findProperty("GITHUB_TOKEN") ?: ""
     }
+
+    modrinth {
+        accessToken = findProperty("MODRINTH_TOKEN") ?: ""
+        projectId = modrinth_id
+        minecraftVersions.addAll(modrinth_versions.split(','))
+        requires("fabric-api")
+    }
+
+    curseforge {
+        accessToken = findProperty("CURSEFORGE_TOKEN") ?: ""
+        projectId = curseforge_id
+        minecraftVersions.addAll(curseforge_versions.split(','))
+        client = true
+        requires("fabric-api")
+    }
 }
