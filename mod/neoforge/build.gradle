@@ -30,4 +30,17 @@ publishMods {
         parent rootProject.tasks.named("publishGithub")
         accessToken = findProperty("GITHUB_TOKEN") ?: ""
     }
+
+    modrinth {
+        accessToken = findProperty("MODRINTH_TOKEN") ?: ""
+        minecraftVersions.addAll(modrinth_versions.split(','))
+        projectId = modrinth_id
+    }
+
+    curseforge {
+        accessToken = findProperty("CURSEFORGE_TOKEN") ?: ""
+        projectId = curseforge_id
+        minecraftVersions.addAll(curseforge_versions.split(','))
+        client = true
+    }
 }

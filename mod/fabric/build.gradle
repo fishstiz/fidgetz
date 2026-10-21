@@ -38,10 +38,25 @@ publishMods {
     file = jar.archiveFile
     additionalFiles.from(sourcesJar.archiveFile)
     displayName = "Fabric v${this.version}"
-    modLoaders.add("neoforge")
+    modLoaders.add("fabric")
 
     github {
         parent rootProject.tasks.named("publishGithub")
         accessToken = findProperty("GITHUB_TOKEN") ?: ""
+    }
+
+    modrinth {
+        accessToken = findProperty("MODRINTH_TOKEN") ?: ""
+        projectId = modrinth_id
+        minecraftVersions.addAll(modrinth_versions.split(','))
+        requires("fabric-api")
+    }
+
+    curseforge {
+        accessToken = findProperty("CURSEFORGE_TOKEN") ?: ""
+        projectId = curseforge_id
+        minecraftVersions.addAll(curseforge_versions.split(','))
+        client = true
+        requires("fabric-api")
     }
 }
