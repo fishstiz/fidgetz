@@ -273,13 +273,14 @@ public class FZLayoutList extends AbstractListWidget<FZLayoutList.Entry> impleme
             // so when a button inside the list reinitializes entries,
             // the new button instance with the same id as the clicked button cannot be refocused
             Entry clickedEntry = resolveEntry(entry);
-            if (clickedEntry != null) {
+            if (clickedEntry != null && (!(clickedEntry.widget instanceof FZComponent component) || component.fidgetz$shouldTakeFocusAfterInteraction()) ) {
                 setFocused(clickedEntry);
                 if (isValidClickButton(button)) {
                     setDragging(true);
                 }
-                return true;
             }
+
+            return true;
         }
 
         return scrolled;
