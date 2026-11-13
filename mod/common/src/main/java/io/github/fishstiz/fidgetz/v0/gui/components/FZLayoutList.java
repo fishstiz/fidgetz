@@ -283,7 +283,7 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
         boolean scrolled = updateScrolling(event);
 
         Entry entry = getEntryAt(event.x(), event.y());
-        if (entry != null && entry.widget.mouseClicked(event, doubleClick) && entry.widget.shouldTakeFocusAfterInteraction()) {
+        if (entry != null && entry.widget.mouseClicked(event, doubleClick)) {
             // buttons are only focused after end of mouseClicked,
             // so when a button inside the list reinitializes entries,
             // the new button instance with the same id as the clicked button cannot be refocused
@@ -293,8 +293,9 @@ public class FZLayoutList extends AbstractListWidget implements Layout, FZCompon
                 if (isValidClickButton(event.buttonInfo())) {
                     setDragging(true);
                 }
-                return true;
             }
+
+            return true;
         }
 
         return scrolled;
