@@ -9,6 +9,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.TabNavigation;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent.ArrowNavigation;
 import net.minecraft.client.gui.navigation.ScreenDirection;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -175,6 +175,23 @@ public final class NavigationUtils {
             return childPath;
         }
         return parentPath;
+    }
+
+    // ideally setFocused impl should have the validation instead
+    public static @Nullable ComponentPath validatePath(@Nullable ComponentPath path) {
+        if (path == null) {
+            return null;
+        }
+
+        MutableObject<@Nullable List<? extends GuiEventListener>> current = new MutableObject<>();
+        return NavigationUtils.takeWhile(path, component -> {
+            List<? extends GuiEventListener> children = current.getValue();
+            if (children == null || children.contains(component)) {
+                current.setValue(component instanceof ContainerEventHandler subContainer ? subContainer.children() : null);
+                return true;
+            }
+            return false;
+        });
     }
 
     public static ComponentPath addFocusEffects(
