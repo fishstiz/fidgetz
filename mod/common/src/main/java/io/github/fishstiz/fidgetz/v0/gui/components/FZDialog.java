@@ -6,15 +6,12 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class FZDialog extends FZContainer implements FZComponent, FZPopover {
@@ -78,17 +75,9 @@ public abstract class FZDialog extends FZContainer implements FZComponent, FZPop
 
     protected void refocusLastContainerPath() {
         if (shouldRefocusLastPath() && lastContainerFocusPath != null) {
-            MutableObject<@Nullable List<? extends GuiEventListener>> current = new MutableObject<>();
-            ComponentPath path = NavigationUtils.takeWhile(lastContainerFocusPath, component -> {
-                List<? extends GuiEventListener> children = current.get();
-                if (children == null || children.contains(component)) {
-                    current.setValue(component instanceof ContainerEventHandler subContainer ? subContainer.children() : null);
-                    return true;
-                }
-                return false;
-            });
-            if (path != null) {
-                path.applyFocus(true);
+            ComponentPath validPath = NavigationUtils.validatePath(lastContainerFocusPath);
+            if (validPath != null) {
+                validPath.applyFocus(true);
             }
 
             lastContainerFocusPath = null;
