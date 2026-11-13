@@ -1,6 +1,4 @@
-- Fixed FZAbstractListWidget height propagation to entries.
-- Fixed inactive popover entries opening its children.
-- Moved debug to mod. Can be activated with the `-Dfidgetz.debug` vm arg
-  - Press `F7` for focused path
-  - Press `F8` for hovered path
-- Added more GuiHooks for adding/removing widgets to screen 
+- Opening a dropdown changes focus to the dropdown's container
+- Added `NavigationUtils#validatePath`
+- Fixed `FZLayoutList` not taking focus when child does not take focus
+- Remove unused access transformer path in NeoForge ([#1](https://github.com/fishstiz/fidgetz/issues/1))
