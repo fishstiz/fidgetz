@@ -1,4 +1,10 @@
+0.7.4
+
 - Opening a dropdown changes focus to the dropdown's container
 - Added `NavigationUtils#validatePath`
 - Fixed `FZLayoutList` not taking focus when child does not take focus
 - Remove unused access transformer path in NeoForge ([#1](https://github.com/fishstiz/fidgetz/issues/1))
+
+0.7.5
+
+- Added Renderables Suppliers
