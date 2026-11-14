@@ -1,10 +1,11 @@
 package io.github.fishstiz.fidgetz.v0.gui.renderables;
 
+import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.CommonColors;
 
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public final class Renderables {
@@ -18,41 +19,89 @@ public final class Renderables {
         return EMPTY;
     }
 
+    public static RenderableRectangle wrap(Supplier<RenderableRectangle> delegate) {
+        return (graphics, left, top, width, height, mouseX, mouseY, partialTick) ->
+                delegate.get().extractRenderState(graphics, left, top, width, height, mouseX, mouseY, partialTick);
+    }
+
     public static RenderableRectangle fill(int color) {
-        return new ColoredRectangle(color);
+        return (graphics, left, top, width, height, _, _, _) ->
+                graphics.fill(left, top, left + width, top + height, color);
+    }
+
+    public static RenderableRectangle fill(IntSupplier color) {
+        Objects.requireNonNull(color, "color cannot be null");
+        return (graphics, left, top, width, height, _, _, _) ->
+                graphics.fill(left, top, left + width, top + height, color.getAsInt());
     }
 
     public static RenderableRectangle outline(int color) {
-        return new Outline(color);
+        return (graphics, left, top, width, height, _, _, _) -> graphics.outline(left, top, width, height, color);
+    }
+
+    public static RenderableRectangle outline(IntSupplier color) {
+        Objects.requireNonNull(color, "color cannot be null");
+        return (graphics, left, top, width, height, _, _, _) -> graphics.outline(left, top, width, height, color.getAsInt());
     }
 
     public static RenderableRectangle text(String text) {
-        return text(Component.literal(Objects.requireNonNull(text, "text cannot be null")));
+        return text(text, false);
+    }
+
+    public static RenderableRectangle text(String text, boolean leftAligned) {
+        return text(Component.literal(Objects.requireNonNull(text, "text cannot be null")), leftAligned);
     }
 
     public static RenderableRectangle text(Component text) {
+        return text(text, false);
+    }
+
+    public static RenderableRectangle text(Component text, boolean leftAligned) {
         Objects.requireNonNull(text, "text cannot be null");
-        return new TextRectangle(() -> text);
+        return text(() -> text, leftAligned);
     }
 
     public static RenderableRectangle text(Supplier<Component> text) {
-        return new TextRectangle(Objects.requireNonNull(text, "text cannot be null"));
+        return text(Objects.requireNonNull(text, "text cannot be null"), false);
+    }
+
+    public static RenderableRectangle text(Supplier<Component> text, boolean leftAligned) {
+        return leftAligned
+                ? (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.scrollingText(graphics.textRenderer(), text.get(), left, top, left + width, top + height)
+                : (graphics, left, top, width, height, _, _, _) ->
+                graphics.textRenderer().acceptScrolling(text.get(), left + (width / 2), left, left + width, top, top + height);
     }
 
     public static RenderableRectangle boxShadow(float scale) {
-        return new BoxShadow(scale, 0, 0);
+        return boxShadow(scale, 0, 0);
     }
 
     public static RenderableRectangle boxShadow(float scale, int xOffset, int yOffset) {
-        return new BoxShadow(scale, xOffset, yOffset);
-    }
-
-    public static RenderableRectangle sprite(Identifier sprite, int color) {
-        return new RenderableGuiSprite(Objects.requireNonNull(sprite, "sprite cannot be null"), color);
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.boxShadow(graphics, left, top, width, height, scale, xOffset, yOffset);
     }
 
     public static RenderableRectangle sprite(Identifier sprite) {
-        return sprite(sprite, CommonColors.WHITE);
+        Objects.requireNonNull(sprite, "sprite cannot be null");
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.sprite(graphics, sprite, left, top, width, height);
+    }
+
+    public static RenderableRectangle sprite(Identifier sprite, int color) {
+        Objects.requireNonNull(sprite, "sprite cannot be null");
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.sprite(graphics, sprite, left, top, width, height, color);
+    }
+
+    public static RenderableRectangle sprite(Supplier<Identifier> sprite) {
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.sprite(graphics, sprite.get(), left, top, width, height);
+    }
+
+    public static RenderableRectangle sprite(Supplier<Identifier> sprite, int color) {
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.sprite(graphics, sprite.get(), left, top, width, height, color);
     }
 
     public static RenderableRectangle texture(
@@ -64,7 +113,21 @@ public final class Renderables {
             int uWidth,
             int vHeight
     ) {
-        return new RenderableTexture(Objects.requireNonNull(texture, "texture cannot be null"), textureWidth, textureHeight, u, v, uWidth, vHeight);
+        return (graphics, left, top, width, height, _, _, _) ->
+                GuiGraphicsUtils.texture(
+                        graphics,
+                        texture,
+                        left,
+                        top,
+                        u,
+                        v,
+                        width,
+                        height,
+                        uWidth,
+                        vHeight,
+                        textureWidth,
+                        textureHeight
+                );
     }
 
     public static RenderableRectangle texture(Identifier texture, int textureWidth, int textureHeight, int width, int height) {
@@ -72,6 +135,39 @@ public final class Renderables {
     }
 
     public static RenderableRectangle texture(Identifier texture, int textureWidth, int textureHeight) {
+        return texture(texture, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight);
+    }
+
+    public static RenderableRectangle texture(
+            Supplier<Identifier> texture,
+            int textureWidth,
+            int textureHeight,
+            float u,
+            float v,
+            int uWidth,
+            int vHeight
+    ) {
+        return (graphics, left, top, width, height, _, _, _) -> GuiGraphicsUtils.texture(
+                graphics,
+                texture.get(),
+                left,
+                top,
+                u,
+                v,
+                width,
+                height,
+                uWidth,
+                vHeight,
+                textureWidth,
+                textureHeight
+        );
+    }
+
+    public static RenderableRectangle texture(Supplier<Identifier> texture, int textureWidth, int textureHeight, int width, int height) {
+        return texture(texture, textureWidth, textureHeight, 0, 0, width, height);
+    }
+
+    public static RenderableRectangle texture(Supplier<Identifier> texture, int textureWidth, int textureHeight) {
         return texture(texture, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight);
     }
 }
